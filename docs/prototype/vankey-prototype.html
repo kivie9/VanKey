@@ -1,0 +1,1742 @@
+<title>VanKey Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: page header + segmented switch, then one stage showing either a Windows window (3 columns) or an Android phone frame (bottom nav). */
+:root{
+  --bg:#f1f2f4; --surface:#ffffff; --surface2:#f5f6f8; --line:#e6e8eb; --fg:#15171a; --muted:#6b7280;
+  --accent:#0b7a6b; --accent-fg:#ffffff; --accent-soft:#e2f3ee; --warn:#b45309; --danger:#b42318; --shadow:0 18px 50px rgba(19,32,27,.14);
+  --f-head:'Space Grotesk',system-ui,sans-serif; --f-body:'Inter',system-ui,sans-serif; --f-mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#000000; --surface:#000000; --surface2:#131315; --line:#202024; --fg:#f2f2f5; --muted:#8e8e96;
+  --accent:#4bc6b0; --accent-fg:#04201a; --accent-soft:#0f2622; --warn:#f5a54a; --danger:#ff8a7a; --shadow:0 18px 50px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#000000; --surface:#000000; --surface2:#131315; --line:#202024; --fg:#f2f2f5; --muted:#8e8e96;
+  --accent:#4bc6b0; --accent-fg:#04201a; --accent-soft:#0f2622; --warn:#f5a54a; --danger:#ff8a7a; --shadow:0 18px 50px rgba(0,0,0,.5); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:14px/1.45 var(--f-body);padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.top{max-width:1400px;margin:0 auto 16px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between}
+.top h1{font:700 22px var(--f-head);margin:0}
+.top p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:none;padding:7px 14px;border-radius:7px;color:var(--muted);font-weight:500}
+.seg button.on{background:var(--accent);color:var(--accent-fg)}
+.stage{max-width:1400px;margin:0 auto;overflow-x:auto;padding-bottom:8px}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* Windows window */
+.win{position:relative;min-width:880px;height:640px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden}
+.tbar{height:40px;display:flex;align-items:center;gap:10px;padding:0 14px;background:var(--surface2);border-bottom:1px solid var(--line);font-size:12px;color:var(--muted)}
+.tbar b{font:600 13px var(--f-head);color:var(--fg)}
+.tbar .sp{flex:1}
+.wbody{flex:1;display:grid;grid-template-columns:200px 300px 1fr;min-height:0}
+.wbody.wide{grid-template-columns:200px 1fr}
+nav.side{background:var(--surface2);border-right:1px solid var(--line);padding:12px 8px;display:flex;flex-direction:column;gap:2px;overflow:auto}
+nav.side button{display:flex;align-items:center;gap:10px;border:0;background:none;padding:9px 10px;border-radius:8px;text-align:left;color:var(--muted);font-weight:500}
+nav.side button:hover{background:var(--accent-soft)}
+nav.side button.on{background:var(--accent-soft);color:var(--accent)}
+nav.side .n{margin-left:auto;font-size:11px;color:var(--muted)}
+nav.side hr{border:0;border-top:1px solid var(--line);margin:8px 4px;width:calc(100% - 8px)}
+.col{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
+.sbar{padding:12px;display:flex;gap:8px;border-bottom:1px solid var(--line)}
+.sbar label{flex:1;display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:0 10px;color:var(--muted)}
+.sbar input{flex:1;min-width:0;border:0;background:none;color:var(--fg);padding:8px 0;font:inherit}
+.sbar input:focus-visible{outline:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px;font-weight:500}
+.btn:hover{background:var(--surface2)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.dng{color:var(--danger)}
+.btn.ico{padding:7px 9px}
+.rows{overflow:auto;flex:1;min-height:0}
+.row{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;padding:10px 12px}
+.row:hover{background:var(--surface2)}
+.row.on{background:var(--accent-soft)}
+.row .t{flex:1;min-width:0}
+.row .t b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .t span{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row{cursor:pointer}
+.rc{display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;background:var(--accent-soft);min-width:136px;min-height:46px;padding:10px 14px;margin:-6px 0;border-radius:12px;flex:none}
+.rc:hover{border-color:var(--accent)}
+.rc:active{filter:brightness(.92)}
+.rc .code{font:600 15px var(--f-mono);letter-spacing:.04em;color:var(--accent)}
+.rc.low .code{color:var(--warn)}
+.rc .ring{width:20px;height:20px}
+.rc svg.i{width:15px;height:15px;color:var(--muted)}
+.rc:hover svg.i{color:var(--accent)}
+.card[data-act]{cursor:pointer}
+.card[data-act]:hover{border-color:var(--accent)}
+.rc .ring circle{stroke-width:3.5}
+.av{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;color:#fff;font:600 15px var(--f-head);flex:none}
+.av.lg{width:52px;height:52px;border-radius:13px;font-size:22px}
+.badge{font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);padding:2px 6px;border-radius:5px}
+.pane{overflow:auto;padding:22px 26px;min-width:0}
+.pane h2{font:600 22px var(--f-head);margin:0}
+.dhead{display:flex;gap:14px;align-items:center;margin-bottom:18px}
+.dhead .sp{flex:1}
+.fld{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
+.fld .l{width:130px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;flex:none}
+.fld .v{flex:1;min-width:0;overflow-wrap:anywhere}
+.mono{font-family:var(--f-mono)}
+.totp{display:flex;align-items:center;gap:14px;margin:18px 0;padding:14px 16px;background:var(--surface2);border:1px solid var(--line);border-radius:12px}
+.totp .code{font:600 30px var(--f-mono);letter-spacing:.08em;flex:1}
+.totp small{color:var(--muted);display:block;font-size:12px}
+.ring{width:34px;height:34px;transform:rotate(-90deg);flex:none}
+.ring circle{fill:none;stroke-width:3}
+.rbg{stroke:var(--line)}
+.rfg{stroke:var(--accent);stroke-dasharray:62.83;stroke-linecap:round;transition:stroke-dashoffset .9s linear}
+.low .rfg{stroke:var(--warn)}
+.low .code{color:var(--warn)}
+.foot{margin-top:20px;display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:12px;gap:8px;flex-wrap:wrap}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:16px}
+.card{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.card .code{font:600 26px var(--f-mono);letter-spacing:.08em}
+.card .top2{display:flex;align-items:center;gap:10px}
+.card .top2 .t{flex:1;min-width:0}
+.card .top2 b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .top2 span{font-size:12px;color:var(--muted)}
+.card .bot{display:flex;align-items:center;justify-content:space-between}
+.genout{font:600 22px var(--f-mono);background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:18px;overflow-wrap:anywhere;margin:16px 0}
+.opt{display:flex;align-items:center;gap:12px;padding:8px 0}
+.opt input[type=range]{flex:1;accent-color:var(--accent)}
+.opt label{display:flex;align-items:center;gap:8px}
+.sw{width:38px;height:22px;border-radius:12px;background:var(--line);border:0;position:relative;flex:none;padding:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
+.sw.on{background:var(--accent)}
+.sw.on::after{transform:translateX(16px)}
+.sec{border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px;background:var(--surface)}
+.sec h3{font:600 15px var(--f-head);margin:0 0 6px}
+.sec p{margin:0 0 10px;color:var(--muted);font-size:13px}
+.srow{display:flex;align-items:center;gap:12px;padding:8px 0;justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--muted)}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--accent);display:block}
+.chip.busy i{background:var(--warn);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+@media (prefers-reduced-motion:reduce){.chip.busy i{animation:none}.rfg{transition:none}}
+
+/* lock + modal */
+.lock{position:absolute;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:20px}
+.lockbox{width:min(340px,100%);text-align:center}
+.lockbox .logo{width:64px;height:64px;border-radius:18px;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;margin:0 auto 16px}
+.lockbox .logo svg{width:32px;height:32px}
+.lockbox h2{font:700 24px var(--f-head);margin:0 0 4px}
+.lockbox p{color:var(--muted);margin:0 0 18px}
+.lockbox input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:inherit;margin-bottom:10px}
+.lockbox .btn{width:100%;padding:11px}
+.lockbox .btn+.btn{margin-top:8px}
+.modal{position:absolute;inset:0;z-index:15;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:16px}
+.mbox{width:min(420px,100%);max-height:100%;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.mbox h3{font:600 18px var(--f-head);margin:0 0 12px}
+.mbox label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+.mbox input,.mbox select{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface2);color:var(--fg);font:inherit}
+.mbox .acts{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.lock.auth{display:flex;overflow:auto;z-index:25}
+.lock.auth .lockbox{margin:auto;padding-block:8px}
+.lockbox input[type=checkbox]{width:auto;margin:0}
+.g{width:20px;height:20px;border-radius:50%;background:#fff;color:#4285f4;display:grid;place-items:center;font:700 13px var(--f-head);border:1px solid var(--line)}
+.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;margin:14px 0}
+.or::before,.or::after{content:"";flex:1;border-top:1px solid var(--line)}
+.note{background:var(--accent-soft);color:var(--fg);border-radius:8px;padding:8px 10px;font-size:12px;text-align:left;margin:4px 0 10px}
+.aerr{color:var(--danger);font-size:12px;min-height:16px;margin-bottom:6px;text-align:left}
+.alinks{display:flex;flex-direction:column;gap:6px;margin-top:14px}
+.alinks button{border:0;background:none;color:var(--accent);font-weight:500;padding:4px}
+.rk{font:600 17px var(--f-mono);letter-spacing:.06em;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:16px;margin:0 0 12px;overflow-wrap:anywhere}
+.chk{display:flex;gap:8px;align-items:center;justify-content:center;margin:12px 0;font-size:13px}
+.devs .srow{border-top:1px solid var(--line)}
+.mbox.wide{width:min(480px,100%)}
+.mbox textarea{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface2);color:var(--fg);font:12px var(--f-mono);resize:vertical}
+.mbox input[type=checkbox]{width:auto}
+.tiles{display:grid;gap:8px}
+.tile{display:flex;gap:12px;align-items:center;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px}
+.tile:hover{border-color:var(--accent);background:var(--accent-soft)}
+.tile b{display:block}
+.tile small{color:var(--muted);font-size:12px}
+.ti{width:38px;height:38px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.vf{position:relative;height:210px;border-radius:14px;background:#0b1210;display:grid;place-items:end center;color:#cfe8df;padding-bottom:10px;font-size:12px;overflow:hidden}
+.vf .c{position:absolute;width:34px;height:34px;border:3px solid var(--accent)}
+.vf .tl{left:50px;top:30px;border-right:0;border-bottom:0;border-radius:8px 0 0 0}
+.vf .tr{right:50px;top:30px;border-left:0;border-bottom:0;border-radius:0 8px 0 0}
+.vf .bl{left:50px;bottom:40px;border-right:0;border-top:0;border-radius:0 0 0 8px}
+.vf .br{right:50px;bottom:40px;border-left:0;border-top:0;border-radius:0 0 8px 0}
+.beam{position:absolute;left:60px;right:60px;height:2px;background:var(--accent);box-shadow:0 0 12px var(--accent);animation:beam 2s ease-in-out infinite alternate}
+@keyframes beam{from{top:48px}to{top:150px}}
+@media (prefers-reduced-motion:reduce){.beam{animation:none;top:100px}.chev{transition:none}}
+.dz{border:2px dashed var(--line);border-radius:14px;padding:22px 14px;text-align:center;display:flex;flex-direction:column;gap:4px;align-items:center;background:var(--surface2)}
+.dz span{color:var(--muted);font-size:12px}
+.row2{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+.hint{color:var(--muted);font-size:12px;margin:8px 0 0}
+.scanres{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);background:var(--surface2);border-radius:12px}
+.scanres .t{flex:1;min-width:0}
+.scanres .t b,.scanres .t span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scanres .t span{color:var(--muted);font-size:12px}
+.scanres .code{font:600 20px var(--f-mono);color:var(--accent)}
+.scanres.low .code{color:var(--warn)}
+.gh{display:flex;align-items:center;gap:6px;width:100%;border:0;border-bottom:1px solid var(--line);background:var(--surface2);padding:6px 12px;font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);text-align:left;position:sticky;top:0;z-index:1}
+.gh .n{margin-left:auto;font-weight:500}
+.pane .gh,.pbody>.gh{position:static;border:0;border-radius:8px;margin-top:14px}
+.pbody>.gh{width:calc(100% - 28px);margin-left:14px}
+.chev{display:inline-flex;transition:transform .15s}
+.chev.c{transform:rotate(-90deg)}
+.chev svg{width:14px;height:14px}
+.gby{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted)}
+.pane .gby{padding:12px 0 0;border:0}
+.pbody>.gby{border:0;padding:4px 14px 0}
+.mseg{display:inline-flex;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:2px}
+.mseg button{border:0;background:none;padding:3px 10px;border-radius:6px;color:var(--muted);font-size:12px}
+.mseg button.on{background:var(--accent);color:var(--accent-fg)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 14px 6px;flex:none;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 32px),transparent)}
+.chips::-webkit-scrollbar{display:none}
+.chipb{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:2px 10px;font-size:12px;line-height:20px;color:var(--muted)}
+.chipb.on{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.slabel{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:10px 10px 4px}
+.btn.fav{color:#d99a00}
+.btn.fav svg{fill:currentColor}
+.mbox label.frow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);margin:0;font-size:14px;color:var(--fg)}
+.frow .t{flex:1;min-width:0}
+.frow .t b,.frow .t span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frow .t span{color:var(--muted);font-size:12px}
+.flist{max-height:230px;overflow:auto;margin-top:8px;border-top:1px solid var(--line)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.pbody>.pane,.pbody>.gby,.pbody>.gh,.pbody>div:not(.rows){flex:none}
+.screen{position:absolute;inset:0;z-index:12;background:var(--bg);display:flex;flex-direction:column;overflow:auto}
+.phone .screen{padding-top:34px}
+.shead{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--surface);flex:none}
+.shead h2{font:600 18px var(--f-head);margin:0}
+.sbody{width:min(520px,100%);margin:0 auto;padding:22px 16px}
+.col{position:relative}
+.fabc{position:absolute;right:18px;width:56px;height:56px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;box-shadow:0 6px 16px rgba(0,0,0,.3);z-index:6}
+.fabc svg{width:26px;height:26px;transition:transform .2s}
+.fabc.open svg{transform:rotate(45deg)}
+.fabc.spin-open svg{animation:spinO .5s cubic-bezier(.2,.8,.2,1)}
+.fabc.spin-close svg{animation:spinC .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes spinO{from{transform:rotate(0)}to{transform:rotate(405deg)}}
+@keyframes spinC{from{transform:rotate(45deg)}to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.fabc svg{animation:none!important}}
+.scrim{position:absolute;inset:0;z-index:5;background:rgba(0,0,0,.28)}
+.sdmenu{position:absolute;display:flex;flex-direction:column-reverse;gap:12px;align-items:flex-end;z-index:6}
+.phone .fabc{bottom:78px}
+.phone .sdmenu{bottom:146px;right:24px}
+.col .fabc{bottom:16px;right:16px}
+.col .sdmenu{bottom:84px;right:22px}
+.sd{display:flex;align-items:center;gap:10px;animation:pop .18s ease-out both;animation-delay:calc(var(--k)*35ms)}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.85)}to{opacity:1;transform:none}}
+.sdl{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.18);white-space:nowrap}
+.sdb{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--accent);display:grid;place-items:center;box-shadow:0 3px 10px rgba(0,0,0,.22);flex:none}
+@media (prefers-reduced-motion:reduce){.sd{animation:none}.fabc svg{transition:none}}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));column-gap:14px;margin-top:2px}
+.tr{display:flex;align-items:center;gap:10px;padding:7px 6px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:6px}
+.tr:hover{background:var(--surface2)}
+.tr .av{width:28px;height:28px;border-radius:8px;font-size:13px}
+.tr .t{flex:1;min-width:0}
+.tr .t b{display:block;font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr .t span{display:block;color:var(--muted);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr .code{font:600 17px var(--f-mono);letter-spacing:.04em;color:var(--accent);flex:none}
+.tr.low .code{color:var(--warn)}
+.tr .ring{width:18px;height:18px;flex:none}
+.tr .ring circle{stroke-width:3.5}
+.pbody>.tgrid{padding:0 14px;grid-template-columns:1fr}
+.pane .gh,.pbody>.gh{margin-top:8px}
+.sg{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:14px 4px 6px}
+.sc{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.sr{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:6px 12px;border:0;border-top:1px solid var(--line);background:none;text-align:left;font:inherit;color:var(--fg)}
+.sc>.sr:first-child{border-top:0}
+.sr.lk{cursor:pointer}
+.sr.lk:hover{background:var(--surface2)}
+.sr.sub{padding-left:26px;background:var(--surface2)}
+.sl{flex:1;min-width:0;display:flex;flex-direction:column}
+.sl small{color:var(--muted);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sv{display:flex;align-items:center;gap:6px;color:var(--muted);flex:none}
+.sv svg.i{width:16px;height:16px}
+.btn.sm{padding:4px 10px;font-size:12px}
+span.sw{display:block}
+.gpick{display:flex;align-items:center;gap:6px;min-width:0;flex:1;max-width:50%;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:3px 10px;font-size:12.5px;color:var(--fg)}
+.gpick span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
+.gpick svg.i{width:14px;height:14px;color:var(--muted)}
+.modal.sheet{place-items:end center;padding:0}
+.sheet .mbox{width:100%;border-radius:16px 16px 0 0;max-height:75%}
+.glist{max-height:46vh;overflow:auto;margin:0 -6px}
+.gitem{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:12px 10px;border-radius:10px;text-align:left}
+.gitem:hover{background:var(--surface2)}
+.gitem.on{color:var(--accent);font-weight:600}
+.gitem .gn{flex:1}
+.gitem .n{color:var(--muted);font-size:12px;font-weight:500}
+.gitem .ck{width:18px;display:inline-flex}
+.genout{font:600 20px/1.5 var(--f-mono);letter-spacing:.03em;word-break:break-all;min-height:96px;display:flex;flex-wrap:wrap;align-items:center;align-content:center;padding:18px 16px;margin:4px 0 12px;background:var(--surface2);border:1px solid var(--line);border-radius:14px}
+.genout .gd{font-style:normal;color:var(--accent)}
+.genout .gs{font-style:normal;color:var(--warn)}
+.gmeter{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);margin-bottom:14px}
+.gbar{flex:1;height:6px;border-radius:4px;background:var(--line);overflow:hidden}
+.gbar i{display:block;height:100%;border-radius:4px;background:var(--accent);transition:width .2s}
+.gbar i.w{background:var(--danger)}
+.gbar i.m{background:var(--warn)}
+.gacts{display:flex;gap:8px}
+.gacts .pri{flex:1}
+.btn.big{padding:12px 16px;font-size:15px;border-radius:12px}
+.glen{display:flex;align-items:center;gap:10px;margin:20px 0 14px}
+.glen input{flex:1;min-width:0;accent-color:var(--accent)}
+.glen b{min-width:30px;text-align:right;font:600 18px var(--f-mono)}
+.glen .btn{width:36px;height:36px;padding:0;font-size:18px;border-radius:10px}
+.gopts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.gopt{padding:11px 0;border:1px solid var(--line);border-radius:10px;background:var(--surface);font:600 14px var(--f-mono);color:var(--muted)}
+.gopt.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.sbody input[type=password]{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:inherit;margin-bottom:6px}
+.sbody .rk{text-align:center;margin-bottom:14px}
+.sr .av{width:28px;height:28px;border-radius:8px;font-size:13px;flex:none}
+.exrow{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.sbody select{padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:inherit}
+.sbody textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--fg);font:12px var(--f-mono);margin-top:12px}
+.sbody .empty svg.i{width:32px;height:32px;color:var(--accent);margin-bottom:6px}
+.row{padding:8px 12px}
+.row .av{width:28px;height:28px;border-radius:8px;font-size:13px}
+.av.lg{width:42px;height:42px;border-radius:11px;font-size:18px}
+.about{display:flex;flex-direction:column;align-items:center;gap:2px;margin:10px 0 18px;text-align:center}
+.alogo{width:52px;height:52px;border-radius:15px;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;margin-bottom:8px}
+.alogo svg{width:26px;height:26px}
+.about b{font:700 20px var(--f-head)}
+.about span,.about p{color:var(--muted);margin:0;font-size:13px}
+.sc{border:0;background:var(--surface2)}
+.sr{border-top:1px solid color-mix(in srgb,var(--line) 45%,transparent)}
+.sr.sub{background:var(--surface)}
+.sc .btn:not(.pri){border-color:transparent;background:var(--surface)}
+.sc .mseg{border-color:transparent;background:var(--surface)}
+.win .rows{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));align-content:start;column-gap:10px;padding:0 14px 96px}
+.win .rows .gh{grid-column:1/-1;position:static;border:0;border-radius:8px;margin:12px 0 8px}
+.win .row{background:var(--surface2);border:0;border-radius:12px;margin-bottom:8px;padding:10px 12px}
+.win .row:hover{background:var(--accent-soft)}
+.win .rc{min-width:112px;padding:8px 10px;min-height:40px;margin:-4px 0;background:var(--accent-soft)}
+.win .rc:hover{background:var(--surface)}
+.win{height:700px}
+.col{border-right:0}
+.dwrap{position:relative;width:min(460px,100%);max-height:100%;display:flex}
+.dwrap .dm{width:100%;max-height:100%;overflow:auto}
+.dmx{position:absolute;top:-12px;right:-12px;z-index:2;border-radius:50%;width:34px;height:34px;padding:0;background:var(--surface)}
+.fm label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+.fm input,.fm select{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface2);color:var(--fg);font:inherit}
+.fm textarea{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface2);color:var(--fg);font:13px var(--f-mono);resize:vertical}
+.fm input[type=checkbox]{width:auto}
+.fm label.frow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);margin:0;font-size:14px;color:var(--fg)}
+.sacts{display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--bg);padding:12px 0;margin-top:14px}
+.sbody textarea.qkey{display:block;margin:0;padding:14px;border-radius:12px;font:600 18px/1.45 var(--f-mono);letter-spacing:.04em;resize:none;word-break:break-all;min-height:96px}
+.sbody textarea.qkey:focus{outline:2px solid var(--accent);outline-offset:1px}
+.btn{border-color:transparent;background:var(--surface2)}
+.btn:hover{background:var(--accent-soft)}
+.btn.pri,.btn.pri:hover{background:var(--accent);border-color:var(--accent)}
+.mbox input,.mbox select,.mbox textarea,.fm input,.fm select,.fm textarea,.qrow input,.sbody input[type=password],.sbody select,.sbody textarea,.lockbox input{border-color:transparent}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid color-mix(in srgb,var(--accent) 50%,transparent);outline-offset:2px}
+.sbody textarea.qkey:focus{outline:2px solid color-mix(in srgb,var(--accent) 50%,transparent)}
+.rc:hover{border-color:transparent;background:var(--surface)}
+.tile{border-color:transparent;background:var(--surface2)}
+.tile:hover{border-color:transparent;background:var(--accent-soft)}
+.gopt{border-color:transparent;background:var(--surface2)}
+.gopt.on{border-color:transparent}
+.mseg,.seg{border-color:transparent}
+.seg{background:var(--surface2)}
+.mseg button.on,.seg button.on,.chipb.on{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.gpick,.chip{border-color:transparent;background:var(--surface2)}
+.totp,.scanres,.genout,.mbox{border-color:transparent}
+.dz{border-color:var(--line)}
+.sdl,.sdb{border-color:transparent}
+.tools{display:flex;gap:10px;flex-wrap:wrap}
+.sfield{display:flex;gap:8px;align-items:center;padding:8px 12px 0}
+.sfield label{flex:1;display:flex;align-items:center;gap:8px;background:var(--surface2);border-radius:10px;padding:0 10px;color:var(--muted);min-width:0}
+.sfield input{flex:1;min-width:0;border:0;background:none;color:var(--fg);padding:9px 0;font:inherit}
+.sfield input:focus-visible{outline:0}
+.pane .sfield{padding:12px 0 0}
+.pbody>.sfield{padding:8px 14px 0}
+.btn.ico.on{color:var(--accent);background:var(--accent-soft)}
+.scorecard{display:flex;align-items:center;gap:14px;background:var(--surface2);border-radius:14px;padding:16px;margin-bottom:6px}
+.scorecard .sn{font:700 40px var(--f-head);color:var(--accent)}
+.sn.m,.scorecard .m{color:var(--warn)}
+.sn.w,.scorecard .w{color:var(--danger)}
+.scorecard .sm{display:flex;flex-direction:column}
+.scorecard .sm span{font-size:13px;color:var(--accent)}
+.badge.m{color:var(--warn)}
+.badge.w{color:var(--danger)}
+.hh{margin-top:6px;border-radius:8px;background:var(--surface2);border-top:0}
+.hintx{color:var(--muted);font-size:12px}
+.menu{min-height:58px}
+.menu .sl{font-weight:500}
+.mi{width:34px;height:34px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.mi svg{width:18px;height:18px}
+.swatches{display:flex;gap:12px;flex-wrap:wrap;padding:6px 0}
+.swatch{width:30px;height:30px;border-radius:50%;background:var(--c);border:0;padding:0}
+.swatch.on{box-shadow:0 0 0 2px var(--surface2),0 0 0 4px var(--c)}
+.dense .row{padding:5px 12px}
+.dense .sr{min-height:36px;padding-top:3px;padding-bottom:3px}
+.dense .tr{padding:4px 6px}
+.dense .row .av,.dense .tr .av,.dense .sr .av{width:24px;height:24px;border-radius:7px;font-size:12px}
+.bell{position:relative}
+.nb{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;border-radius:8px;background:var(--danger);color:#fff;font:600 10px/16px var(--f-body);text-align:center;font-style:normal;padding:0 4px}
+.phead .bell{margin-left:4px}
+.ncard{padding:12px;border-top:1px solid color-mix(in srgb,var(--line) 45%,transparent)}
+.sc>.ncard:first-child{border-top:0}
+.nrow{display:flex;gap:10px;align-items:center}
+.nt{flex:1;min-width:0}
+.nt b{display:block}
+.nt span{color:var(--muted);font-size:12px}
+.nact{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.sg.w{color:var(--danger)}
+.sg.m{color:var(--warn)}
+.fld select{background:var(--surface2);color:var(--fg);border:0;border-radius:8px;padding:6px 8px;font:inherit;max-width:100%}
+.rst.over{color:var(--danger)}
+.rst.soon{color:var(--warn)}
+.banner{position:absolute;top:10px;left:10px;right:10px;z-index:40;display:flex;gap:10px;align-items:center;text-align:left;background:var(--surface2);color:var(--fg);border:0;border-radius:14px;padding:12px;box-shadow:0 8px 28px rgba(0,0,0,.4);animation:pop .22s ease-out both}
+.banner .bi{width:34px;height:34px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.banner .bt{display:flex;flex-direction:column;min-width:0}
+.banner .bt b{font-size:12px;color:var(--muted);font-weight:600}
+.banner .bm{color:var(--muted);font-size:12px}
+:root{--avl:92%;--avs:55%;--avt:34%}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--avl:16%;--avs:30%;--avt:74%}}
+:root[data-theme="dark"]{--avl:16%;--avs:30%;--avt:74%}
+.av{background:hsl(var(--h,160) var(--avs) var(--avl));color:hsl(var(--h,160) 62% var(--avt))}
+.rc,.win .rc{background:transparent;min-width:0;min-height:0;padding:8px;margin:-8px -4px -8px 0;border-radius:10px;gap:8px}
+.rc:hover,.win .rc:hover{background:var(--surface2)}
+.rc svg.i{display:none}
+.rc .code{font:600 15px var(--f-mono);letter-spacing:.03em;color:var(--accent)}
+.gh{background:transparent;border:0;padding:16px 14px 6px;font-size:11px;letter-spacing:.08em;color:var(--muted)}
+.rows .gh{background:var(--surface)}
+.win .rows .gh{padding:14px 2px 8px;margin:0;background:transparent}
+.row{border-bottom-color:color-mix(in srgb,var(--line) 55%,transparent)}
+.mi{background:color-mix(in srgb,var(--fg) 8%,transparent);color:var(--accent)}
+.badge.m,.badge.w{background:color-mix(in srgb,currentColor 14%,transparent)}
+.qlab{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+.qrow{display:flex;gap:8px}
+.qrow input{flex:1;min-width:0;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface2);color:var(--fg)}
+.toast{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:20px;font-size:13px;z-index:30;white-space:nowrap}
+
+/* Android phone */
+.phonewrap{display:flex;justify-content:center;padding:6px 0}
+.phone{position:relative;width:372px;height:740px;background:var(--surface);border:10px solid #151a18;border-radius:38px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;flex:none}
+.sbar2{height:28px;display:flex;justify-content:space-between;align-items:center;padding:0 18px;font-size:12px;font-weight:600;color:var(--muted)}
+.phead{display:flex;align-items:center;gap:8px;padding:8px 14px 6px}
+.phead h2{font:700 22px var(--f-head);margin:0;flex:1}
+.pbody{flex:1;overflow:auto;min-height:0;display:flex;flex-direction:column}
+.pbody .sbar{border-bottom:0;padding:6px 14px 10px}
+.pbody .grid{grid-template-columns:1fr;padding:0 14px 14px;margin-top:6px}
+.pbody .pane{padding:8px 16px 20px}
+.pnav{display:flex;border-top:1px solid var(--line);background:var(--surface2);padding-bottom:6px}
+.pnav button{flex:1;border:0;background:none;padding:9px 0 6px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--muted)}
+.pnav button.on{color:var(--accent);font-weight:600}
+.fab{position:absolute;right:18px;bottom:78px;width:54px;height:54px;border-radius:16px;border:0;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;box-shadow:0 6px 16px rgba(0,0,0,.3);z-index:5}
+.fab svg{width:24px;height:24px}
+.pback{display:flex;align-items:center;gap:6px;padding:6px 10px;border:0;background:none;color:var(--accent);font-weight:500}
+.phone .fld .l{width:96px}
+.legend{max-width:1400px;margin:14px auto 0;color:var(--muted);font-size:12.5px}
+</style>
+
+<div class="top">
+  <div>
+    <h1>VanKey</h1>
+    <p>Bản thử giao diện, dữ liệu mẫu.</p>
+  </div>
+  <div class="tools"><div class="seg" role="group" aria-label="Ngôn ngữ"><button id="l-vi" data-act="lang" data-v="vi">Tiếng Việt</button><button id="l-en" data-act="lang" data-v="en">English</button></div><div class="seg" role="group" aria-label="Chọn thiết bị">
+    <button id="m-desktop" data-act="mode" data-v="desktop">Máy tính (Windows)</button>
+    <button id="m-phone" data-act="mode" data-v="phone">Điện thoại (Android)</button>
+  </div></div>
+</div>
+<div class="stage" id="stage"></div>
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const P={
+ search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',plus:'<path d="M12 5v14M5 12h14"/>',
+ lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
+ copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/>',
+ eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+ eyeoff:'<path d="M3 3l18 18M10.6 6.1A9.8 9.8 0 0112 5c6 0 10 7 10 7a17 17 0 01-3.2 3.9M6.6 6.6C3.8 8.4 2 12 2 12s4 7 10 7c1.6 0 3-.4 4.3-1M9.9 9.9a3 3 0 004.2 4.2"/>',
+ sync:'<path d="M20 11a8 8 0 00-14-4L4 9M4 4v5h5M4 13a8 8 0 0014 4l2-2M20 20v-5h-5"/>',
+ back:'<path d="M15 5l-7 7 7 7"/>',key:'<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/>',
+ shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+ gear:'<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.3l2-1.5-2-3.4-2.3.9a7 7 0 00-2.3-1.3L14 3h-4l-.3 2.4A7 7 0 007.4 6.7l-2.3-.9-2 3.4 2 1.5A7 7 0 005 12a7 7 0 00.1 1.3l-2 1.5 2 3.4 2.3-.9a7 7 0 002.3 1.3L10 21h4l.3-2.4a7 7 0 002.3-1.3l2.3.9 2-3.4-2-1.5c.1-.4.1-.9.1-1.3z"/>',
+ dice:'<rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/>',
+ trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>',
+ note:'<path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7"/>',
+ all:'<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+ finger:'<path d="M12 11v3c0 3-1 5-2 7M8 14c0-2.2 1.8-4 4-4s4 1.8 4 4c0 2-.3 4-1 6M5 12a7 7 0 0114 0M8.5 19c.7-1.5 1-3 1-5"/>',
+ up:'<path d="M12 16V4M7 9l5-5 5 5M5 20h14"/>',
+ down:'<path d="M12 4v12M7 11l5 5 5-5M5 20h14"/>',
+ star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+ chev:'<path d="M6 9l6 6 6-6"/>',
+ chevr:'<path d="M9 5l7 7-7 7"/>',
+ card:'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/>',
+ wifi:'<path d="M2 9a15 15 0 0120 0M5 12.5a10 10 0 0114 0M8.5 16a5 5 0 017 0"/><circle cx="12" cy="19" r="1"/>',
+ wallet:'<path d="M4 7h14a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2zM4 7l2-3h10"/><circle cx="16" cy="13.5" r="1"/>',
+ check:'<path d="M5 12l5 5 9-10"/>',
+ bell:'<path d="M6 16v-5a6 6 0 1112 0v5l2 2H4zM10 20a2 2 0 004 0"/>',
+ palette:'<path d="M12 3a9 9 0 100 18c1.5 0 2-1 1.5-2s0-2 1.5-2h2a3 3 0 003-3c0-5-4-11-8-11z"/><circle cx="7.5" cy="12" r="1"/><circle cx="10" cy="7.5" r="1"/><circle cx="15" cy="7.5" r="1"/>',
+ help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 115 0c0 1.5-2.5 2-2.5 3.5M12 17h.01"/>',
+ info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+ edit:'<path d="M4 20h4l10-10-4-4L4 16zM13 7l4 4"/>',
+ filter:'<path d="M3 5h18l-7 8v6l-4-2v-4z"/>',
+ x:'<path d="M6 6l12 12M18 6L6 18"/>',
+ folder:'<path d="M3 6a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>',
+ qr:'<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v2M14 18h2v2M18 18h2v2"/>'
+};
+const ic=n=>'<svg class="i" viewBox="0 0 24 24" aria-hidden="true">'+P[n]+'</svg>';
+const TYPE={acc:'Đăng nhập',totp:'Chỉ 2FA',key:'API key',crypto:'Ví crypto',card:'Thẻ',wifi:'Wi-Fi',note:'Ghi chú'};
+const TI={acc:'user',totp:'shield',key:'key',crypto:'wallet',card:'card',wifi:'wifi',note:'note'};
+const TPL={
+ acc:[['Tên đăng nhập',0],['Mật khẩu',1,1],['Địa chỉ',0],['Mã dự phòng',1]],
+ totp:[['Tài khoản',0]],
+ key:[['Dịch vụ',0],['Khóa',1],['Ngày hết hạn',0]],
+ crypto:[['Ví hoặc sàn',0],['Địa chỉ ví',0],['Cụm từ khôi phục',1]],
+ card:[['Chủ thẻ',0],['Số thẻ',1],['Hạn',0],['CVV',1],['PIN',1]],
+ wifi:[['Tên mạng',0],['Mật khẩu',1,1],['Bảo mật',0]],
+ note:[['Nội dung',1]]
+};
+const sub=i=>{const x=i.f.find(y=>!y[2]&&y[1]);return x?x[1]:''};
+let items=[
+ {id:'i1',type:'acc',title:'GitHub',f:[['Tên đăng nhập','longvan1296'],['Mật khẩu','vT7#kQ2m9Lx!pR4z',1],['Địa chỉ','github.com']],totp:'JBSWY3DPEHPK3PXP',at:'hôm nay 09:12'},
+ {id:'i2',type:'acc',title:'Google',f:[['Email','demo.user@gmail.com'],['Mật khẩu','Hn5$wB8e!cD3yU6q',1],['Địa chỉ','accounts.google.com']],totp:'GEZDGNBVGY3TQOJQ',at:'hôm qua 21:40'},
+ {id:'i3',type:'acc',title:'Binance',f:[['Email','demo.user@gmail.com'],['Mật khẩu','Zq4&mN7tK1^vS9xE',1],['Địa chỉ','binance.com']],totp:'MFRGGZDFMZTWQ2LK',at:'3 ngày trước'},
+ {id:'i4',type:'acc',title:'Facebook',f:[['Tên đăng nhập','demo.user'],['Mật khẩu','Lp2@fG6hJ8!rT5nC',1],['Địa chỉ','facebook.com']],at:'tuần trước'},
+ {id:'i5',type:'key',title:'OpenAI API',f:[['Khóa','sk-demo-9fA2c7XbQ41LmN0pZr8TyUe5',1],['Dịch vụ','platform.openai.com'],['Ghi chú','Dùng cho dự án chatbot']],at:'tuần trước'},
+ {id:'i6',type:'key',title:'AWS Access Key',f:[['Access key ID','AKIADEMO7QW3EXAMPLE'],['Secret','wJalrDEMO/K7MDENG/bPxRfiCYEXAMPLEKEY',1],['Vùng','ap-southeast-1']],totp:'NBSWY3DPEB3W64TM',at:'2 tuần trước'},
+ {id:'i7',type:'crypto',title:'Cụm từ khôi phục ví',f:[['Ví hoặc sàn','Ví lạnh'],['Cụm từ khôi phục','tower anchor velvet nine copper river basic mimic ocean frame laser quiet',1]],at:'tháng trước'}
+];
+const G0={i1:['Dev',1],i2:['Cá nhân',1],i3:['Crypto'],i4:['Cá nhân'],i5:['Dev'],i6:['Công việc'],i7:['Crypto']};
+items.forEach(i=>{const g=G0[i.id];i.g=g[0];i.fav=!!g[1]});
+items.push({id:'i8',type:'acc',title:'GitHub',f:[['Tên đăng nhập','longvan1296'],['Mật khẩu','Qm4$yT9nB2!kXw7e',1],['Địa chỉ','github.com']],totp:'JBSWY3DPEHPK3PXP',at:'3 tháng trước',g:'Dev'});
+items.push({id:'i9',type:'acc',title:'Instagram',f:[['Tên đăng nhập','demo.user'],['Mật khẩu','Lp2@fG6hJ8!rT5nC',1]],at:'2 tháng trước',g:'Cá nhân'});
+items.find(i=>i.id==='i1').hist=[['Qm4$yT9nB2!kXw7e','3 tháng trước'],['Zr8#pL3vN6@wQd2s','8 tháng trước']];
+items.push({id:'i14',type:'acc',title:'Forum cũ',f:[['Tên đăng nhập','vanlong'],['Mật khẩu','abc12345',1],['Địa chỉ','oldforum.example']],at:'2 năm trước',g:'Cá nhân'});
+items.push({id:'i10',type:'totp',title:'Discord',f:[['Tài khoản','demo.user@gmail.com']],totp:'JBSWY3DPEHPK3PXB',at:'hôm nay',g:'Cá nhân'});
+items.push({id:'i11',type:'card',title:'Visa Vietcombank',f:[['Chủ thẻ','NGUYEN VAN A'],['Số thẻ','4111 1111 1111 1111',1],['Hạn','08/28'],['CVV','123',1]],at:'tuần trước',g:'Cá nhân'});
+items.push({id:'i12',type:'wifi',title:'Wi-Fi nhà',f:[['Tên mạng','Nha_Van_5G'],['Mật khẩu','Kp7#xT2mQ9vL',1],['Bảo mật','WPA3']],at:'tháng trước',g:'Cá nhân'});
+items.push({id:'i13',type:'note',title:'Ghi chú router',f:[['Nội dung','Đăng nhập 192.168.1.1, user admin. Đổi mật khẩu mặc định.',1]],at:'2 tuần trước',g:'Công việc'});
+(function(){
+  const N=Date.now(),D=864e5,pad=n=>String(n).padStart(2,'0');
+  const set=(id,days,mo,b)=>{const it=items.find(x=>x.id===id);if(it){it.pwAt=N-days*D;it.rem={m:mo,b}}};
+  set('i1',85,3,7);set('i2',60,6,14);set('i3',40,3,7);set('i14',400,12,14);
+  const card=items.find(x=>x.id==='i11');if(card){const d=new Date(N+20*D),h=card.f.find(x=>x[0]==='Hạn');if(h)h[1]=pad(d.getMonth()+1)+'/'+String(d.getFullYear()).slice(2)}
+  const key=items.find(x=>x.id==='i6');if(key){const d=new Date(N+10*D);key.f.push(['Ngày hết hạn',pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()])}
+})();
+const TH=(()=>{try{return JSON.parse(localStorage.getItem('km-theme')||'{}')}catch(e){return {}}})();
+const S={theme:TH.theme||'system',accent:TH.accent||'teal',dense:!!TH.dense,stk:[],setp:'acc',lang:(()=>{try{return localStorage.getItem('km-lang')||'vi'}catch(e){return 'vi'}})(),mode:innerWidth<700?'phone':'desktop',locked:false,hasPw:false,auth:'out',authTab:'login',user:null,via:'',rk:'',prov:'cf',devs:[['Android · Pixel 8','2 phút trước'],['Windows · PC-VAN','hôm qua']],faq:-1,ex:{scope:'all',fmt:'enc',grp:'',out:''},snz:{},banner:null,notif:{before:7,defM:0},trash:[{ago:3,it:{id:'t1',type:'acc',title:'Gmail cũ',f:[['Tên đăng nhập','van.old@gmail.com'],['Mật khẩu','Ab3$kP9mQ2!xLz7t',1]],at:'3 ngày trước',g:'Cá nhân'}}],tconf:'',breach:null,histOpen:null,cpid:'',sopen:false,dial:false,rkShow:false,rkNew:false,devOpen:false,spin:'',screen:null,quick:{key:'',secret:'',label:'',err:''},by:'grp',col:{},scan:null,imp:null,sec:'all',sel:'i1',q:'',tab:'vault',open:false,modal:false,show:{},
+ gen:{len:20,up:1,low:1,num:1,sym:1,out:''},sync:'ok',syncAt:'2 phút trước',toast:'',sw:{bio:1,auto:1,clip:1,codes:1,nOn:1}};
+const hue=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h};
+const av=(t,lg)=>'<div class="av'+(lg?' lg':'')+'" style="--h:'+hue(t)+'">'+esc(t[0].toUpperCase())+'</div>';
+const spark=(v)=>v;
+
+/* TOTP RFC 6238 (HMAC-SHA1, 30s, 6 digits) */
+function b32(s){const A='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';let b='';for(const c of s.toUpperCase()){const v=A.indexOf(c);if(v>=0)b+=v.toString(2).padStart(5,'0')}const o=[];for(let i=0;i+8<=b.length;i+=8)o.push(parseInt(b.slice(i,i+8),2));return new Uint8Array(o)}
+async function totp(sec,t){const step=Math.floor((t||Date.now())/30000);const k=await crypto.subtle.importKey('raw',b32(sec),{name:'HMAC',hash:'SHA-1'},false,['sign']);const buf=new ArrayBuffer(8),dv=new DataView(buf);dv.setUint32(0,Math.floor(step/4294967296));dv.setUint32(4,step>>>0);const h=new Uint8Array(await crypto.subtle.sign('HMAC',k,buf));const o=h[19]&15;return String(((h[o]&127)<<24|h[o+1]<<16|h[o+2]<<8|h[o+3])%1e6).padStart(6,'0')}
+async function tick(){
+  const rem=30-((Date.now()/1000)%30);
+  document.querySelectorAll('[data-code]').forEach(async el=>{
+    try{const c=await totp(el.dataset.code);el.textContent=c.slice(0,3)+' '+c.slice(3)}catch(e){el.textContent='--- ---'}
+  });
+  document.querySelectorAll('[data-ring]').forEach(el=>{el.style.strokeDashoffset=62.83*(1-rem/30)});
+  document.querySelectorAll('[data-sec]').forEach(el=>{el.textContent=Math.ceil(rem)+'s'});
+  document.querySelectorAll('.tw').forEach(el=>el.classList.toggle('low',rem<=5));
+}
+setInterval(tick,1000);
+
+function genPw(){const g=S.gen;let set='';if(g.up)set+='ABCDEFGHJKLMNPQRSTUVWXYZ';if(g.low)set+='abcdefghijkmnopqrstuvwxyz';if(g.num)set+='23456789';if(g.sym)set+='!@#$%^&*-_=+?';if(!set)set='abcdefghijkmnopqrstuvwxyz';const a=new Uint32Array(g.len);crypto.getRandomValues(a);g.out=[...a].map(n=>set[n%set.length]).join('')}
+genPw();
+
+function quickCheck(){
+  const el=$('#q2-key'),q=S.quick;if(el)q.key=el.value;
+  const raw=q.key.trim();q.secret='';q.label='';q.err='';
+  if(!raw)q.err='Nhập key trước.';
+  else if(/^otpauth:/i.test(raw)){const r=parseOtp(raw);if(r){q.secret=r.secret;q.label=r.title+(r.user?' · '+r.user:'')}else q.err='Link không hợp lệ.'}
+  else{const s=raw.replace(/[\s-]/g,'').replace(/=+$/,'').toUpperCase();if(/^[A-Z2-7]{8,}$/.test(s))q.secret=s;else q.err='Key không hợp lệ. Chỉ gồm chữ A-Z, số 2-7 và tối thiểu 8 ký tự.'}
+  render();
+}
+function fabHTML(){
+  const o=(a,i,l,k)=>'<div class="sd" style="--k:'+k+'"><span class="sdl">'+l+'</span><button class="sdb" data-act="'+a+'" aria-label="'+l+'">'+ic(i)+'</button></div>';
+  return (S.dial?'<div class="scrim" data-act="dial"></div><div class="sdmenu">'+o('mform','note','Nhập tay',1)+o('mscan','qr','Quét mã QR',2)+o('mimport','down','Nhập từ file / app khác',3)+o('mquick','eye','Xem nhanh 2FA',4)+'</div>':'')+
+   '<button class="fabc'+(S.dial?' open':'')+(S.spin?' spin-'+S.spin:'')+'" data-act="dial" aria-expanded="'+S.dial+'" aria-label="Thêm">'+ic('plus')+'</button>';
+}
+function helpScr(){
+  const Q=[['Quên vault passphrase?','Dùng mã khôi phục. Không có cả hai thì không lấy lại được dữ liệu.'],['Chuyển từ Google Authenticator','Bấm dấu +, chọn Nhập từ file / app khác, rồi Google Authenticator.'],['Đồng bộ hoạt động thế nào?','Kho được mã hóa ngay trên máy rồi mới gửi đi. Máy chủ chỉ giữ dữ liệu đã mã hóa.'],['Mã 2FA không đúng','Kiểm tra giờ của thiết bị và bật tự động đặt giờ.'],['Đổi sang máy mới','Đăng nhập, rồi nhập vault passphrase hoặc mã khôi phục.']];
+  return scrWrap('Hướng dẫn','<div class="sc">'+Q.map((q,k)=>srow(esc(q[0]),'',ic(S.faq===k?'chev':'chevr'),'faq',k)+(S.faq===k?'<div class="sr sub"><span class="sl" style="color:var(--muted)">'+esc(q[1])+'</span></div>':'')).join('')+'</div>');
+}
+function aboutScr(){
+  const row=t=>srow(t,'',ic('chevr'),'stub',t);
+  return scrWrap('Giới thiệu','<div class="about"><div class="alogo">'+ic('lock')+'</div><b>VanKey</b><span>Phiên bản 0.1.0</span><p>Quản lý mật khẩu và mã 2FA, mã hóa đầu-cuối.</p></div><div class="sc">'+row('Điều khoản sử dụng')+row('Chính sách bảo mật')+row('Giấy phép mã nguồn mở')+row('Kiểm tra cập nhật')+'</div>');
+}
+function findDups(){
+  const cl=[],seen=new Set();
+  const by=(kind,fn,skip)=>{const m=new Map();items.forEach(i=>{const k=fn(i);if(!k)return;if(!m.has(k))m.set(k,[]);m.get(k).push(i)});m.forEach(a=>{if(a.length<2)return;const sig=a.map(i=>i.id).sort().join();if(skip&&seen.has(sig))return;seen.add(sig);cl.push({kind,items:a})})};
+  by('Trùng mã 2FA',i=>i.totp?i.totp.toUpperCase():'');
+  by('Trùng tên và tài khoản',i=>(i.title+'|'+(sub(i))).toLowerCase(),1);
+  by('Dùng chung mật khẩu',i=>{const p=i.f.find(x=>x[0]==='Mật khẩu');return p&&p[1]?p[1]:''},1);
+  return cl;
+}
+function exItems(){const e=S.ex;let l=items.slice();if(e.scope==='2fa'||e.fmt==='otp')l=l.filter(i=>i.totp);if(e.grp)l=l.filter(i=>i.g===e.grp);return l}
+function otpLink(i){const iss=encodeURIComponent(i.title),u=encodeURIComponent(sub(i));return 'otpauth://totp/'+iss+':'+u+'?secret='+i.totp+'&issuer='+iss}
+function csvOf(l){const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';return 'title,group,username,password,totp\n'+l.map(i=>{const pw=i.f.find(x=>x[0]==='Mật khẩu');return [i.title,i.g||'',sub(i),pw?pw[1]:'',i.totp||''].map(q).join(',')}).join('\n')}
+function scrWrap(title,body){return '<div class="screen"><div class="shead"><button class="btn" data-act="qback" aria-label="Quay lại">'+ic('back')+'Quay lại</button><h2>'+title+'</h2></div><div class="sbody">'+body+'</div></div>'}
+function exScr(){
+  const e=S.ex,l=exItems();
+  const mk=(k,t)=>'<button class="'+(e.scope===k?'on':'')+'" data-act="exscope" data-v="'+k+'">'+t+'</button>';
+  const fm=(k,t,sub,badge)=>srow(t+(badge?' <span class="badge">'+badge+'</span>':''),sub,e.fmt===k?ic('check'):'','exfmt',k);
+  const opts='<option value="">Mọi nhóm</option>'+groupNames().map(g=>'<option'+(e.grp===g?' selected':'')+'>'+esc(g)+'</option>').join('');
+  return scrWrap('Xuất dữ liệu',
+    '<div class="exrow"><div class="mseg">'+mk('all','Tất cả')+mk('2fa','Chỉ 2FA')+'</div><select id="ex-grp" aria-label="Nhóm">'+opts+'</select></div>'+
+    '<div class="sg">Định dạng</div><div class="sc">'+fm('enc','Sao lưu mã hóa','.vkbackup','Khuyên dùng')+fm('otp','Link otpauth://','Cho app 2FA khác','')+fm('csv','CSV','Mở bằng Excel','')+'</div>'+
+    (e.fmt!=='enc'?'<div class="note" style="margin-top:12px">File không mã hóa. Xóa sau khi dùng.</div><input id="ex-pass" type="password" placeholder="Vault passphrase" aria-label="Vault passphrase"><div id="exerr" class="aerr"></div>':'')+
+    '<button class="btn pri big" style="width:100%;margin-top:12px" data-act="exgo">'+ic('up')+'Xuất '+l.length+' mục</button>'+
+    (e.out?'<textarea id="ex-out" rows="7" readonly aria-label="Kết quả">'+esc(e.out)+'</textarea><button class="btn big" style="width:100%;margin-top:8px" data-act="copy" data-v="'+esc(e.out)+'">'+ic('copy')+'Copy</button>':''));
+}
+function dupScr(){
+  const cl=findDups();
+  const b=!cl.length?'<div class="empty">'+ic('check')+'<div>Không có mục trùng lặp.</div></div>':cl.map((c,ci)=>{
+    const merge=c.kind!=='Dùng chung mật khẩu';
+    return '<div class="sg">'+esc(c.kind)+' · '+c.items.length+'</div><div class="sc">'+c.items.map((i,k)=>'<div class="sr">'+av(i.title)+'<span class="sl">'+esc(i.title)+'<small>'+esc(sub(i))+' · '+esc(i.g||'Chưa phân nhóm')+' · '+esc(i.at)+'</small></span><span class="sv">'+(merge&&k===0?'<span class="badge">Giữ</span>':'')+'<button class="btn sm dng" data-act="ddel" data-v="'+i.id+'" aria-label="Xóa '+esc(i.title)+'">'+ic('trash')+'</button></span></div>').join('')+(merge?'<div class="sr"><button class="btn sm pri" style="width:100%" data-act="dmerge" data-v="'+ci+'">Gộp, giữ bản mới nhất</button></div>':'')+'</div>';
+  }).join('');
+  return scrWrap('Mục trùng lặp',b);
+}
+function formFields(ty){
+  return TPL[ty].map((x,k)=>{
+    const id='f-'+k,inp=x[0]==='Nội dung'?'<textarea id="'+id+'" rows="4"></textarea>':'<input id="'+id+'"'+(x[1]?' type="password"':'')+' autocomplete="off">';
+    return '<label for="'+id+'">'+esc(x[0])+'</label>'+(x[2]?'<div class="qrow">'+inp+'<button class="btn" data-act="fgen" data-v="'+id+'">'+ic('dice')+'Tạo</button></div>':inp);
+  }).join('')+(ty==='acc'||ty==='totp'?'<label for="f-totp">Key 2FA'+(ty==='totp'?'':' (không bắt buộc)')+'</label><input id="f-totp" class="mono" placeholder="JBSWY3DPEHPK3PXP hoặc link otpauth://" autocomplete="off">':'');
+}
+function formModal(){
+  const ty0=TYPE[S.sec]?S.sec:'acc';
+  return wrapS('Thêm mục mới',
+   '<label for="f-type">Loại</label><select id="f-type">'+Object.keys(TYPE).map(k=>'<option value="'+k+'"'+(k===ty0?' selected':'')+'>'+TYPE[k]+'</option>').join('')+'</select>'+
+   '<label for="f-title">Tên</label><input id="f-title" placeholder="VD: Netflix" autocomplete="off">'+
+   '<div id="f-fields">'+formFields(ty0)+'</div><div id="f-custom"></div>'+
+   '<button class="btn sm" style="margin-top:10px" data-act="faddf">'+ic('plus')+'Thêm trường</button>'+
+   '<label for="f-grp">Nhóm</label><select id="f-grp">'+grpOpts(S.sec.startsWith('g:')?S.sec.slice(2):'')+'</select><input id="f-newg" placeholder="hoặc nhập tên nhóm mới" style="margin-top:6px" aria-label="Tên nhóm mới">'+
+   '<div id="f-err" class="aerr" style="margin-top:6px"></div>',
+   '<button class="btn" data-act="mclose2">Hủy</button><button class="btn pri" data-act="save">Lưu</button>');
+}
+function saveForm(){
+  const ty=$('#f-type').value,er=$('#f-err'),f=[];
+  TPL[ty].forEach((x,k)=>{const el=$('#f-'+k),v=el?el.value.trim():'';if(v||k===0)f.push([x[0],v,x[1]?1:0])});
+  document.querySelectorAll('#f-custom .qrow').forEach(r=>{const n=r.querySelector('.cf-n').value.trim(),v=r.querySelector('.cf-v').value.trim();if(n&&v)f.push([n,v,0])});
+  let secret;const te=$('#f-totp');
+  if(te&&te.value.trim()){
+    const raw=te.value.trim();
+    if(/^otpauth:/i.test(raw)){const r=parseOtp(raw);secret=r&&r.secret}
+    else{const s=raw.replace(/[\s-]/g,'').replace(/=+$/,'').toUpperCase();secret=/^[A-Z2-7]{8,}$/.test(s)?s:undefined}
+    if(!secret){er.textContent='Key 2FA không hợp lệ.';return}
+  }
+  if(ty==='totp'&&!secret){er.textContent='Nhập key 2FA.';return}
+  const t=$('#f-title').value.trim()||'Mục mới',ng=$('#f-newg').value.trim(),g=ng||$('#f-grp').value,id='n'+Date.now();
+  const hasPw=f.some(x=>x[0]==='Mật khẩu'&&x[1]);
+  items.unshift({id,type:ty,title:t,f,totp:secret,g,at:'vừa xong',pwAt:Date.now(),rem:hasPw&&S.notif.defM?{m:S.notif.defM,b:S.notif.before}:null});
+  S.sel=id;S.sec='all';S.modal=false;S.sync='busy';render();
+  setTimeout(()=>{S.sync='ok';S.syncAt='vừa xong';render()},1100);
+}
+function detailModal(){return '<div class="modal" data-act="dclose"><div class="dwrap"><button class="btn ico dmx" data-act="dclose2" aria-label="Đóng">'+ic('x')+'</button><div class="mbox dm" role="dialog" aria-label="Chi tiết">'+detail(cur())+'</div></div></div>'}
+const DAY=864e5;
+const fmtD=t=>new Date(t).toLocaleDateString(S.lang==='en'?'en-GB':'vi-VN');
+function remInfo(i){if(!i.rem||!i.pwAt)return null;const due=i.pwAt+i.rem.m*30*DAY,left=Math.ceil((due-Date.now())/DAY);return {due,left,state:left<0?'over':left<=i.rem.b?'soon':'ok'}}
+function expInfo(i){
+  let due=0,lab='';
+  if(i.type==='card'){const v=((i.f.find(x=>x[0]==='Hạn')||[])[1]||'').trim(),m=/^(\d{1,2})\/(\d{2})$/.exec(v);if(m){due=new Date(2000+(+m[2]),+m[1],0,23,59).getTime();lab='Thẻ hết hạn'}}
+  else if(i.type==='key'){const v=((i.f.find(x=>x[0]==='Ngày hết hạn')||[])[1]||'').trim(),m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(v);if(m){due=new Date(+m[3],+m[2]-1,+m[1],23,59).getTime();lab='API key hết hạn'}}
+  if(!due)return null;
+  const left=Math.ceil((due-Date.now())/DAY);
+  return {due,left,lab,state:left<0?'over':left<=30?'soon':'ok'};
+}
+function alerts(){
+  if(!S.sw.nOn)return [];
+  const out=[],now=Date.now();
+  items.forEach(i=>{
+    const r=remInfo(i);
+    if(r&&r.state!=='ok'&&!(S.snz[i.id+':pw']>now))out.push({i,kind:'pw',lab:'Đổi mật khẩu',left:r.left,state:r.state});
+    const e=expInfo(i);
+    if(e&&e.state!=='ok'&&!(S.snz[i.id+':x']>now))out.push({i,kind:'x',lab:e.lab,left:e.left,state:e.state});
+  });
+  return out.sort((a,b)=>a.left-b.left);
+}
+const leftTxt=l=>l<0?'Quá hạn '+(-l)+' ngày':l===0?'Hết hạn hôm nay':'Còn '+l+' ngày';
+function bellBtn(){const n=alerts().length;return '<button class="btn ico bell" data-act="mnotif" aria-label="Thông báo">'+ic('bell')+(n?'<i class="nb">'+n+'</i>':'')+'</button>'}
+function remHTML(i){
+  if(!pwOf(i))return '';
+  const r=remInfo(i),m=i.rem?i.rem.m:0,b=i.rem?i.rem.b:S.notif.before;
+  const mo=[0,1,3,6,12].map(v=>'<option value="'+v+'"'+(v===m?' selected':'')+'>'+(v?v+' tháng':'Tắt')+'</option>').join('');
+  const bo=[1,3,7,14,30].map(v=>'<option value="'+v+'"'+(v===b?' selected':'')+'>'+v+' ngày</option>').join('');
+  return '<div class="fld"><div class="l">Nhắc đổi</div><div class="v"><select id="rem-m" data-id="'+i.id+'" aria-label="Nhắc đổi mật khẩu">'+mo+'</select></div></div>'+
+    (m?'<div class="fld"><div class="l">Báo trước</div><div class="v"><select id="rem-b" data-id="'+i.id+'" aria-label="Báo trước">'+bo+'</select></div></div><div class="fld"><div class="l">Hết hạn</div><div class="v rst '+(r?r.state:'')+'">'+(r?fmtD(r.due)+' · '+leftTxt(r.left):'')+'</div></div>':'');
+}
+function notifScr(){
+  const A=alerts();
+  const card=a=>'<div class="ncard"><div class="nrow">'+av(a.i.title)+'<div class="nt"><b>'+esc(a.i.title)+'</b><span>'+a.lab+' · '+leftTxt(a.left)+'</span></div></div><div class="nact">'+
+    (a.kind==='pw'?'<button class="btn sm pri" data-act="chpw" data-v="'+a.i.id+'">Đổi mật khẩu</button>':'<button class="btn sm pri" data-act="hopen" data-v="'+a.i.id+'">Mở</button>')+
+    '<button class="btn sm" data-act="nsnz" data-v="'+a.i.id+':'+(a.kind==='pw'?'pw':'x')+'">Nhắc lại sau 7 ngày</button><button class="btn sm" data-act="nskip" data-v="'+a.i.id+':'+(a.kind==='pw'?'pw':'x')+'">Bỏ qua</button></div></div>';
+  const grp=(t,l,cls)=>l.length?'<div class="sg '+cls+'">'+t+' · '+l.length+'</div><div class="sc">'+l.map(card).join('')+'</div>':'';
+  const body=!A.length?'<div class="empty">'+ic('check')+'<div>Không có nhắc nhở.</div></div>':grp('Quá hạn',A.filter(a=>a.state==='over'),'w')+grp('Sắp hết hạn',A.filter(a=>a.state==='soon'),'m');
+  return scrWrap('Nhắc nhở',body);
+}
+function histHTML(i){
+  if(!i.hist||!i.hist.length)return '';
+  const open=S.histOpen===i.id;
+  return '<button class="sr lk hh" data-act="histtog" data-v="'+i.id+'"><span class="sl">Lịch sử mật khẩu</span><span class="sv">'+i.hist.length+'<span class="chev'+(open?'':' c')+'">'+ic('chev')+'</span></span></button>'+
+   (open?i.hist.map((h,k)=>{const key='h'+i.id+k,sh=S.show[key];return '<div class="fld"><div class="l">'+esc(h[1])+'</div><div class="v mono">'+(sh?esc(h[0]):'••••••••••••')+'</div><button class="btn ico" data-act="eye" data-v="'+key+'" aria-label="Hiện hoặc ẩn">'+ic(sh?'eyeoff':'eye')+'</button><button class="btn ico" data-act="copy" data-v="'+esc(h[0])+'" aria-label="Copy">'+ic('copy')+'</button><button class="btn sm" data-act="hrest" data-v="'+i.id+':'+k+'">Dùng lại</button></div>'}).join(''):'');
+}
+function trashItem(id){const it=items.find(i=>i.id===id);if(!it)return;items=items.filter(i=>i.id!==id);S.trash.unshift({it,ago:0})}
+function trashScr(){
+  const T=S.trash;
+  const b=!T.length?'<div class="empty">'+ic('trash')+'<div>Thùng rác trống.</div></div>':
+    '<div class="exrow"><span class="hintx">Mục đã xóa được giữ 30 ngày</span><button class="btn sm dng" data-act="tempty">'+(S.tconf==='all'?'Chắc chắn?':'Dọn sạch')+'</button></div><div class="sc" style="margin-top:12px">'+
+    T.map((x,k)=>'<div class="sr">'+av(x.it.title)+'<span class="sl">'+esc(x.it.title)+'<small>'+esc(sub(x.it))+' · Còn '+(30-x.ago)+' ngày</small></span><span class="sv"><button class="btn sm" data-act="trest" data-v="'+k+'">Khôi phục</button><button class="btn sm dng" data-act="tdel" data-v="'+k+'" aria-label="Xóa vĩnh viễn">'+(S.tconf===String(k)?'Chắc chắn?':ic('trash'))+'</button></span></div>').join('')+'</div>';
+  return scrWrap('Thùng rác',b);
+}
+function pwOf(i){const p=i.f.find(x=>x[0]==='Mật khẩu');return p&&p[1]?p[1]:''}
+function isWeak(p){const c=(/[a-z]/.test(p)?1:0)+(/[A-Z]/.test(p)?1:0)+(/\d/.test(p)?1:0)+(/[^A-Za-z0-9]/.test(p)?1:0);return p.length<10||c<3}
+function health(){
+  const weak=items.filter(i=>{const p=pwOf(i);return p&&isWeak(p)});
+  const reuse=findDups().filter(c=>c.kind==='Dùng chung mật khẩu');
+  const reuseN=reuse.reduce((n,c)=>n+c.items.length,0);
+  const no2fa=items.filter(i=>i.type==='acc'&&!i.totp);
+  const leak=Array.isArray(S.breach)?items.filter(i=>S.breach.includes(i.id)):[];
+  const score=Math.max(0,100-Math.min(40,weak.length*10)-Math.min(30,reuseN*5)-Math.min(20,no2fa.length*3)-Math.min(40,leak.length*15));
+  return {weak,reuse,no2fa,leak,score,lab:score>=80?'Tốt':score>=50?'Cần cải thiện':'Nguy hiểm',cls:score>=80?'':score>=50?'m':'w'};
+}
+function healthScr(){
+  const h=health();
+  const row=(i,t)=>srow(esc(i.title),t,ic('chevr'),'hopen',i.id);
+  const sec=(t,n,rows)=>n?'<div class="sg">'+t+' · '+n+'</div><div class="sc">'+rows+'</div>':'';
+  const reuseRows=h.reuse.map(c=>c.items.map(i=>row(i,c.items.filter(x=>x!==i).map(x=>esc(x.title)).join(', '))).join('')).join('');
+  const reuseN=h.reuse.reduce((n,c)=>n+c.items.length,0);
+  const issues=h.leak.length+h.weak.length+reuseN+h.no2fa.length;
+  let b='<div class="scorecard"><span class="sn '+h.cls+'">'+h.score+'</span><div class="sm"><b>Điểm bảo mật</b><span class="'+h.cls+'">'+h.lab+'</span></div></div>';
+  b+=sec('Đã bị rò rỉ',h.leak.length,h.leak.map(i=>row(i,'Rò rỉ trong 2 vụ')).join(''));
+  b+=sec('Mật khẩu yếu',h.weak.length,h.weak.map(i=>row(i,'Yếu · '+pwOf(i).length+' ký tự')).join(''));
+  b+=sec('Dùng chung mật khẩu',reuseN,reuseRows);
+  b+=sec('Chưa bật 2FA',h.no2fa.length,h.no2fa.map(i=>row(i,'Nên bật 2FA')).join(''));
+  if(!issues)b+='<div class="empty">'+ic('check')+'<div>Không có vấn đề.</div></div>';
+  const br=S.breach===null?srow('Kiểm tra rò rỉ mật khẩu','Không gửi mật khẩu',ic('chevr'),'hbreach'):S.breach==='busy'?srow('Đang kiểm tra...','',''):srow('Kiểm tra lại',h.leak.length?'Phát hiện '+h.leak.length+' mục':'Không phát hiện rò rỉ.',ic('sync'),'hbreach');
+  b+='<div class="sg">Rò rỉ</div><div class="sc">'+br+'</div>';
+  return scrWrap('Kiểm tra bảo mật',b);
+}
+function recScr(){
+  const k=S.rkShow?esc(S.rk):'••••-••••-••••-••••-••••-••••';
+  let b='<div class="rk">'+k+'</div>';
+  if(S.rkShow){
+    b+='<div class="gacts"><button class="btn pri big" data-act="copy" data-v="'+esc(S.rk)+'">'+ic('copy')+'Copy</button></div>';
+    b+=S.rkNew
+      ?'<div class="note" style="margin-top:12px">Mã cũ sẽ mất hiệu lực.</div><div class="gacts"><button class="btn big" data-act="rkcancel">Hủy</button><button class="btn big dng" style="flex:1" data-act="rkok">Tạo mã mới</button></div>'
+      :'<button class="btn big dng" style="width:100%;margin-top:10px" data-act="rknew">Tạo mã mới</button>';
+  }else{
+    b+='<input id="rk-pass" type="password" placeholder="Vault passphrase" aria-label="Vault passphrase"><div id="rkerr" class="aerr" style="margin-top:6px"></div><button class="btn pri big" style="width:100%" data-act="rkshow">Hiện mã</button>';
+  }
+  return '<div class="screen"><div class="shead"><button class="btn" data-act="qback" aria-label="Quay lại">'+ic('back')+'Quay lại</button><h2>Mã khôi phục</h2></div><div class="sbody">'+b+'</div></div>';
+}
+function quickScr(){
+  if(S.screen==='recovery')return recScr();
+  if(S.screen==='set')return setScr();
+  if(S.screen==='notif')return notifScr();
+  if(S.screen==='help')return helpScr();
+  if(S.screen==='about')return aboutScr();
+  if(S.screen==='trash')return trashScr();
+  if(S.screen==='health')return healthScr();
+  if(S.screen==='export')return exScr();
+  if(S.screen==='dups')return dupScr();
+  if(S.screen==='gen')return '<div class="screen"><div class="shead"><button class="btn" data-act="qback" aria-label="Quay lại">'+ic('back')+'Quay lại</button><h2>Tạo mật khẩu</h2></div><div class="sbody">'+genPane(1)+'</div></div>';
+  if(S.screen!=='quick')return '';
+  return '<div class="screen"><div class="shead"><button class="btn" data-act="qback" aria-label="Quay lại">'+ic('back')+'Quay lại</button><h2>Xem nhanh 2FA</h2></div><div class="sbody">'+quickPane(3)+'</div></div>';
+}
+function quickPane(c){
+  const q=S.quick,ok=!!q.secret;
+  const head=c>=2?'<p class="hint" style="margin:0 0 8px">Không lưu vào kho.</p>':c?'<h3 style="margin:0 0 8px;font:600 15px var(--f-head)">Xem nhanh bằng key</h3>':'<h2>Xem nhanh 2FA</h2><p style="color:var(--muted);margin:4px 0 14px">Không lưu vào kho.</p>';
+  return head+'<label class="qlab" for="q2-key">Key (secret) hoặc link otpauth://</label><textarea id="q2-key" class="qkey" rows="3" placeholder="JBSWY3DPEHPK3PXP" autocomplete="off" spellcheck="false">'+esc(q.key)+'</textarea><button class="btn pri big" style="width:100%;margin-top:10px" data-act="quickcheck">'+ic('shield')+'Kiểm tra</button><div class="aerr" style="margin-top:6px">'+esc(q.err)+'</div>'+
+   '<div class="totp tw" style="margin:6px 0 10px'+(ok?'':';opacity:.6')+'"><div style="flex:1;min-width:0"><small>'+(ok&&q.label?esc(q.label):'Mã hiện tại')+'</small><div class="code"'+(ok?' data-code="'+q.secret+'"':'')+'>'+(ok?'------':'--- ---')+'</div></div>'+
+   (ok?'<svg class="ring" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" class="rbg"/><circle cx="12" cy="12" r="10" class="rfg" data-ring/></svg><span class="mono" data-sec style="width:28px;font-size:12px">30s</span><button class="btn ico" data-act="copycode" data-v="'+q.secret+'" data-n="xem nhanh" aria-label="Copy mã">'+ic('copy')+'</button>':'')+'</div>'+
+   (ok?'<button class="btn" data-act="quicksave">'+ic('plus')+'Lưu vào kho</button>':'');
+}
+function groupNames(){const s=new Set(['Cá nhân','Công việc','Crypto','Dev']);items.forEach(i=>{if(i.g)s.add(i.g)});return [...s].sort((a,b)=>a.localeCompare(b,'vi'))}
+const grpOpts=sel=>'<option value="">Chưa phân nhóm</option>'+groupNames().map(g=>'<option'+(g===sel?' selected':'')+'>'+esc(g)+'</option>').join('');
+function bucket(l){
+  if(S.by==='none')return [['',l]];
+  const m=new Map(),key=i=>S.by==='type'?TYPE[i.type]:(i.fav?'Yêu thích':(i.g||'Chưa phân nhóm'));
+  l.forEach(i=>{const k=key(i);if(!m.has(k))m.set(k,[]);m.get(k).push(i)});
+  return [...m.entries()].sort((a,b)=>a[0]==='Yêu thích'?-1:b[0]==='Yêu thích'?1:a[0].localeCompare(b[0],'vi'));
+}
+const gh=(k,n)=>'<button class="gh" data-act="gtoggle" data-v="'+esc(k)+'" aria-expanded="'+!S.col[k]+'"><span class="chev'+(S.col[k]?' c':'')+'">'+ic('chev')+'</span>'+(k==='Yêu thích'?'★ ':'')+esc(k)+'<span class="n">'+n+'</span></button>';
+const matchQ=i=>(i.title+' '+i.f.filter(x=>!x[2]).map(x=>x[1]).join(' ')).toLowerCase().includes(S.q.toLowerCase());
+function sfield(){return S.sopen?'<div class="sfield"><label>'+ic('search')+'<input id="q" placeholder="Tìm kiếm" value="'+esc(S.q)+'" autocomplete="off" aria-label="Tìm kiếm"></label><button class="btn ico" data-act="sopen" aria-label="Đóng tìm kiếm">'+ic('x')+'</button></div>':''}
+function sbtn(){return '<button class="btn ico'+(S.sopen?' on':'')+'" data-act="sopen" aria-label="Tìm kiếm" aria-pressed="'+!!S.sopen+'">'+ic('search')+'</button>'}
+function gby(){
+  const o=(k,l)=>'<button class="'+(S.by===k?'on':'')+'" data-act="by" data-v="'+k+'">'+l+'</button>';
+  return sfield()+'<div class="gby">'+sbtn()+'<div class="mseg" role="group" aria-label="Gom theo">'+o('grp','Nhóm')+o('type','Loại')+o('none','Không')+'</div></div>';
+}
+function gbar(){
+  const o=(k,l)=>'<button class="'+(S.by===k?'on':'')+'" data-act="by" data-v="'+k+'">'+l+'</button>';
+  const act=S.sec.startsWith('g:');
+  return sfield()+'<div class="gby"><div style="display:flex;gap:6px"><button class="btn ico'+(act?' on':'')+'" data-act="mgroups" aria-haspopup="dialog" aria-label="Lọc theo nhóm">'+ic('filter')+'</button>'+sbtn()+'</div><div class="mseg" role="group" aria-label="Gom theo">'+o('grp','Nhóm')+o('type','Loại')+o('none','Không')+'</div></div>';
+}
+function chips(){const c=(k,l)=>'<button class="chipb'+(S.sec===k?' on':'')+'" data-act="sec" data-v="'+esc(k)+'">'+esc(l)+'</button>';return '<div class="chips">'+c('all','Tất cả')+groupNames().map(g=>c('g:'+g,g)).join('')+'</div>'}
+function parseOtp(u){
+  try{const x=new URL(String(u).trim());if(x.protocol!=='otpauth:'||x.hostname!=='totp')return null;
+    const s=(x.searchParams.get('secret')||'').replace(/[\s=]/g,'').toUpperCase();if(!/^[A-Z2-7]{8,}$/.test(s))return null;
+    const lab=decodeURIComponent(x.pathname.replace(/^\//,''));let iss=x.searchParams.get('issuer')||'',user=lab;
+    if(lab.includes(':')){const p=lab.split(':');const pre=p.shift();if(!iss)iss=pre;user=p.join(':').trim()}
+    return {title:iss||user||'Không tên',user:user||iss,secret:s}}catch(e){return null}}
+const filtered=()=>items.filter(i=>(TYPE[S.sec]?i.type===S.sec:S.sec.startsWith('g:')?(i.g||'')===S.sec.slice(2):true)&&(!S.q||matchQ(i)));
+const cur=()=>items.find(i=>i.id===S.sel);
+
+function listRows(){
+  const l=filtered();
+  if(!l.length)return '<div class="empty">Không có mục nào khớp.</div>';
+  return bucket(l).map(([k,arr])=>(k?gh(k,arr.length):'')+(S.col[k]?'':arr.map(i=>rowH(i)).join(''))).join('');
+}
+function rowH(i){
+  return [i].map(i=>'<div class="row" data-act="sel" data-v="'+i.id+'" role="button" tabindex="0">'+av(i.title)+'<div class="t"><b>'+esc(i.title)+'</b><span>'+esc(sub(i))+'</span></div>'+(i.totp&&S.sw.codes?'<button class="rc tw" data-act="copycode" data-v="'+i.totp+'" data-n="'+esc(i.title)+'" aria-label="Copy mã 2FA của '+esc(i.title)+'">'+ic('copy')+'<span class="code" data-code="'+i.totp+'">------</span><svg class="ring" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" class="rbg"/><circle cx="12" cy="12" r="10" class="rfg" data-ring/></svg></button>':'')+'</div>').join('');
+}
+function detail(i){
+  if(!i)return '<div class="empty">Chọn một mục để xem chi tiết.</div>';
+  const flds=i.f.map((f,k)=>{const key=i.id+k,sec=f[2],shown=!sec||S.show[key];
+    return '<div class="fld"><div class="l">'+esc(f[0])+'</div><div class="v'+(sec?' mono':'')+'">'+(shown?esc(f[1]):'••••••••••••')+'</div>'+
+    (sec?'<button class="btn ico" data-act="eye" data-v="'+key+'" aria-label="Hiện hoặc ẩn">'+ic(S.show[key]?'eyeoff':'eye')+'</button>':'')+
+    '<button class="btn ico" data-act="copy" data-v="'+esc(f[1])+'" aria-label="Copy">'+ic('copy')+'</button>'+(f[0]==='Mật khẩu'?'<button class="btn ico" data-act="chpw" data-v="'+i.id+'" aria-label="Đổi mật khẩu">'+ic('edit')+'</button>':'')+'</div>'}).join('');
+  const t=i.totp?'<div class="totp tw"><div style="flex:1"><small>Mã 2FA</small><div class="code" data-code="'+i.totp+'">------</div></div><svg class="ring" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" class="rbg"/><circle cx="12" cy="12" r="10" class="rfg" data-ring/></svg><span class="mono" data-sec style="width:28px;font-size:12px">30s</span><button class="btn ico" data-act="copycode" data-v="'+i.totp+'" data-n="'+esc(i.title)+'" aria-label="Copy mã">'+ic('copy')+'</button></div>':'';
+  return '<div class="dhead">'+av(i.title,1)+'<div><h2>'+esc(i.title)+'</h2><span class="badge">'+TYPE[i.type]+'</span></div><div class="sp"></div><button class="btn ico'+(i.fav?' fav':'')+'" data-act="fav" data-v="'+i.id+'" aria-label="Yêu thích" aria-pressed="'+!!i.fav+'">'+ic('star')+'</button></div><div class="fld"><div class="l">Nhóm</div><div class="v"><select id="gsel" data-id="'+i.id+'" aria-label="Nhóm">'+grpOpts(i.g)+'</select></div></div>'+flds+histHTML(i)+remHTML(i)+t+
+   '<div class="foot"><span>Sửa lần cuối: '+esc(i.at)+'</span><button class="btn dng" data-act="del" data-v="'+i.id+'">'+ic('trash')+'Xóa</button></div>';
+}
+function totpCards(){
+  const l=items.filter(i=>i.totp&&(!S.q||matchQ(i)));
+  return bucket(l).map(([k,arr])=>(k?gh(k,arr.length):'')+(S.col[k]?'':'<div class="tgrid">'+arr.map(i=>trH(i)).join('')+'</div>')).join('');
+}
+function trH(i){return '<div class="tr tw" data-act="copycode" data-v="'+i.totp+'" data-n="'+esc(i.title)+'" role="button" tabindex="0" aria-label="Copy mã 2FA '+esc(i.title)+'">'+av(i.title)+'<div class="t"><b>'+esc(i.title)+'</b><span>'+esc(sub(i))+'</span></div><span class="code" data-code="'+i.totp+'">------</span><svg class="ring" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" class="rbg"/><circle cx="12" cy="12" r="10" class="rfg" data-ring/></svg></div>'}
+function cardH(i){
+  return [i].map(i=>'<div class="card tw" data-act="copycode" data-v="'+i.totp+'" data-n="'+esc(i.title)+'"><div class="top2">'+av(i.title)+'<div class="t"><b>'+esc(i.title)+'</b><span>'+esc(sub(i))+'</span></div></div><div class="code" data-code="'+i.totp+'">------</div><div class="bot"><div style="display:flex;align-items:center;gap:8px"><svg class="ring" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" class="rbg"/><circle cx="12" cy="12" r="10" class="rfg" data-ring/></svg><span class="mono" data-sec style="font-size:12px">30s</span></div><button class="btn" data-act="copycode" data-v="'+i.totp+'" data-n="'+esc(i.title)+'">'+ic('copy')+'Copy</button></div></div>').join('');
+}
+function genHTML(p){return [...p].map(c=>/[0-9]/.test(c)?'<i class="gd">'+c+'</i>':/[A-Za-z]/.test(c)?c:'<i class="gs">'+esc(c)+'</i>').join('')}
+function genInfo(){
+  const g=S.gen,pool=(g.up?24:0)+(g.low?25:0)+(g.num?8:0)+(g.sym?13:0)||25;
+  const bits=Math.round(g.len*Math.log2(pool));
+  const lab=bits<40?'Yếu':bits<60?'Khá':bits<80?'Mạnh':'Rất mạnh';
+  return {bits,lab,pct:Math.min(100,Math.round(bits/110*100)),cls:bits<40?'w':bits<60?'m':''};
+}
+function genFill(){
+  const i=genInfo(),g=S.gen,set=(id,fn)=>{const e=$(id);if(e)fn(e)};
+  set('#genout',e=>e.innerHTML=genHTML(g.out));
+  set('#genlenv',e=>e.textContent=g.len);
+  set('#genlen',e=>e.value=g.len);
+  set('#gencopy',e=>e.dataset.v=g.out);
+  set('#gfill',e=>{e.style.width=i.pct+'%';e.className=i.cls});
+  set('#glab',e=>e.textContent=i.lab+' · '+i.bits+' bit');
+}
+function genPane(c){
+  const g=S.gen,i=genInfo();
+  const o=(k,l)=>'<button class="gopt'+(g[k]?' on':'')+'" data-act="gopt" data-v="'+k+'" aria-pressed="'+!!g[k]+'">'+l+'</button>';
+  return (c?'':'<h2>Tạo mật khẩu</h2>')+'<div class="genout" id="genout">'+genHTML(g.out)+'</div>'+
+   '<div class="gmeter"><div class="gbar"><i id="gfill" class="'+i.cls+'" style="width:'+i.pct+'%"></i></div><span id="glab">'+i.lab+' · '+i.bits+' bit</span></div>'+
+   '<div class="gacts"><button class="btn pri big" data-act="copy" data-v="'+esc(g.out)+'" id="gencopy">'+ic('copy')+'Copy</button><button class="btn big ico" data-act="gen" aria-label="Tạo mới">'+ic('sync')+'</button></div>'+
+   '<div class="glen"><button class="btn ico" data-act="glen" data-v="-1" aria-label="Giảm độ dài">−</button><input type="range" min="8" max="48" value="'+g.len+'" id="genlen" aria-label="Độ dài"><button class="btn ico" data-act="glen" data-v="1" aria-label="Tăng độ dài">+</button><b id="genlenv">'+g.len+'</b></div>'+
+   '<div class="gopts">'+o('up','A-Z')+o('low','a-z')+o('num','0-9')+o('sym','!@#')+'</div>';
+}
+function genPaneOld(c){const g=S.gen;
+  const o=(k,l)=>'<label><input type="checkbox" data-gk="'+k+'"'+(g[k]?' checked':'')+'> '+l+'</label>';
+  return (c?'':'<h2>Tạo mật khẩu</h2>')+'<div class="genout" id="genout">'+esc(g.out)+'</div><div style="display:flex;gap:8px"><button class="btn pri" data-act="gen">'+ic('dice')+'Tạo mới</button><button class="btn" data-act="copy" data-v="'+esc(g.out)+'" id="gencopy">'+ic('copy')+'Copy</button></div>'+
+  '<div class="opt" style="margin-top:14px"><span>Độ dài</span><input type="range" min="8" max="48" value="'+g.len+'" id="genlen" aria-label="Độ dài"><b class="mono" id="genlenv">'+g.len+'</b></div>'+
+  '<div class="opt" style="flex-wrap:wrap;gap:18px">'+o('up','A-Z')+o('low','a-z')+o('num','0-9')+o('sym','!@#$')+'</div>';
+}
+function syncChip(){
+  if(!S.user)return '<button class="chip" data-act="sync" aria-label="Chưa đồng bộ"><i style="background:var(--muted)"></i>Chỉ trên máy này</button>';
+  return '<button class="chip'+(S.sync==='busy'?' busy':'')+'" data-act="sync" aria-label="Đồng bộ ngay"><i></i>'+(S.sync==='busy'?'Đang đồng bộ...':(S.prov==='cf'?'Cloudflare':'Drive')+' · '+S.syncAt)+'</button>'}
+function swr(k,l,d){return '<div class="srow"><div><b>'+l+'</b><div style="color:var(--muted);font-size:12px">'+d+'</div></div><button class="sw'+(S.sw[k]?' on':'')+'" data-act="sw" data-v="'+k+'" role="switch" aria-checked="'+!!S.sw[k]+'" aria-label="'+l+'"></button></div>'}
+function accSec(){
+  if(!S.user)return '<div class="sec"><h3>Tài khoản</h3><p>Chưa đăng nhập. Dữ liệu chỉ nằm trên máy này và không được đồng bộ.</p><button class="btn pri" data-act="openlogin">Đăng nhập hoặc tạo tài khoản</button></div>';
+  const me=S.mode==='phone'?'Android · máy này':'Windows · máy này';
+  const dv=[[me,'đang dùng',-1]].concat(S.devs.map((d,k)=>[d[0],d[1],k]));
+  return '<div class="sec devs"><h3>Tài khoản</h3><div class="srow" style="padding-top:0"><div><b>'+esc(S.user)+'</b><div style="color:var(--muted);font-size:12px">Đăng nhập bằng '+esc(S.via)+'</div></div><button class="btn dng" data-act="alogout">Đăng xuất</button></div>'+
+   dv.map(d=>'<div class="srow"><div><b style="font-weight:500">'+esc(d[0])+'</b><div style="color:var(--muted);font-size:12px">'+esc(d[1])+'</div></div>'+(d[2]>=0?'<button class="btn" data-act="rmdev" data-v="'+d[2]+'">Gỡ</button>':'<span class="badge">Máy này</span>')+'</div>').join('')+'</div>';
+}
+function syncSec(){
+  const u=!!S.user;
+  return '<div class="sec"><h3>Đồng bộ</h3><p>Chỉ file đã mã hóa được gửi đi. Máy chủ không đọc được nội dung.</p><div class="seg" style="margin-bottom:10px"><button class="'+(S.prov==='cf'?'on':'')+'" data-act="prov" data-v="cf">Cloudflare</button><button class="'+(S.prov==='drive'?'on':'')+'" data-act="prov" data-v="drive">Google Drive</button></div><div class="srow"><div><b>'+(S.prov==='cf'?'keys.example.workers.dev':'Drive · appDataFolder')+'</b><div style="color:var(--muted);font-size:12px">'+(u?'vault.enc · '+items.length+' mục · lần cuối '+esc(S.syncAt):'Đăng nhập để bật đồng bộ')+'</div></div><button class="btn pri" data-act="sync">'+ic('sync')+'Đồng bộ ngay</button></div></div>';
+}
+function newRk(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',a=new Uint32Array(24);crypto.getRandomValues(a);const s=[...a].map(n=>A[n%A.length]);return [0,4,8,12,16,20].map(i=>s.slice(i,i+4).join('')).join('-')}
+function authScr(){
+  if(S.auth==='in')return '';
+  let h='';
+  if(S.auth==='out'){
+    const reg=S.authTab==='register';
+    h='<h2>VanKey</h2><p>'+(reg?'Tạo tài khoản':'Đăng nhập')+'</p>'+
+     '<button class="btn gbtn" data-act="glogin"><span class="g">G</span>Tiếp tục với Google</button><div class="or"><span>hoặc</span></div>'+
+     '<input id="a-email" type="email" placeholder="Email" autocomplete="off" aria-label="Email"><input id="a-pass" type="password" placeholder="Mật khẩu đăng nhập" aria-label="Mật khẩu đăng nhập">'+
+     (reg?'<input id="a-pass2" type="password" placeholder="Nhập lại mật khẩu đăng nhập" aria-label="Nhập lại mật khẩu"><div class="note">Vault passphrase mã hóa dữ liệu, quên là mất. Đặt khác mật khẩu đăng nhập.</div><input id="a-vp" type="password" placeholder="Vault passphrase" aria-label="Vault passphrase"><input id="a-vp2" type="password" placeholder="Nhập lại vault passphrase" aria-label="Nhập lại vault passphrase">':'')+
+     '<div id="aerr" class="aerr"></div><button class="btn pri" data-act="'+(reg?'areg':'alogin')+'">'+(reg?'Tạo tài khoản':'Đăng nhập')+'</button>'+
+     '<div class="alinks"><button data-act="authtab" data-v="'+(reg?'login':'register')+'">'+(reg?'Đã có tài khoản? Đăng nhập':'Tạo tài khoản mới')+'</button><button data-act="skip" style="color:var(--muted)">Dùng offline, không cần tài khoản</button></div>';
+  }else if(S.auth==='recovery'){
+    h='<h2>Lưu recovery key</h2><p>Dùng để khôi phục kho nếu quên passphrase. Cất nơi an toàn.</p><div class="rk">'+esc(S.rk)+'</div><button class="btn" data-act="copy" data-v="'+esc(S.rk)+'">'+ic('copy')+'Copy</button><label class="chk"><input id="a-ok" type="checkbox"> Tôi đã lưu recovery key</label><div id="aerr" class="aerr"></div><button class="btn pri" data-act="recok">Tiếp tục</button>';
+  }else{
+    h='<h2>Mở kho trên máy này</h2><p>Đã đăng nhập'+(S.user?' ('+esc(S.user)+')':'')+'. Nhập passphrase hoặc recovery key.</p><input id="a-vp" type="password" placeholder="Vault passphrase hoặc recovery key" aria-label="Vault passphrase"><div id="aerr" class="aerr"></div><button class="btn pri" data-act="vunlock">Giải mã kho</button><div class="alinks"><button data-act="alogout" style="color:var(--muted)">Đăng xuất</button></div>';
+  }
+  return '<div class="lock auth"><div class="lockbox"><div class="logo">'+ic('lock')+'</div>'+h+'</div></div>';
+}
+function lockSec(){
+  const clip=swr('clip','Xóa clipboard sau 30 giây','Áp dụng cho mật khẩu và mã 2FA');
+  if(!S.hasPw)return '<div class="sec"><h3>Khóa ứng dụng</h3><p>Chưa đặt master password nên app mở thẳng vào kho. Đặt mật khẩu để app hiện màn khóa mỗi lần mở.</p><button class="btn pri" data-act="pwset">'+ic('lock')+'Đặt master password</button></div><div class="sec"><h3>Bảo mật</h3>'+clip+'</div>';
+  return '<div class="sec"><h3>Khóa ứng dụng</h3><p>Đang bật. App hiện màn khóa mỗi lần mở.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="lock">'+ic('lock')+'Khóa ngay</button><button class="btn" data-act="pwset">Đổi mật khẩu</button><button class="btn dng" data-act="pwoff">Tắt mật khẩu</button></div></div><div class="sec"><h3>Bảo mật</h3>'+swr('bio','Mở khóa sinh trắc',S.mode==='phone'?'Vân tay hoặc khuôn mặt':'Windows Hello')+swr('auto','Tự khóa sau 5 phút','Cũng khóa khi thu nhỏ app')+clip+'</div>';
+}
+function srow(l,sub,right,act,v){
+  const tag=act?'button':'div';
+  return '<'+tag+' class="sr'+(act?' lk':'')+'"'+(act?' data-act="'+act+'"'+(v!=null?' data-v="'+v+'"':''):'')+'><span class="sl">'+l+(sub?'<small>'+sub+'</small>':'')+'</span><span class="sv">'+(right||'')+'</span></'+tag+'>';
+}
+const sgrp=(t,rows)=>(t?'<div class="sg">'+t+'</div>':'<div style="height:14px"></div>')+'<div class="sc">'+rows+'</div>';
+const stog=(k,l)=>'<button class="sr lk" data-act="sw" data-v="'+k+'" role="switch" aria-checked="'+!!S.sw[k]+'"><span class="sl">'+l+'</span><span class="sv"><span class="sw'+(S.sw[k]?' on':'')+'"></span></span></button>';
+function openScr(n){if(S.screen)S.stk.push([S.screen,S.setp]);S.screen=n}
+function setAcc(){
+  const u=S.user,chev=ic('chevr');
+  let acc;
+  if(u){
+    const dv=[[S.mode==='phone'?'Android · máy này':'Windows · máy này','đang dùng',-1]].concat(S.devs.map((d,k)=>[d[0],d[1],k]));
+    acc=srow(esc(u),'Đăng nhập bằng '+esc(S.via),'<button class="btn sm dng" data-act="alogout">Đăng xuất</button>')+
+      srow('Thiết bị đã đăng nhập','',dv.length+'<span class="chev'+(S.devOpen?'':' c')+'">'+ic('chev')+'</span>','devtog')+
+      (S.devOpen?dv.map(d=>srow(esc(d[0]),esc(d[1]),d[2]>=0?'<button class="btn sm" data-act="rmdev" data-v="'+d[2]+'">Gỡ</button>':'<span class="badge">Máy này</span>').replace('class="sr"','class="sr sub"')).join(''):'');
+  }else acc=srow('Chưa đăng nhập','','<button class="btn sm pri" data-act="openlogin">Đăng nhập</button>');
+  const acct=u?(S.via==='email'?srow('Đổi mật khẩu đăng nhập','',chev,'mchpw'):'')+srow('Đổi vault passphrase','',chev,'mchvp')+srow('Mã khôi phục','',ic('shield')+chev,'mrk'):'';
+  const sync=srow('Máy chủ đồng bộ','','<div class="mseg"><button class="'+(S.prov==='cf'?'on':'')+'" data-act="prov" data-v="cf">Cloudflare</button><button class="'+(S.prov==='drive'?'on':'')+'" data-act="prov" data-v="drive">Drive</button></div>')+
+    srow(u?'vault.enc · '+items.length+' mục':'Chưa bật đồng bộ',u?'Lần cuối '+esc(S.syncAt):'Đăng nhập để bật','<button class="btn sm pri" data-act="sync">'+ic('sync')+'Đồng bộ</button>');
+  return sgrp('',acc)+(acct?sgrp('Mật khẩu và khôi phục',acct):'')+sgrp('Đồng bộ',sync);
+}
+function setData(){
+  const chev=ic('chevr'),dc=findDups().length;
+  return sgrp('Nhập và xuất',srow('Nhập từ app hoặc file khác','',chev,'import')+srow('Quét mã QR','',chev,'mscan')+srow('Xuất dữ liệu','',chev,'mex'))+
+    sgrp('Dọn dẹp',srow('Thùng rác','',(S.trash.length?'<span class="badge">'+S.trash.length+'</span>':'')+chev,'mtrash')+srow('Tìm mục trùng lặp','',(dc?'<span class="badge">'+dc+'</span>':'')+chev,'mdups'));
+}
+function setSec(){
+  const hh=health();
+  const lock=S.hasPw
+    ?srow('Master password','Đang bật','<button class="btn sm" data-act="pwset">Đổi</button><button class="btn sm dng" data-act="pwoff">Tắt</button>')+srow('Khóa ngay','',ic('lock'),'lock')+stog('bio',S.mode==='phone'?'Mở khóa bằng vân tay':'Mở khóa bằng Windows Hello')+stog('auto','Tự khóa sau 5 phút')
+    :srow('Khóa ứng dụng','','<button class="btn sm pri" data-act="pwset">Đặt mật khẩu</button>');
+  return sgrp('',srow('Kiểm tra bảo mật','','<span class="badge '+hh.cls+'">'+hh.score+'</span>'+ic('chevr'),'mhealth'))+sgrp('Khóa ứng dụng',lock+stog('clip','Xóa clipboard sau 30 giây'));
+}
+function setTheme(){
+  const seg=(k,l)=>'<button class="'+(S.theme===k?'on':'')+'" data-act="theme" data-v="'+k+'">'+l+'</button>';
+  const dseg=(k,l)=>'<button class="'+((S.dense?'dense':'cozy')===k?'on':'')+'" data-act="dense" data-v="'+k+'">'+l+'</button>';
+  const sw=Object.keys(ACC).map(k=>'<button class="swatch'+(S.accent===k?' on':'')+'" data-act="accent" data-v="'+k+'" style="--c:'+ACC[k].l+'" aria-label="'+k+'" aria-pressed="'+(S.accent===k)+'"></button>').join('');
+  return sgrp('',srow('Giao diện','','<div class="mseg">'+seg('system','Hệ thống')+seg('light','Sáng')+seg('dark','Tối')+'</div>'))+
+    sgrp('Màu nhấn','<div class="sr"><span class="swatches">'+sw+'</span></div>')+
+    sgrp('Mật độ',srow('Danh sách','','<div class="mseg">'+dseg('cozy','Thoải mái')+dseg('dense','Gọn')+'</div>'));
+}
+function setGen(){
+  const o=(k,l)=>'<button class="'+(S.by===k?'on':'')+'" data-act="by" data-v="'+k+'">'+l+'</button>';
+  return sgrp('',srow('Ngôn ngữ','','<div class="mseg"><button class="'+(S.lang==='vi'?'on':'')+'" data-act="lang" data-v="vi">Tiếng Việt</button><button class="'+(S.lang==='en'?'on':'')+'" data-act="lang" data-v="en">English</button></div>'))+
+    sgrp('Hiển thị',stog('codes','Hiện mã 2FA trong danh sách Kho')+srow('Gom theo','','<div class="mseg">'+o('grp','Nhóm')+o('type','Loại')+o('none','Không')+'</div>'))+
+    sgrp('Thông báo',stog('nOn','Bật thông báo nhắc nhở')+srow('Báo trước mặc định','','<div class="mseg">'+[1,3,7,14].map(n=>'<button class="'+(S.notif.before===n?'on':'')+'" data-act="nbef" data-v="'+n+'">'+n+' ngày</button>').join('')+'</div>')+srow('Mật khẩu mới tự nhắc đổi sau','','<div class="mseg">'+[0,3,6].map(n=>'<button class="'+(S.notif.defM===n?'on':'')+'" data-act="ndef" data-v="'+n+'">'+(n?n+' tháng':'Tắt')+'</button>').join('')+'</div>')+srow('Gửi thử thông báo','',ic('bell')+ic('chevr'),'ntest'))+
+    sgrp('Công cụ',srow('Tạo mật khẩu','',ic('dice')+ic('chevr'),'mgen'));
+}
+function setHelp(){
+  const chev=ic('chevr');
+  return sgrp('',srow('Hướng dẫn sử dụng','',chev,'mhelp')+srow('Liên hệ hỗ trợ','support@example.com',ic('copy'),'copy','support@example.com')+srow('Gửi góp ý hoặc báo lỗi','',chev,'mfb'));
+}
+function setScr(){
+  const T={acc:['Tài khoản',setAcc],data:['Dữ liệu',setData],sec:['Bảo mật',setSec],theme:['Chủ đề',setTheme],gen:['Chung',setGen],help:['Hỗ trợ',setHelp]}[S.setp]||['Cài đặt',setAcc];
+  return scrWrap(T[0],T[1]());
+}
+function setPane(){
+  const hh=health();
+  const m=(k,i,t,d,r)=>'<button class="sr lk menu" data-act="mset" data-v="'+k+'"><span class="mi">'+ic(i)+'</span><span class="sl">'+t+'<small>'+d+'</small></span><span class="sv">'+(r||'')+ic('chevr')+'</span></button>';
+  return (S.mode==='phone'?'':'<h2 style="font-size:18px;margin:0">Cài đặt</h2>')+'<div style="height:14px"></div><div class="sc">'+
+    m('acc','user','Tài khoản','Đăng nhập, thiết bị, đồng bộ')+
+    m('data','folder','Dữ liệu','Nhập, xuất, thùng rác, mục trùng')+
+    m('sec','lock','Bảo mật','Khóa app, kiểm tra bảo mật','<span class="badge '+hh.cls+'">'+hh.score+'</span>')+
+    m('theme','palette','Chủ đề','Giao diện, màu sắc, mật độ')+
+    m('gen','gear','Chung','Ngôn ngữ, hiển thị, công cụ')+
+    m('help','help','Hỗ trợ','Hướng dẫn, liên hệ, góp ý')+
+    m('about','info','Giới thiệu','Phiên bản, điều khoản, giấy phép')+'</div>';
+}
+function setPaneOld(){
+  return '<h2 style="margin-bottom:16px">Cài đặt</h2>'+
+  accSec()+syncSec()+
+  lockSec()+
+  '<div class="sec"><h3>Nhập và sao lưu</h3><p>Chuyển dữ liệu từ Google Authenticator, Bitwarden, 1Password, KeePass, Chrome hoặc file khác.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="import">'+ic('down')+'Nhập từ app hoặc file khác</button><button class="btn" data-act="mscan">'+ic('qr')+'Quét mã QR</button><button class="btn" data-act="export">Xuất bản sao lưu mã hóa</button></div></div>';
+}
+const SRC={
+ ga:{n:'Google Authenticator',d:'Ảnh mã QR "Xuất tài khoản"',hint:'Chuyển tài khoản, Xuất tài khoản, rồi chọn ảnh mã QR.',btn:'Chọn ảnh QR',s:'A',i:'shield'},
+ ae:{n:'Aegis / 2FAS',d:'File sao lưu JSON',hint:'Chọn file sao lưu JSON.',btn:'Chọn file JSON',s:'A',i:'shield'},
+ bw:{n:'Bitwarden',d:'File JSON hoặc CSV',hint:'Xuất kho rồi chọn file. Nhớ xóa file sau khi nhập.',btn:'Chọn file',s:'B',i:'lock'},
+ op:{n:'1Password',d:'File CSV hoặc 1pux',hint:'Xuất rồi chọn file. Nhớ xóa file sau khi nhập.',btn:'Chọn file',s:'B',i:'lock'},
+ kp:{n:'KeePass',d:'File CSV hoặc XML',hint:'Xuất rồi chọn file. Nhớ xóa file sau khi nhập.',btn:'Chọn file',s:'B',i:'lock'},
+ ch:{n:'Chrome / Edge',d:'File CSV mật khẩu',hint:'Xuất mật khẩu rồi chọn file. Nhớ xóa file sau khi nhập.',btn:'Chọn file CSV',s:'B',i:'lock'},
+ tx:{n:'Link otpauth://',d:'Dán nhiều link, mỗi dòng một link',hint:'',btn:'',s:'',i:'copy'}
+};
+const SAMP={
+ A:[{title:'Dropbox',user:'demo.user@gmail.com',secret:'JBSWY3DPEHPK3PXA'},{title:'Cloudflare',user:'demo.user@gmail.com',secret:'GEZDGNBVGY3TQOJA'},{title:'Microsoft',user:'demo@outlook.com',secret:'MFRGGZDFMZTWQ2LA'},{title:'GitHub',user:'longvan1296',secret:'JBSWY3DPEHPK3PXP'},{title:'Steam',user:'demo_gamer',secret:'NBSWY3DPEB3W64TA'}],
+ B:[{title:'Netflix',user:'demo.user@gmail.com',pass:'Rt6!pW3zQ8@mKx2L'},{title:'Spotify',user:'demo.user@gmail.com',pass:'Bd9#nH4vX7$cYe5T'},{title:'Amazon',user:'demo.user@gmail.com',pass:'Gj3&sL8qM2!wZr6U',secret:'MFRGGZDFMZTWQ2LB'},{title:'Google',user:'demo.user@gmail.com',pass:'Hn5$wB8e!cD3yU6q'},{title:'Shopee',user:'0912345678',pass:'Kv7@tF2yN9#rPa4C'}]
+};
+const dupOf=t=>items.some(i=>i.title.toLowerCase()===String(t).toLowerCase());
+function tile(a,v,i,h,d){return '<button class="tile" data-act="'+a+'"'+(v?' data-v="'+v+'"':'')+'><span class="ti">'+ic(i)+'</span><span><b>'+esc(h)+'</b><small>'+esc(d)+'</small></span></button>'}
+function wrapS(title,body,acts){return '<div class="screen"><div class="shead"><button class="btn" data-act="mclose2" aria-label="Quay lại">'+ic('back')+'Quay lại</button><h2>'+esc(title)+'</h2></div><div class="sbody fm">'+body+(acts?'<div class="sacts">'+acts+'</div>':'')+'</div></div>'}
+function wrapM(title,body,acts){return '<div class="modal" data-act="mclose"><div class="mbox wide" role="dialog" aria-label="'+esc(title)+'"><h3>'+esc(title)+'</h3>'+body+(acts?'<div class="acts">'+acts+'</div>':'')+'</div></div>'}
+function modal2(){
+  if(S.modal==='cpw')return wrapM('Đổi mật khẩu','<label for="np">Mật khẩu mới</label><div class="qrow"><input id="np" type="password" autocomplete="off"><button class="btn" data-act="fgen" data-v="np">'+ic('dice')+'Tạo</button></div><div id="nperr" class="aerr" style="margin-top:6px"></div>','<button class="btn" data-act="mclose2">Hủy</button><button class="btn pri" data-act="npsave">Lưu</button>');
+  if(S.modal==='fb')return wrapM('Góp ý hoặc báo lỗi','<label for="fb-t">Loại</label><select id="fb-t"><option>Góp ý</option><option>Báo lỗi</option></select><label for="fb-m">Nội dung</label><textarea id="fb-m" rows="5"></textarea><div id="fberr" class="aerr" style="margin-top:6px"></div>','<button class="btn" data-act="mclose2">Hủy</button><button class="btn pri" data-act="fbsend">Gửi</button>');
+  if(S.modal==='chpw'||S.modal==='chvp'){
+    const vp=S.modal==='chvp';
+    return wrapM(vp?'Đổi vault passphrase':'Đổi mật khẩu đăng nhập','<label for="cp0">Hiện tại</label><input id="cp0" type="password"><label for="cp1">Mới (ít nhất 8 ký tự)</label><input id="cp1" type="password"><label for="cp2">Nhập lại</label><input id="cp2" type="password"><div id="cperr" class="aerr" style="margin-top:6px"></div>','<button class="btn" data-act="mclose2">Hủy</button><button class="btn pri" data-act="'+(vp?'cvpsave':'cpsave')+'">Lưu</button>');
+  }
+  if(S.modal==='groups'){
+    const cg=S.sec.startsWith('g:')?S.sec.slice(2):'';
+    const it=(v,l,n,on)=>'<button class="gitem'+(on?' on':'')+'" data-act="sec" data-v="'+esc(v)+'"><span class="gn">'+esc(l)+'</span><span class="n">'+n+'</span><span class="ck">'+(on?ic('check'):'')+'</span></button>';
+    return '<div class="modal sheet" data-act="mclose"><div class="mbox wide" role="dialog" aria-label="Chọn nhóm"><h3>Chọn nhóm</h3><div class="glist">'+it('all','Tất cả nhóm',items.length,!cg)+groupNames().map(g=>it('g:'+g,g,items.filter(i=>i.g===g).length,g===cg)).join('')+'</div></div></div>';
+  }  if(S.modal==='add')return wrapM('Thêm vào kho','<div class="tiles">'+tile('mform','','plus','Nhập tay','Tài khoản, API key, ghi chú')+tile('mscan','','qr','Quét mã QR','Thêm nhanh mã 2FA từ mã QR hoặc link')+tile('mimport','','down','Nhập từ app hoặc file khác','Google Authenticator, Bitwarden, 1Password, CSV...')+'</div>','<button class="btn" data-act="mclose2">Đóng</button>');
+  if(S.modal==='scan'){
+    const r=S.scan;
+    if(r)return wrapS('Đã đọc được mã QR','<div class="scanres tw">'+av(r.title)+'<div class="t"><b>'+esc(r.title)+'</b><span>'+esc(r.user)+'</span></div><div class="code" data-code="'+r.secret+'">------</div></div><label for="q-grp">Nhóm</label><select id="q-grp">'+grpOpts('')+'</select>','<button class="btn" data-act="mscan">Quét lại</button><button class="btn pri" data-act="addscan">Thêm vào kho</button>');
+    const cam=S.mode==='phone'
+      ?'<div class="vf"><i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i><div class="beam"></div><span>Đưa mã QR vào khung</span></div><div class="row2"><button class="btn pri" data-act="fakescan">Giả lập: đã quét được</button><button class="btn" data-act="fakescan">Chọn ảnh từ thư viện</button></div>'
+      :'<div class="dz"><b>Kéo thả ảnh chứa mã QR vào đây</b><span>hoặc dán ảnh bằng Ctrl+V</span><div class="row2"><button class="btn pri" data-act="fakescan">Chọn ảnh</button><button class="btn" data-act="fakescan">Quét vùng màn hình</button></div></div>';
+    return wrapS('Quét mã QR',cam+'<div class="or"><span>hoặc dán link otpauth://</span></div><input id="q-link" class="mono" placeholder="otpauth://totp/GitHub:me?secret=JBSWY3DPEHPK3PXP&amp;issuer=GitHub" aria-label="Link otpauth"><div id="qerr" class="aerr"></div><button class="btn" data-act="readlink">Đọc link</button>','<button class="btn" data-act="mclose2">Đóng</button>');
+  }
+  const m=S.imp||{};
+  if(!m.src)return wrapS('Nhập dữ liệu','<div class="tiles">'+Object.keys(SRC).map(k=>tile('isrc',k,SRC[k].i,SRC[k].n,SRC[k].d)).join('')+'</div>','<button class="btn" data-act="mclose2">Đóng</button>');
+  const s=SRC[m.src];
+  let body='<button class="pback" style="padding:0 0 8px" data-act="iback">'+ic('back')+'Chọn nguồn khác</button><b>'+esc(s.n)+'</b><p class="hint">'+esc(s.hint)+'</p>',acts='<button class="btn" data-act="mclose2">Hủy</button>';
+  if(!m.found){
+    if(m.src==='tx')body+='<textarea id="i-text" rows="5" placeholder="otpauth://totp/GitHub:me?secret=...&#10;otpauth://totp/Google:me?secret=..." aria-label="Danh sách link"></textarea><div id="ierr" class="aerr"></div><button class="btn pri" data-act="iread">Đọc link</button>';
+    else body+='<div class="dz"><b>'+esc(s.d)+'</b><span>Kéo thả vào đây hoặc chọn file</span><div class="row2"><button class="btn pri" data-act="ipick">'+esc(s.btn)+'</button></div></div>';
+  }else{
+    const on=m.found.filter(x=>x.on).length;
+    body+='<p class="hint">Tìm thấy '+m.found.length+' mục. Mục trùng được bỏ chọn sẵn.</p><div class="flist">'+m.found.map((x,k)=>'<label class="frow"><input type="checkbox" data-act="itog" data-v="'+k+'"'+(x.on?' checked':'')+'>'+av(x.title)+'<span class="t"><b>'+esc(x.title)+'</b><span>'+esc(x.user)+'</span></span>'+(x.dup?'<span class="badge" style="color:var(--warn);background:transparent;border:1px solid var(--warn)">Đã có</span>':'')+(x.secret?'<span class="badge">2FA</span>':'')+'</label>').join('')+'</div><label for="i-grp">Đưa vào nhóm</label><select id="i-grp">'+grpOpts(m.grp==='__src'?'':m.grp)+'<option value="__src"'+(m.grp==='__src'?' selected':'')+'>Tạo nhóm mới theo tên nguồn</option></select>';
+    acts+='<button class="btn pri" data-act="idone"'+(on?'':' disabled')+'>Nhập '+on+' mục</button>';
+  }
+  return wrapS('Nhập từ '+s.n,body,acts);
+}
+function modal(){
+  if(S.modal==='form')return formModal();
+  if(['add','scan','import','quick','groups','chpw','chvp','fb','cpw'].includes(S.modal))return modal2();
+  if(S.modal==='pw'||S.modal==='pwoff'){
+    const off=S.modal==='pwoff';
+    return '<div class="modal" data-act="mclose"><div class="mbox" role="dialog" aria-label="Master password"><h3>'+(off?'Tắt master password':S.hasPw?'Đổi master password':'Đặt master password')+'</h3>'+
+     (off?'<label for="pw1">Nhập mật khẩu hiện tại</label><input id="pw1" type="password">'
+         :'<label for="pw1">Mật khẩu mới (ít nhất 8 ký tự)</label><input id="pw1" type="password"><label for="pw2">Nhập lại mật khẩu</label><input id="pw2" type="password"><p style="color:var(--muted);font-size:12px">Quên mật khẩu là mất vault.</p>')+
+     '<div id="pwerr" style="color:var(--danger);font-size:12px;min-height:16px"></div><div class="acts"><button class="btn" data-act="mclose2">Hủy</button><button class="btn pri" data-act="'+(off?'pwoffsave':'pwsave')+'">'+(off?'Tắt':'Lưu')+'</button></div></div></div>';
+  }
+  if(!S.modal)return '';
+  return '<div class="modal" data-act="mclose"><div class="mbox" role="dialog" aria-label="Thêm mục"><h3>Thêm mục mới</h3><label for="f-type">Loại</label><select id="f-type"><option value="acc">Tài khoản</option><option value="key">API key</option><option value="note">Ghi chú</option></select><label for="f-title">Tên</label><input id="f-title" placeholder="VD: Netflix"><label for="f-user">Tên đăng nhập / email</label><input id="f-user"><label for="f-pass">Mật khẩu hoặc khóa</label><div class="qrow"><input id="f-pass" type="password"><button class="btn" data-act="fgen">'+ic('dice')+'Tạo</button></div><label for="f-grp">Nhóm</label><select id="f-grp">'+grpOpts(S.sec.startsWith('g:')?S.sec.slice(2):'')+'</select><input id="f-newg" placeholder="hoặc nhập tên nhóm mới" style="margin-top:6px" aria-label="Tên nhóm mới"><label for="f-totp">Mã bí mật 2FA (không bắt buộc)</label><input id="f-totp" class="mono" placeholder="JBSWY3DPEHPK3PXP"><div class="acts"><button class="btn" data-act="mclose2">Hủy</button><button class="btn pri" data-act="save">Lưu</button></div></div></div>';
+}
+function lockScr(){
+  if(!S.locked)return '';
+  return '<div class="lock"><div class="lockbox"><div class="logo">'+ic('lock')+'</div><h2>VanKey</h2><p>Nhập master password</p><input id="mp" type="password" placeholder="Master password" autocomplete="off"><button class="btn pri" data-act="unlock">Mở khóa</button><button class="btn" data-act="unlock">'+ic('finger')+(S.mode==='phone'?'Dùng vân tay':'Dùng Windows Hello')+'</button></div></div>';
+}
+const counts=t=>t==='all'?items.length:items.filter(i=>i.type===t).length;
+
+function desktop(){
+  const nav=(k,i,l,n)=>'<button class="'+(S.sec===k?'on':'')+'" data-act="sec" data-v="'+k+'">'+ic(i)+l+(n!=null?'<span class="n">'+n+'</span>':'')+'</button>';
+  const split=S.sec==='all'||!!TYPE[S.sec]||S.sec.startsWith('g:');
+  let main;
+  if(split)main='<section class="col">'+gby()+'<div class="rows" id="rows">'+listRows()+'</div>'+fabHTML()+'</section>';
+  else if(S.sec==='totp')main='<section class="col" style="border-right:0"><div class="pane" style="flex:1;min-height:0"><h2>Mã 2FA</h2>'+gby()+totpCards()+'</div>'+fabHTML()+'</section>';
+  else if(S.sec==='quick')main='<section class="pane" style="max-width:560px">'+quickPane()+'</section>';
+  else if(S.sec==='gen')main='<section class="pane" style="max-width:560px">'+genPane()+'</section>';
+  else main='<section class="pane" style="max-width:640px">'+setPane()+'</section>';
+  return '<div class="win"><div class="tbar">'+ic('shield')+'<b>VanKey</b><span class="sp"></span>'+syncChip()+bellBtn()+'<button class="btn" style="padding:4px 10px" data-act="mquick">'+ic('eye')+'Xem nhanh 2FA</button>'+(S.hasPw?'<button class="btn" style="padding:4px 10px" data-act="lock">'+ic('lock')+'Khóa</button>':'')+'</div><div class="wbody wide"><nav class="side">'+nav('all','all','Tất cả',counts('all'))+Object.keys(TYPE).filter(k=>counts(k)).map(k=>nav(k,TI[k],TYPE[k],counts(k))).join('')+'<div class="slabel">Nhóm</div>'+groupNames().map(g=>nav('g:'+g,'folder',esc(g),items.filter(i=>i.g===g).length)).join('')+'<hr>'+nav('totp','shield','Mã 2FA',items.filter(i=>i.totp).length)+nav('set','gear','Cài đặt')+'</nav>'+main+'</div>'+quickScr()+(S.open?detailModal():'')+modal()+lockScr()+authScr()+'</div>';
+}
+function phone(){
+  let body='',title={vault:'Kho',totp:'Mã 2FA',gen:'Tạo mật khẩu',set:'Cài đặt'}[S.tab],fab='';
+  if(S.tab==='vault'&&S.open){body='<button class="pback" data-act="back">'+ic('back')+'Quay lại</button><div class="pane" id="detail">'+detail(cur())+'</div>';title='Chi tiết'}
+  else if(S.tab==='vault'){body=gbar()+'<div class="rows" id="rows">'+listRows()+'</div>';fab=fabHTML()}
+  else if(S.tab==='totp'){body=gby()+totpCards();fab=fabHTML()}
+  else if(S.tab==='gen')body='<div class="pane">'+genPane()+'</div>';
+  else body='<div class="pane">'+setPane()+'</div>';
+  const nb=(k,i,l)=>'<button class="'+(S.tab===k?'on':'')+'" data-act="tab" data-v="'+k+'">'+ic(i)+l+'</button>';
+  return '<div class="phonewrap"><div class="phone"><div class="sbar2"><span>9:41</span><span>5G · 82%</span></div><div class="phead"><h2>'+title+'</h2>'+syncChip()+bellBtn()+'</div><div class="pbody">'+body+'</div>'+fab+'<div class="pnav">'+nb('vault','lock','Kho')+nb('totp','shield','2FA')+nb('set','gear','Cài đặt')+'</div>'+quickScr()+modal()+lockScr()+authScr()+(S.toast?'<div class="toast">'+esc(S.toast)+'</div>':'')+'</div></div>';
+}
+function render(){
+  $('#m-desktop').classList.toggle('on',S.mode==='desktop');$('#m-phone').classList.toggle('on',S.mode==='phone');
+  $('#stage').innerHTML=S.mode==='desktop'?desktop():phone();
+  if(S.mode==='desktop'&&S.toast){const w=$('.win');if(w)w.insertAdjacentHTML('beforeend','<div class="toast">'+esc(S.toast)+'</div>')}
+  if(S.banner){const w=$('.win')||$('.phone');if(w)w.insertAdjacentHTML('beforeend','<button class="banner" data-act="mnotif" role="alert"><span class="bi">'+ic('bell')+'</span><span class="bt"><b>VanKey</b><span>'+esc(S.banner.t)+'</span><span class="bm">'+esc(S.banner.m)+'</span></span></button>')}
+  tick();
+  const mp=$('#mp');if(mp)mp.focus();
+  const ch=$('.chips'),on=$('.chipb.on');if(ch&&on)ch.scrollLeft=on.offsetLeft-ch.clientWidth/2+on.offsetWidth/2;
+}
+let tt,bt;
+function toast(m){S.toast=m;render();clearTimeout(tt);tt=setTimeout(()=>{S.toast='';const t=$('.toast');if(t)t.remove()},1800)}
+async function copy(v,msg){try{await navigator.clipboard.writeText(v)}catch(e){}toast(msg||'Đã copy. Tự xóa sau 30 giây')}
+
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,v=b.dataset.v;
+  if((a==='mclose'||a==='dclose')&&e.target!==b)return;
+  if(a!=='dial')S.dial=false;
+  if(a==='dial'){const was=S.dial;S.dial=!was;S.spin=was?'close':'open';render();setTimeout(()=>{S.spin=''},600);return}
+  if(a==='lang'){setLang(v);return}
+  if(a==='mode'){S.mode=v;S.open=false;render()}
+  else if(a==='unlock'){S.locked=false;render()}
+  else if(a==='lock'){S.locked=true;render()}
+  else if(a==='sec'){S.modal=false;S.sec=v;S.q='';const f=filtered();if(!f.find(i=>i.id===S.sel))S.sel=f[0]?f[0].id:null;render()}
+  else if(a==='tab'){S.tab=v;S.open=false;render()}
+  else if(a==='sel'){S.sel=v;S.open=true;render()}
+  else if(a==='back'){S.open=false;render()}
+  else if(a==='eye'){S.show[v]=!S.show[v];render()}
+  else if(a==='copy')copy(v);
+  else if(a==='copycode'){copy(await totp(v),'Đã copy mã 2FA'+(b.dataset.n?' · '+b.dataset.n:''))}
+  else if(a==='del'){trashItem(v);const f=filtered();S.sel=f[0]?f[0].id:null;S.open=false;render();toast('Đã chuyển vào thùng rác')}
+  else if(a==='add'){S.modal='add';render()}
+  else if(a==='mquick'){S.screen='quick';render();const k=$('#q2-key');if(k)k.focus()}
+  else if(a==='qback'){const p=S.stk.pop();S.screen=p?p[0]:null;if(p)S.setp=p[1];S.rkShow=false;S.rkNew=false;S.ex.out='';S.tconf='';render()}
+  else if(a==='mhelp'){S.faq=-1;openScr('help');render()}
+  else if(a==='faq'){S.faq=S.faq===+v?-1:+v;render()}
+  else if(a==='mabout'){openScr('about');render()}
+  else if(a==='stub'){toast(v==='Kiểm tra cập nhật'?'Đang dùng bản mới nhất':v+': mở trang (bản thử)')}
+  else if(a==='mfb'){S.modal='fb';render()}
+  else if(a==='fbsend'){if(!$('#fb-m').value.trim()){$('#fberr').textContent='Nhập nội dung.';return}S.modal=false;render();toast('Đã gửi. Cảm ơn bạn')}
+  else if(a==='mex'){S.ex.out='';openScr('export');render()}
+  else if(a==='exscope'){S.ex.scope=v;S.ex.out='';render()}
+  else if(a==='exfmt'){S.ex.fmt=v;S.ex.out='';render()}
+  else if(a==='exgo'){const l=exItems();
+    if(!l.length){toast('Không có mục để xuất');return}
+    if(S.ex.fmt==='enc'){toast('Đã xuất vankey-'+new Date().toISOString().slice(0,10)+'.vkbackup · '+l.length+' mục');return}
+    if(!$('#ex-pass').value){$('#exerr').textContent='Nhập vault passphrase để xuất.';return}
+    S.ex.out=S.ex.fmt==='otp'?l.map(otpLink).join('\n'):csvOf(l);render()}
+  else if(a==='mdups'){openScr('dups');render()}
+  else if(a==='dmerge'){const c=findDups()[+v];if(c){const keep=c.items[0];c.items.slice(1).forEach(d=>{if(!keep.totp&&d.totp)keep.totp=d.totp;trashItem(d.id)});S.sel=keep.id;render();toast('Đã gộp '+c.items.length+' mục thành 1')}}
+  else if(a==='ddel'){trashItem(v);if(S.sel===v)S.sel=items[0]?items[0].id:null;render()}
+  else if(a==='mchpw'){S.modal='chpw';render()}
+  else if(a==='mchvp'){S.modal='chvp';render()}
+  else if(a==='cpsave'||a==='cvpsave'){const p0=$('#cp0').value,p1=$('#cp1').value,p2=$('#cp2').value,er=$('#cperr');
+    if(!p0){er.textContent='Nhập mật khẩu hiện tại.';return}
+    if(p1.length<8){er.textContent='Mật khẩu mới cần ít nhất 8 ký tự.';return}
+    if(p1!==p2){er.textContent='Hai mật khẩu chưa giống nhau.';return}
+    if(p1===p0){er.textContent='Mật khẩu mới phải khác mật khẩu cũ.';return}
+    S.modal=false;render();toast(a==='cvpsave'?'Đã đổi vault passphrase, kho được mã hóa lại':'Đã đổi mật khẩu đăng nhập')}
+  else if(a==='mrk'){if(!S.rk)S.rk=newRk();S.rkShow=false;S.rkNew=false;openScr('recovery');render()}
+  else if(a==='rkshow'){if(!$('#rk-pass').value){$('#rkerr').textContent='Nhập vault passphrase.';return}S.rkShow=true;render()}
+  else if(a==='rknew'){S.rkNew=true;render()}
+  else if(a==='rkcancel'){S.rkNew=false;render()}
+  else if(a==='rkok'){S.rk=newRk();S.rkNew=false;render();toast('Đã tạo mã mới. Hãy lưu lại ngay')}
+  else if(a==='gopt'){const g=S.gen;g[v]=g[v]?0:1;if(!(g.up||g.low||g.num||g.sym))g[v]=1;genPw();render()}
+  else if(a==='glen'){S.gen.len=Math.max(8,Math.min(48,S.gen.len+(+v)));genPw();genFill()}
+  else if(a==='mgen'){genPw();openScr('gen');render()}
+  else if(a==='fgen'){genPw();const f=$('#'+(v||'f-pass'));if(f){f.value=S.gen.out;f.type='text'}}
+  else if(a==='mgroups'){S.modal='groups';render()}
+  else if(a==='devtog'){S.devOpen=!S.devOpen;render()}
+  else if(a==='sopen'){S.sopen=!S.sopen;if(!S.sopen)S.q='';render();const q=$('#q');if(q)q.focus()}
+  else if(a==='mnotif'){S.banner=null;if(S.screen!=='notif')openScr('notif');render()}
+  else if(a==='nsnz'){S.snz[v]=Date.now()+7*DAY;render();toast('Đã hẹn nhắc lại sau 7 ngày')}
+  else if(a==='nskip'){S.snz[v]=Date.now()+30*DAY;render();toast('Đã bỏ qua nhắc nhở')}
+  else if(a==='nbef'){S.notif.before=+v;render()}
+  else if(a==='ndef'){S.notif.defM=+v;render()}
+  else if(a==='ntest'){const A=alerts()[0];S.banner=A?{t:A.i.title+' · '+A.lab,m:leftTxt(A.left)}:{t:'VanKey',m:'Đây là thông báo thử'};render();clearTimeout(bt);bt=setTimeout(()=>{S.banner=null;const b=$('.banner');if(b)b.remove()},5000)}
+  else if(a==='mtrash'){S.tconf='';openScr('trash');render()}
+  else if(a==='trest'){const x=S.trash.splice(+v,1)[0];if(x){items.unshift(x.it);S.tconf='';render();toast('Đã khôi phục')}}
+  else if(a==='tdel'){if(S.tconf===v){S.trash.splice(+v,1);S.tconf='';render();toast('Đã xóa vĩnh viễn')}else{S.tconf=v;render()}}
+  else if(a==='tempty'){if(S.tconf==='all'){S.trash=[];S.tconf='';render();toast('Đã dọn sạch thùng rác')}else{S.tconf='all';render()}}
+  else if(a==='mhealth'){openScr('health');render()}
+  else if(a==='hbreach'){S.breach='busy';render();setTimeout(()=>{S.breach=['i4','i9'];render()},1600)}
+  else if(a==='hopen'){S.sel=v;if(S.mode==='phone'){S.screen=null;S.stk=[];S.tab='vault';}S.open=true;render()}
+  else if(a==='histtog'){S.histOpen=S.histOpen===v?null:v;render()}
+  else if(a==='chpw'){S.cpid=v;S.modal='cpw';render()}
+  else if(a==='npsave'){const it=items.find(i=>i.id===S.cpid),nv=$('#np').value;
+    if(!nv){$('#nperr').textContent='Nhập mật khẩu mới.';return}
+    const pf=it&&it.f.find(x=>x[0]==='Mật khẩu');
+    if(pf){(it.hist=it.hist||[]).unshift([pf[1],'vừa xong']);if(it.hist.length>10)it.hist.pop();pf[1]=nv;it.at='vừa xong';it.pwAt=Date.now()}
+    S.modal=false;render();toast('Đã đổi mật khẩu')}
+  else if(a==='hrest'){const [id,k]=v.split(':'),it=items.find(i=>i.id===id);
+    if(it&&it.hist){const h=it.hist.splice(+k,1)[0],pf=it.f.find(x=>x[0]==='Mật khẩu');it.hist.unshift([pf[1],'vừa xong']);pf[1]=h[0];it.at='vừa xong';it.pwAt=Date.now();render();toast('Đã khôi phục mật khẩu cũ')}}
+  else if(a==='mset'){if(v==='about')openScr('about');else{S.setp=v;openScr('set')}render()}
+  else if(a==='theme'){S.theme=v;saveTheme();applyTheme();render()}
+  else if(a==='accent'){S.accent=v;saveTheme();applyTheme();render()}
+  else if(a==='dense'){S.dense=v==='dense';saveTheme();applyTheme();render()}
+  else if(a==='quickcheck')quickCheck();
+  else if(a==='quicksave'){const q=S.quick;S.scan={title:q.label?q.label.split(' · ')[0]:'Mã 2FA mới',user:q.label&&q.label.includes(' · ')?q.label.split(' · ')[1]:'',secret:q.secret};S.modal='scan';render()}
+  else if(a==='mform'){S.modal='form';render()}
+  else if(a==='by'){S.by=v;render()}
+  else if(a==='gtoggle'){S.col[v]=!S.col[v];render()}
+  else if(a==='fav'){const it=items.find(i=>i.id===v);if(it){it.fav=!it.fav;render()}}
+  else if(a==='mscan'){S.modal='scan';S.scan=null;render()}
+  else if(a==='fakescan'){const p=[['Discord','demo.user@gmail.com','JBSWY3DPEHPK3PXB'],['Notion','demo.user@gmail.com','GEZDGNBVGY3TQOJB'],['Slack','demo@congty.vn','MFRGGZDFMZTWQ2LC']];const r=p[Math.floor(Math.random()*p.length)];S.scan={title:r[0],user:r[1],secret:r[2]};render()}
+  else if(a==='readlink'){const r=parseOtp($('#q-link').value);if(!r){$('#qerr').textContent='Link không hợp lệ. Cần dạng otpauth://totp/...?secret=...';return}S.scan=r;render()}
+  else if(a==='addscan'){const r=S.scan,g=$('#q-grp').value;items.unshift({id:'q'+Date.now(),type:'acc',title:r.title,f:[['Tên đăng nhập',r.user]],totp:r.secret,g,at:'vừa xong'});S.modal=false;S.scan=null;render();toast('Đã thêm '+r.title+' vào kho')}
+  else if(a==='import'||a==='mimport'){S.modal='import';S.imp={src:null,found:null,grp:''};render()}
+  else if(a==='isrc'){S.imp={src:v,found:null,grp:''};render()}
+  else if(a==='iback'){S.imp={src:null,found:null,grp:''};render()}
+  else if(a==='ipick'){const s=SRC[S.imp.src];S.imp.found=SAMP[s.s].map(x=>{const dup=dupOf(x.title);return Object.assign({},x,{dup,on:!dup})});render()}
+  else if(a==='iread'){const L=$('#i-text').value.split(/\r?\n/).map(parseOtp).filter(Boolean);if(!L.length){$('#ierr').textContent='Không đọc được link nào. Mỗi dòng là một link otpauth://totp/...';return}S.imp.found=L.map(x=>{const dup=dupOf(x.title);return Object.assign({},x,{dup,on:!dup})});render()}
+  else if(a==='itog'){const x=S.imp.found[+v];x.on=!x.on;render()}
+  else if(a==='idone'){const m=S.imp,g=m.grp==='__src'?'Nhập từ '+SRC[m.src].n:m.grp;let n=0;m.found.forEach((x,k)=>{if(!x.on)return;n++;const f=[['Tên đăng nhập',x.user]];if(x.pass)f.push(['Mật khẩu',x.pass,1]);items.push({id:'m'+k+Date.now(),type:'acc',title:x.title,f,totp:x.secret,g,at:'vừa nhập'})});S.modal=false;S.imp=null;S.sec='all';render();toast('Đã nhập '+n+' mục')}
+  else if(a==='dclose'||a==='dclose2'){S.open=false;render()}
+  else if(a==='mclose'||a==='mclose2'){S.modal=false;render()}
+  else if(a==='save'){saveForm()}
+  else if(a==='faddf'){$('#f-custom').insertAdjacentHTML('beforeend','<div class="qrow" style="margin-top:6px"><input class="cf-n" placeholder="Tên trường" aria-label="Tên trường"><input class="cf-v" placeholder="Giá trị" aria-label="Giá trị"></div>')}
+  else if(a==='saveOld'){
+    const ty=$('#f-type').value,t=$('#f-title').value.trim()||'Mục mới',u=$('#f-user').value,p=$('#f-pass').value,s=$('#f-totp').value.replace(/\s/g,'');
+    const f=ty==='acc'?[['Tên đăng nhập',u],['Mật khẩu',p,1]]:ty==='key'?[['Dịch vụ',u],['Khóa',p,1]]:[['Nội dung',p||u,1]];
+    const id='n'+Date.now(),ng=$('#f-newg').value.trim(),g=ng||$('#f-grp').value;items.unshift({id,type:ty,title:t,f,totp:s||undefined,g,at:'vừa xong'});
+    S.sel=id;S.sec='all';S.modal=false;S.sync='busy';render();setTimeout(()=>{S.sync='ok';S.syncAt='vừa xong';render()},1100)}
+  else if(a==='gen'){genPw();render()}
+  else if(a==='sync'){if(!S.user){toast('Đăng nhập để bật đồng bộ');return}S.sync='busy';render();setTimeout(()=>{S.sync='ok';S.syncAt='vừa xong';render();toast('Đã đồng bộ, không có xung đột')},1200)}
+  else if(a==='sw'){S.sw[v]=!S.sw[v];render()}
+  else if(a==='authtab'){S.authTab=v;render()}
+  else if(a==='glogin'){S.user='demo.user@gmail.com';S.via='Google';S.auth='vault';render()}
+  else if(a==='alogin'){const em=$('#a-email').value.trim(),pw=$('#a-pass').value,er=$('#aerr');
+    if(!/^\S+@\S+\.\S+$/.test(em)){er.textContent='Email chưa đúng định dạng.';return}
+    if(!pw){er.textContent='Nhập mật khẩu đăng nhập.';return}
+    S.user=em;S.via='email';S.auth='vault';render()}
+  else if(a==='areg'){const em=$('#a-email').value.trim(),p1=$('#a-pass').value,p2=$('#a-pass2').value,v1=$('#a-vp').value,v2=$('#a-vp2').value,er=$('#aerr');
+    if(!/^\S+@\S+\.\S+$/.test(em)){er.textContent='Email chưa đúng định dạng.';return}
+    if(p1.length<8){er.textContent='Mật khẩu đăng nhập cần ít nhất 8 ký tự.';return}
+    if(p1!==p2){er.textContent='Hai mật khẩu đăng nhập chưa giống nhau.';return}
+    if(v1.length<8){er.textContent='Vault passphrase cần ít nhất 8 ký tự.';return}
+    if(v1!==v2){er.textContent='Hai vault passphrase chưa giống nhau.';return}
+    if(v1===p1){er.textContent='Vault passphrase phải khác mật khẩu đăng nhập.';return}
+    S.user=em;S.via='email';S.rk=newRk();S.auth='recovery';render()}
+  else if(a==='skip'){S.auth='in';S.user=null;render()}
+  else if(a==='openlogin'){S.auth='out';S.authTab='login';render()}
+  else if(a==='recok'){if(!$('#a-ok').checked){$('#aerr').textContent='Hãy xác nhận đã lưu recovery key.';return}S.auth='in';render();toast('Đã tạo tài khoản và bật đồng bộ')}
+  else if(a==='vunlock'){if(!$('#a-vp').value){$('#aerr').textContent='Nhập vault passphrase hoặc recovery key.';return}S.auth='in';render();toast('Đã giải mã kho trên máy này')}
+  else if(a==='alogout'){S.auth='out';S.user=null;S.authTab='login';render()}
+  else if(a==='rmdev'){S.devs.splice(+v,1);render()}
+  else if(a==='prov'){S.prov=v;render()}
+  else if(a==='pwset'){S.modal='pw';render()}
+  else if(a==='pwoff'){S.modal='pwoff';render()}
+  else if(a==='pwsave'){const p=$('#pw1').value,q=$('#pw2').value,er=$('#pwerr');
+    if(p.length<8){er.textContent='Mật khẩu cần ít nhất 8 ký tự.';return}
+    if(p!==q){er.textContent='Hai mật khẩu chưa giống nhau.';return}
+    S.hasPw=true;S.modal=false;render();toast('Đã bật khóa ứng dụng')}
+  else if(a==='pwoffsave'){if(!$('#pw1').value){$('#pwerr').textContent='Nhập mật khẩu hiện tại.';return}
+    S.hasPw=false;S.locked=false;S.modal=false;render();toast('Đã tắt khóa ứng dụng')}
+  else if(a==='export')toast('Đã xuất vault.backup.enc (mô phỏng)');
+});
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='q2-key'){S.quick.key=t.value;return}
+  if(t.id==='q'){S.q=t.value;const r=$('#rows');if(r)r.innerHTML=listRows();else{render();const q=$('#q');if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length)}}return}
+  if(t.id==='genlen'){S.gen.len=+t.value;genPw();genFill()}
+  if(t.dataset&&t.dataset.gk){S.gen[t.dataset.gk]=t.checked?1:0;genPw();$('#genout').textContent=S.gen.out;$('#gencopy').dataset.v=S.gen.out}
+});
+document.addEventListener('change',e=>{const t=e.target;
+  if(t.id==='gsel'){const it=items.find(i=>i.id===t.dataset.id);if(it){it.g=t.value;render();toast('Đã chuyển vào nhóm '+(t.value||'Chưa phân nhóm'))}}
+  else if(t.id==='i-grp'&&S.imp)S.imp.grp=t.value;
+  else if(t.id==='rem-m'||t.id==='rem-b'){
+    const it=items.find(i=>i.id===t.dataset.id);
+    if(it){
+      if(t.id==='rem-m'){const m=+t.value;if(!m)it.rem=null;else{it.rem={m,b:it.rem?it.rem.b:S.notif.before};if(!it.pwAt)it.pwAt=Date.now()}}
+      else if(it.rem)it.rem.b=+t.value;
+      render();
+    }
+  }
+  else if(t.id==='f-type'){$('#f-fields').innerHTML=formFields(t.value);$('#f-custom').innerHTML=''}
+  else if(t.id==='ex-grp'){S.ex.grp=t.value;S.ex.out='';render()}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.open&&S.mode==='desktop'){S.open=false;render();return}if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('tr')){e.target.click();return}if(e.key==='Enter'&&e.target.id==='q2-key'){e.preventDefault();quickCheck();return}if(e.key==='Enter'&&e.target.closest&&e.target.closest('.auth')&&e.target.tagName==='INPUT'){const p=document.querySelector('.auth .btn.pri');if(p)p.click();return}if(e.key==='Enter'&&e.target.id==='q'){const x=filtered().find(i=>i.totp);if(x)totp(x.totp).then(c=>copy(c,'Đã copy mã 2FA · '+x.title));return}if(e.key==='Enter'&&e.target.classList.contains('row')){S.sel=e.target.dataset.v;S.open=true;render();return}if(e.key==='Enter'&&e.target.id==='mp'){S.locked=false;render()}});
+
+/* ---------- theme ---------- */
+const ACC={
+ teal:{l:'#0b7a6b',d:'#4bc6b0',sl:'#e2f3ee',sd:'#0f2622'},
+ blue:{l:'#2563eb',d:'#6ea8ff',sl:'#e6eefc',sd:'#14233f'},
+ violet:{l:'#7c3aed',d:'#b197fc',sl:'#efe9fc',sd:'#241b3d'},
+ pink:{l:'#db2777',d:'#ff7eb6',sl:'#fbe8f1',sd:'#3a1829'},
+ orange:{l:'#d9730d',d:'#ffb066',sl:'#fbeedd',sd:'#3a2410'},
+ green:{l:'#16a34a',d:'#5ee08a',sl:'#e1f5e8',sd:'#12301d'}
+};
+function saveTheme(){try{localStorage.setItem('km-theme',JSON.stringify({theme:S.theme,accent:S.accent,dense:S.dense}))}catch(e){}}
+function applyTheme(){
+  const r=document.documentElement,a=ACC[S.accent]||ACC.teal;
+  if(S.theme==='system')r.removeAttribute('data-theme');else r.setAttribute('data-theme',S.theme);
+  let st=document.getElementById('km-acc');
+  if(!st){st=document.createElement('style');st.id='km-acc';document.head.appendChild(st)}
+  const L='--accent:'+a.l+';--accent-soft:color-mix(in srgb,'+a.l+' 11%,#ffffff);--accent-fg:#fff',D='--accent:'+a.d+';--accent-soft:color-mix(in srgb,'+a.d+' 15%,#0b0b0d);--accent-fg:#06110f';
+  st.textContent=':root{'+L+'}@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){'+D+'}}:root[data-theme="dark"]{'+D+'}';
+  document.body.classList.toggle('dense',S.dense);
+}
+applyTheme();
+/* ---------- i18n: source strings are Vietnamese; English is applied on top ---------- */
+const EN={
+"Bản thử giao diện, dữ liệu mẫu.":"UI prototype, sample data.",
+"Chọn thiết bị":"Choose device",
+"Máy tính (Windows)":"Desktop (Windows)",
+"Điện thoại (Android)":"Phone (Android)",
+"Ngôn ngữ":"Language",
+"Chung":"General",
+"Kho":"Vault",
+"Nhắc nhở":"Reminders",
+"Quá hạn":"Overdue",
+"Sắp hết hạn":"Expiring soon",
+"Không có nhắc nhở.":"No reminders.",
+"Nhắc lại sau 7 ngày":"Remind in 7 days",
+"Bỏ qua":"Dismiss",
+"Đã hẹn nhắc lại sau 7 ngày":"Will remind again in 7 days",
+"Đã bỏ qua nhắc nhở":"Reminder dismissed",
+"Mở":"Open",
+"Nhắc đổi mật khẩu":"Password change reminder",
+"Nhắc đổi":"Remind to change",
+"Báo trước mặc định":"Default notice",
+"Báo trước":"Notify before",
+"Hết hạn hôm nay":"Expires today",
+"Hết hạn":"Expires",
+"Thẻ hết hạn":"Card expires",
+"API key hết hạn":"API key expires",
+"Thông báo":"Notifications",
+"Bật thông báo nhắc nhở":"Enable reminder notifications",
+"Mật khẩu mới tự nhắc đổi sau":"Remind to change new passwords after",
+"Gửi thử thông báo":"Send a test notification",
+"Đây là thông báo thử":"This is a test notification",
+"Dữ liệu":"Data",
+"Chủ đề":"Theme",
+"Mật khẩu và khôi phục":"Passwords and recovery",
+"Nhập và xuất":"Import and export",
+"Dọn dẹp":"Cleanup",
+"Giao diện":"Appearance",
+"Hệ thống":"System",
+"Sáng":"Light",
+"Tối":"Dark",
+"Màu nhấn":"Accent color",
+"Mật độ":"Density",
+"Thoải mái":"Comfortable",
+"Gọn":"Compact",
+"Danh sách":"List",
+"Hiện mã 2FA trong danh sách Kho":"Show 2FA codes in the vault list",
+"Hiển thị":"Display",
+"Công cụ":"Tools",
+"Gom theo":"Group by",
+"Đăng nhập, thiết bị, đồng bộ":"Sign-in, devices, sync",
+"Nhập, xuất, thùng rác, mục trùng":"Import, export, trash, duplicates",
+"Khóa app, kiểm tra bảo mật":"App lock, security check",
+"Giao diện, màu sắc, mật độ":"Appearance, colors, density",
+"Ngôn ngữ, hiển thị, công cụ":"Language, display, tools",
+"Hướng dẫn, liên hệ, góp ý":"Guide, contact, feedback",
+"Phiên bản, điều khoản, giấy phép":"Version, terms, licenses",
+"Thùng rác":"Trash",
+"Đã chuyển vào thùng rác":"Moved to trash",
+"Mục đã xóa được giữ 30 ngày":"Deleted items are kept for 30 days",
+"Khôi phục":"Restore",
+"Xóa vĩnh viễn":"Delete permanently",
+"Chắc chắn?":"Sure?",
+"Dọn sạch":"Empty trash",
+"Thùng rác trống.":"Trash is empty.",
+"Đã khôi phục mật khẩu cũ":"Old password restored",
+"Đã khôi phục":"Restored",
+"Đã xóa vĩnh viễn":"Deleted permanently",
+"Đã dọn sạch thùng rác":"Trash emptied",
+"Lịch sử mật khẩu":"Password history",
+"Dùng lại":"Use again",
+"Đổi mật khẩu":"Change password",
+"Đã đổi mật khẩu":"Password changed",
+"Mật khẩu mới":"New password",
+"Nhập mật khẩu mới.":"Enter a new password.",
+"Kiểm tra bảo mật":"Security check",
+"Điểm bảo mật":"Security score",
+"Tốt":"Good",
+"Cần cải thiện":"Needs work",
+"Nguy hiểm":"At risk",
+"Mật khẩu yếu":"Weak passwords",
+"Chưa bật 2FA":"2FA not enabled",
+"Nên bật 2FA":"Consider enabling 2FA",
+"Đã bị rò rỉ":"Leaked in a breach",
+"Kiểm tra rò rỉ mật khẩu":"Check for leaked passwords",
+"Không gửi mật khẩu":"Passwords are not sent",
+"Đang kiểm tra...":"Checking...",
+"Kiểm tra lại":"Check again",
+"Không phát hiện rò rỉ.":"No leaks found.",
+"Không có vấn đề.":"No issues.",
+"Rò rỉ":"Leaks",
+"ký tự":"characters",
+"Forum cũ":"Old forum",
+"Gmail cũ":"Old Gmail",
+"Tìm kiếm":"Search",
+"Đóng tìm kiếm":"Close search",
+"Lọc theo nhóm":"Filter by group",
+"Đăng nhập":"Sign in",
+"Chỉ 2FA":"2FA only",
+"Ví crypto":"Crypto wallet",
+"Thẻ":"Card",
+"Ghi chú":"Note",
+"Tên đăng nhập":"Username",
+"Mật khẩu":"Password",
+"Địa chỉ":"Website",
+"Mã dự phòng":"Backup codes",
+"Tài khoản":"Account",
+"Dịch vụ":"Service",
+"Khóa":"Key",
+"Ngày hết hạn":"Expiry date",
+"Ví hoặc sàn":"Wallet or exchange",
+"Địa chỉ ví":"Wallet address",
+"Cụm từ khôi phục":"Recovery phrase",
+"Chủ thẻ":"Cardholder",
+"Số thẻ":"Card number",
+"Hạn":"Expiry",
+"Tên mạng":"Network name",
+"Bảo mật":"Security",
+"Nội dung":"Content",
+"hôm nay 09:12":"today 09:12",
+"hôm qua 21:40":"yesterday 21:40",
+"3 ngày trước":"3 days ago",
+"tuần trước":"last week",
+"Dùng cho dự án chatbot":"For the chatbot project",
+"Vùng":"Region",
+"2 tuần trước":"2 weeks ago",
+"Cụm từ khôi phục ví":"Wallet recovery phrase",
+"Ví lạnh":"Cold wallet",
+"tháng trước":"last month",
+"Cá nhân":"Personal",
+"Công việc":"Work",
+"3 tháng trước":"3 months ago",
+"2 tháng trước":"2 months ago",
+"hôm nay":"today",
+"Wi-Fi nhà":"Home Wi-Fi",
+"Ghi chú router":"Router note",
+"Đăng nhập 192.168.1.1, user admin. Đổi mật khẩu mặc định.":"Sign in at 192.168.1.1, user admin. Change the default password.",
+"2 phút trước":"2 minutes ago",
+"hôm qua":"yesterday",
+"Nhập key trước.":"Enter a key first.",
+"Link không hợp lệ.":"Invalid link.",
+"Key không hợp lệ. Chỉ gồm chữ A-Z, số 2-7 và tối thiểu 8 ký tự.":"Invalid key. Use letters A-Z, digits 2-7, at least 8 characters.",
+"Nhập tay":"Manual entry",
+"Quét mã QR":"Scan QR code",
+"Nhập từ file / app khác":"Import from file / other app",
+"Thêm":"Add",
+"Quên vault passphrase?":"Forgot your vault passphrase?",
+"Dùng mã khôi phục. Không có cả hai thì không lấy lại được dữ liệu.":"Use your recovery key. Without both, the data cannot be recovered.",
+"Chuyển từ Google Authenticator":"Move from Google Authenticator",
+"Bấm dấu +, chọn Nhập từ file / app khác, rồi Google Authenticator.":"Tap +, choose Import from file / other app, then Google Authenticator.",
+"Đồng bộ hoạt động thế nào?":"How does sync work?",
+"Kho được mã hóa ngay trên máy rồi mới gửi đi. Máy chủ chỉ giữ dữ liệu đã mã hóa.":"Your vault is encrypted on your device before it is sent. The server only stores encrypted data.",
+"Mã 2FA không đúng":"2FA code is wrong",
+"Kiểm tra giờ của thiết bị và bật tự động đặt giờ.":"Check your device clock and turn on automatic time.",
+"Đổi sang máy mới":"Switching to a new device",
+"Đăng nhập, rồi nhập vault passphrase hoặc mã khôi phục.":"Sign in, then enter your vault passphrase or recovery key.",
+"Hướng dẫn":"Guide",
+"Giới thiệu":"About",
+"Phiên bản 0.1.0":"Version 0.1.0",
+"Quản lý mật khẩu và mã 2FA, mã hóa đầu-cuối.":"Password and 2FA manager with end-to-end encryption.",
+"Điều khoản sử dụng":"Terms of use",
+"Chính sách bảo mật":"Privacy policy",
+"Giấy phép mã nguồn mở":"Open-source licenses",
+"Kiểm tra cập nhật":"Check for updates",
+"Trùng mã 2FA":"Same 2FA code",
+"Trùng tên và tài khoản":"Same name and account",
+"Dùng chung mật khẩu":"Shared password",
+"Quay lại":"Back",
+"Mọi nhóm":"All groups",
+"Xuất dữ liệu":"Export data",
+"Tất cả":"All",
+"Nhóm":"Group",
+"Định dạng":"Format",
+"Sao lưu mã hóa":"Encrypted backup",
+"Khuyên dùng":"Recommended",
+"Cho app 2FA khác":"For other 2FA apps",
+"Mở bằng Excel":"Opens in Excel",
+"File không mã hóa. Xóa sau khi dùng.":"Unencrypted file. Delete after use.",
+"Xuất":"Export",
+"mục":"items",
+"Kết quả":"Result",
+"Không có mục trùng lặp.":"No duplicates found.",
+"Chưa phân nhóm":"Ungrouped",
+"Giữ":"Keep",
+"Xóa":"Delete",
+"Gộp, giữ bản mới nhất":"Merge, keep newest",
+"Mục trùng lặp":"Duplicates",
+"Tạo":"Generate",
+"(không bắt buộc)":"(optional)",
+"JBSWY3DPEHPK3PXP hoặc link otpauth://":"JBSWY3DPEHPK3PXP or otpauth:// link",
+"Thêm mục mới":"Add new item",
+"Loại":"Type",
+"Tên":"Name",
+"Thêm trường":"Add field",
+"hoặc nhập tên nhóm mới":"or enter a new group name",
+"Tên nhóm mới":"New group name",
+"Hủy":"Cancel",
+"Lưu":"Save",
+"Key 2FA không hợp lệ.":"Invalid 2FA key.",
+"Nhập key 2FA.":"Enter the 2FA key.",
+"Mục mới":"New item",
+"vừa xong":"just now",
+"Đóng":"Close",
+"Chi tiết":"Details",
+"Mã cũ sẽ mất hiệu lực.":"The old key will stop working.",
+"Tạo mã mới":"Generate new key",
+"Hiện mã":"Show key",
+"Mã khôi phục":"Recovery key",
+"Tạo mật khẩu":"Generate password",
+"Không lưu vào kho.":"Not saved to the vault.",
+"Xem nhanh bằng key":"Quick view by key",
+"Xem nhanh 2FA":"Quick 2FA view",
+"Key (secret) hoặc link otpauth://":"Key (secret) or otpauth:// link",
+"Kiểm tra":"Check",
+"Mã hiện tại":"Current code",
+"Copy mã":"Copy code",
+"Lưu vào kho":"Save to vault",
+"Yêu thích":"Favorites",
+"Không":"None",
+"Tất cả nhóm":"All groups",
+"Không tên":"Untitled",
+"Không có mục nào khớp.":"No matching items.",
+"Copy mã 2FA của":"Copy 2FA code for",
+"Chọn một mục để xem chi tiết.":"Select an item to see details.",
+"Hiện hoặc ẩn":"Show or hide",
+"Mã 2FA mới":"New 2FA code",
+"Mã 2FA":"2FA",
+"Sửa lần cuối:":"Last edited:",
+"Copy mã 2FA":"Copy 2FA code",
+"Yếu":"Weak",
+"Khá":"Fair",
+"Mạnh":"Strong",
+"Rất mạnh":"Very strong",
+"Tạo mới":"Regenerate",
+"Giảm độ dài":"Shorter",
+"Độ dài":"Length",
+"Tăng độ dài":"Longer",
+"Chưa đồng bộ":"Not synced",
+"Chỉ trên máy này":"This device only",
+"Đồng bộ ngay":"Sync now",
+"Đang đồng bộ...":"Syncing...",
+"Chưa đăng nhập. Dữ liệu chỉ nằm trên máy này và không được đồng bộ.":"Not signed in. Data stays on this device and is not synced.",
+"Đăng nhập hoặc tạo tài khoản":"Sign in or create an account",
+"Android · máy này":"Android · this device",
+"Windows · máy này":"Windows · this device",
+"đang dùng":"in use",
+"Đăng nhập bằng":"Signed in with",
+"Đăng xuất":"Sign out",
+"Gỡ":"Remove",
+"Máy này":"This device",
+"Đồng bộ":"Sync",
+"Chỉ file đã mã hóa được gửi đi. Máy chủ không đọc được nội dung.":"Only the encrypted file is sent. The server cannot read the content.",
+"mục · lần cuối":"items · last",
+"Đăng nhập để bật đồng bộ":"Sign in to enable sync",
+"Tạo tài khoản":"Create account",
+"Tiếp tục với Google":"Continue with Google",
+"hoặc":"or",
+"Mật khẩu đăng nhập":"Login password",
+"Nhập lại mật khẩu đăng nhập":"Repeat login password",
+"Nhập lại mật khẩu":"Repeat password",
+"Vault passphrase mã hóa dữ liệu, quên là mất. Đặt khác mật khẩu đăng nhập.":"The vault passphrase encrypts your data; if you forget it, it's gone. Use one different from your login password.",
+"Nhập lại vault passphrase":"Repeat vault passphrase",
+"Đã có tài khoản? Đăng nhập":"Have an account? Sign in",
+"Tạo tài khoản mới":"Create a new account",
+"Dùng offline, không cần tài khoản":"Use offline, no account needed",
+"Lưu recovery key":"Save your recovery key",
+"Dùng để khôi phục kho nếu quên passphrase. Cất nơi an toàn.":"Use it to recover your vault if you forget the passphrase. Keep it safe.",
+"Tôi đã lưu recovery key":"I've saved my recovery key",
+"Tiếp tục":"Continue",
+"Mở kho trên máy này":"Unlock vault on this device",
+"Đã đăng nhập":"Signed in",
+". Nhập passphrase hoặc recovery key.":". Enter your passphrase or recovery key.",
+"Vault passphrase hoặc recovery key":"Vault passphrase or recovery key",
+"Giải mã kho":"Decrypt vault",
+"Xóa clipboard sau 30 giây":"Clear clipboard after 30 seconds",
+"Áp dụng cho mật khẩu và mã 2FA":"Applies to passwords and 2FA codes",
+"Khóa ứng dụng":"App lock",
+"Chưa đặt master password nên app mở thẳng vào kho. Đặt mật khẩu để app hiện màn khóa mỗi lần mở.":"No master password set, so the app opens straight to the vault. Set one to show a lock screen each time.",
+"Đặt master password":"Set master password",
+"Đang bật. App hiện màn khóa mỗi lần mở.":"On. The app shows a lock screen each time it opens.",
+"Khóa ngay":"Lock now",
+"Đổi mật khẩu":"Change password",
+"Tắt mật khẩu":"Turn off password",
+"Mở khóa sinh trắc":"Biometric unlock",
+"Vân tay hoặc khuôn mặt":"Fingerprint or face",
+"Tự khóa sau 5 phút":"Auto-lock after 5 minutes",
+"Cũng khóa khi thu nhỏ app":"Also locks when minimized",
+"Thiết bị đã đăng nhập":"Signed-in devices",
+"Chưa đăng nhập":"Not signed in",
+"Máy chủ đồng bộ":"Sync server",
+"Chưa bật đồng bộ":"Sync is off",
+"Lần cuối":"Last",
+"Đăng nhập để bật":"Sign in to enable",
+"Đang bật":"On",
+"Đổi":"Change",
+"Tắt":"Off",
+"Mở khóa bằng vân tay":"Unlock with fingerprint",
+"Mở khóa bằng Windows Hello":"Unlock with Windows Hello",
+"Đặt mật khẩu":"Set password",
+"Đổi mật khẩu đăng nhập":"Change login password",
+"Đổi vault passphrase":"Change vault passphrase",
+"Nhập từ app hoặc file khác":"Import from other app or file",
+"Tìm mục trùng lặp":"Find duplicates",
+"Cài đặt":"Settings",
+"Dữ liệu và công cụ":"Data and tools",
+"Hỗ trợ":"Support",
+"Hướng dẫn sử dụng":"User guide",
+"Liên hệ hỗ trợ":"Contact support",
+"Gửi góp ý hoặc báo lỗi":"Send feedback or report a bug",
+"Về VanKey":"About VanKey",
+"Nhập và sao lưu":"Import and backup",
+"Chuyển dữ liệu từ Google Authenticator, Bitwarden, 1Password, KeePass, Chrome hoặc file khác.":"Move data from Google Authenticator, Bitwarden, 1Password, KeePass, Chrome or another file.",
+"Xuất bản sao lưu mã hóa":"Export encrypted backup",
+"Ảnh mã QR":"QR code image",
+"Xuất tài khoản":"Export accounts",
+"Chuyển tài khoản, Xuất tài khoản, rồi chọn ảnh mã QR.":"Choose Transfer accounts, Export accounts, then select the QR code image.",
+"Chọn ảnh QR":"Choose QR image",
+"File sao lưu JSON":"JSON backup file",
+"Chọn file sao lưu JSON.":"Choose the JSON backup file.",
+"Chọn file JSON":"Choose JSON file",
+"File JSON hoặc CSV":"JSON or CSV file",
+"Xuất kho rồi chọn file. Nhớ xóa file sau khi nhập.":"Export your vault, then choose the file. Delete the file after importing.",
+"Chọn file":"Choose file",
+"File CSV hoặc 1pux":"CSV or 1pux file",
+"Xuất rồi chọn file. Nhớ xóa file sau khi nhập.":"Export, then choose the file. Delete the file after importing.",
+"File CSV hoặc XML":"CSV or XML file",
+"File CSV mật khẩu":"Passwords CSV file",
+"Xuất mật khẩu rồi chọn file. Nhớ xóa file sau khi nhập.":"Export passwords, then choose the file. Delete the file after importing.",
+"Chọn file CSV":"Choose CSV file",
+"Dán nhiều link, mỗi dòng một link":"Paste multiple links, one per line",
+"Góp ý hoặc báo lỗi":"Feedback or bug report",
+"Góp ý":"Feedback",
+"Báo lỗi":"Bug report",
+"Gửi":"Send",
+"Hiện tại":"Current",
+"Mới (ít nhất 8 ký tự)":"New (at least 8 characters)",
+"Nhập lại":"Repeat",
+"Chọn nhóm":"Choose group",
+"Thêm vào kho":"Add to vault",
+"Tài khoản, API key, ghi chú":"Accounts, API keys, notes",
+"Thêm nhanh mã 2FA từ mã QR hoặc link":"Quickly add a 2FA code from a QR or link",
+"Đã đọc được mã QR":"QR code read",
+"Quét lại":"Scan again",
+"Đưa mã QR vào khung":"Put the QR code in the frame",
+"Giả lập: đã quét được":"Simulate: scanned",
+"Chọn ảnh từ thư viện":"Choose from gallery",
+"Kéo thả ảnh chứa mã QR vào đây":"Drag and drop an image with a QR code here",
+"hoặc dán ảnh bằng Ctrl+V":"or paste an image with Ctrl+V",
+"Chọn ảnh":"Choose image",
+"Quét vùng màn hình":"Scan screen area",
+"hoặc dán link otpauth://":"or paste an otpauth:// link",
+"Đọc link":"Read link",
+"Nhập dữ liệu":"Import data",
+"Chọn nguồn khác":"Choose another source",
+"Danh sách link":"Link list",
+"Kéo thả vào đây hoặc chọn file":"Drag and drop here or choose a file",
+"Tìm thấy":"Found",
+"mục. Mục trùng được bỏ chọn sẵn.":"items. Duplicates are unchecked.",
+"Đã có":"Exists",
+"Đưa vào nhóm":"Put in group",
+"Tạo nhóm mới theo tên nguồn":"Create a new group named after the source",
+"Nhập":"Import",
+"Nhập từ":"Import from",
+"Tắt master password":"Turn off master password",
+"Đổi master password":"Change master password",
+"Nhập mật khẩu hiện tại":"Enter current password",
+"Mật khẩu mới (ít nhất 8 ký tự)":"New password (at least 8 characters)",
+"Quên mật khẩu là mất vault.":"If you forget the password, the vault is lost.",
+"Thêm mục":"Add item",
+"Tên đăng nhập / email":"Username / email",
+"Mật khẩu hoặc khóa":"Password or key",
+"Mã bí mật 2FA (không bắt buộc)":"2FA secret (optional)",
+"Nhập master password":"Enter master password",
+"Mở khóa":"Unlock",
+"Dùng vân tay":"Use fingerprint",
+"Dùng Windows Hello":"Use Windows Hello",
+"Đã copy. Tự xóa sau 30 giây":"Copied. Clears in 30 seconds",
+"Đã copy mã 2FA ·":"2FA code copied ·",
+"Đã copy mã 2FA":"2FA code copied",
+"Đang dùng bản mới nhất":"You're on the latest version",
+": mở trang (bản thử)":": opens page (demo)",
+"Nhập nội dung.":"Enter some text.",
+"Đã gửi. Cảm ơn bạn":"Sent. Thank you",
+"Không có mục để xuất":"Nothing to export",
+"Đã xuất vankey-":"Exported vankey-",
+"Nhập vault passphrase để xuất.":"Enter the vault passphrase to export.",
+"Đã gộp":"Merged",
+"mục thành 1":"items into 1",
+"Nhập mật khẩu hiện tại.":"Enter the current password.",
+"Mật khẩu mới cần ít nhất 8 ký tự.":"The new password needs at least 8 characters.",
+"Hai mật khẩu chưa giống nhau.":"The two passwords don't match.",
+"Mật khẩu mới phải khác mật khẩu cũ.":"The new password must differ from the old one.",
+"Đã đổi vault passphrase, kho được mã hóa lại":"Vault passphrase changed, vault re-encrypted",
+"Đã đổi mật khẩu đăng nhập":"Login password changed",
+"Nhập vault passphrase.":"Enter the vault passphrase.",
+"Đã tạo mã mới. Hãy lưu lại ngay":"New key created. Save it now",
+"Link không hợp lệ. Cần dạng otpauth://totp/...?secret=...":"Invalid link. Expected otpauth://totp/...?secret=...",
+"Đã thêm":"Added",
+"vào kho":"to vault",
+"Không đọc được link nào. Mỗi dòng là một link otpauth://totp/...":"No links could be read. Each line should be an otpauth://totp/... link",
+"vừa nhập":"just imported",
+"Đã nhập":"Imported",
+"Tên trường":"Field name",
+"Giá trị":"Value",
+"Đã đồng bộ, không có xung đột":"Synced, no conflicts",
+"Email chưa đúng định dạng.":"Invalid email format.",
+"Nhập mật khẩu đăng nhập.":"Enter the login password.",
+"Mật khẩu đăng nhập cần ít nhất 8 ký tự.":"The login password needs at least 8 characters.",
+"Hai mật khẩu đăng nhập chưa giống nhau.":"The two login passwords don't match.",
+"Vault passphrase cần ít nhất 8 ký tự.":"The vault passphrase needs at least 8 characters.",
+"Hai vault passphrase chưa giống nhau.":"The two vault passphrases don't match.",
+"Vault passphrase phải khác mật khẩu đăng nhập.":"The vault passphrase must differ from the login password.",
+"Hãy xác nhận đã lưu recovery key.":"Please confirm you saved the recovery key.",
+"Đã tạo tài khoản và bật đồng bộ":"Account created and sync enabled",
+"Nhập vault passphrase hoặc recovery key.":"Enter the vault passphrase or recovery key.",
+"Đã giải mã kho trên máy này":"Vault unlocked on this device",
+"Mật khẩu cần ít nhất 8 ký tự.":"The password needs at least 8 characters.",
+"Đã bật khóa ứng dụng":"App lock turned on",
+"Đã tắt khóa ứng dụng":"App lock turned off",
+"Đã xuất vault.backup.enc (mô phỏng)":"Exported vault.backup.enc (simulated)",
+"Đã chuyển vào nhóm":"Moved to group",
+"Đóng ":"Close ",
+"Quên":"Forgot",
+"Bấm":"Tap"
+};
+const RXS=[
+ [/Tìm thấy (\d+) mục\. Mục trùng được bỏ chọn sẵn\./,'Found $1 items. Duplicates are unchecked.'],
+ [/^Nhập (\d+) mục$/,'Import $1 items'],
+ [/^Xuất (\d+) mục$/,'Export $1 items'],
+ [/Đã nhập (\d+) mục/,'Imported $1 items'],
+ [/Đã gộp (\d+) mục thành 1/,'Merged $1 items into 1'],
+ [/Đã thêm (.+) vào kho/,'Added $1 to vault'],
+ [/Đã chuyển vào nhóm (.+)/,'Moved to group $1'],
+ [/Đã xuất vankey-(\S+)\.vkbackup · (\d+) mục/,'Exported vankey-$1.vkbackup · $2 items'],
+ [/(\d+) phút trước/,'$1 minutes ago'],
+ [/(\d+) ngày trước/,'$1 days ago'],
+ [/(\d+) tuần trước/,'$1 weeks ago'],
+ [/(\d+) tháng trước/,'$1 months ago'],
+ [/^Lần cuối (.+)$/,'Last: $1'],
+ [/Còn (\d+) ngày/,'$1 days left'],
+ [/Rò rỉ trong (\d+) vụ/,'Found in $1 breaches'],
+ [/Phát hiện (\d+) mục/,'Found $1 items'],
+ [/(\d+) năm trước/,'$1 years ago'],
+ [/Quá hạn (\d+) ngày/,'Overdue by $1 days'],
+ [/^1 tháng$/,'1 month'],
+ [/^(\d+) tháng$/,'$1 months'],
+ [/^1 ngày$/,'1 day'],
+ [/^(\d+) ngày$/,'$1 days']
+];
+const VIRX0=/[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/i;
+const ASC=new RegExp('(^|[^A-Za-z])('+Object.keys(EN).filter(k=>!VIRX0.test(k)).join('|')+')($|[^A-Za-z])');
+const VIRX={test:t=>VIRX0.test(t)||ASC.test(t)};
+const keysEN=Object.keys(EN).sort((a,b)=>b.length-a.length);
+function trs(str){
+  if(!VIRX.test(str))return str;
+  let r=str;
+  RXS.forEach(([re,rep])=>{r=r.replace(re,rep)});
+  for(let i=0;i<keysEN.length&&VIRX.test(r);i++){const k=keysEN[i];if(r.indexOf(k)>=0)r=r.split(k).join(EN[k])}
+  return r;
+}
+
+const OPTS={childList:true,subtree:true,characterData:true};
+function trEl(el){
+  if(el.tagName==='OPTION'&&!el.hasAttribute('value'))el.setAttribute('value',el.textContent);
+  ['placeholder','aria-label','title'].forEach(a=>{const v=el.getAttribute(a);if(v&&VIRX.test(v))el.setAttribute(a,trs(v))});
+  el.childNodes.forEach(c=>{
+    if(c.nodeType===3){if(VIRX.test(c.nodeValue))c.nodeValue=trs(c.nodeValue)}
+    else if(c.nodeType===1&&c.tagName!=='SCRIPT'&&c.tagName!=='STYLE')trEl(c);
+  });
+}
+const obs=new MutationObserver(ms=>{
+  if(S.lang!=='en')return;
+  obs.disconnect();
+  ms.forEach(m=>{
+    m.addedNodes.forEach(n=>{
+      if(n.nodeType===1)trEl(n);
+      else if(n.nodeType===3&&VIRX.test(n.nodeValue))n.nodeValue=trs(n.nodeValue);
+    });
+    if(m.type==='characterData'&&VIRX.test(m.target.nodeValue))m.target.nodeValue=trs(m.target.nodeValue);
+  });
+  obs.observe(document.body,OPTS);
+});
+const STAT=[];
+(function(){
+  const top=document.querySelector('.top'),w=document.createTreeWalker(top,NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT);
+  let n;
+  while((n=w.nextNode())){
+    if(n.nodeType===3){if(VIRX.test(n.nodeValue))STAT.push([n,n.nodeValue,null])}
+    else{const a=n.getAttribute('aria-label');if(a&&VIRX.test(a))STAT.push([n,a,'aria-label'])}
+  }
+})();
+function setStatic(){
+  STAT.forEach(([n,o,a])=>{const v=S.lang==='en'?trs(o):o;if(a)n.setAttribute(a,v);else n.nodeValue=v});
+  $('#l-vi').classList.toggle('on',S.lang==='vi');
+  $('#l-en').classList.toggle('on',S.lang==='en');
+  document.documentElement.lang=S.lang;
+}
+function setLang(v){S.lang=v;try{localStorage.setItem('km-lang',v)}catch(e){}setStatic();render()}
+obs.observe(document.body,OPTS);
+setStatic();
+
+render();
+</script>

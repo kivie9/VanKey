@@ -1,0 +1,28 @@
+# Quy tắc phân tích mã của dự án VanKey. Nghiêm hơn mặc định của Flutter vì đây là app bảo mật.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  errors:
+    # Không để sót mã gỡ lỗi in dữ liệu ra console.
+    avoid_print: error
+  exclude:
+    - build/**
+    - android/**
+    - windows/**
+
+linter:
+  rules:
+    avoid_print: true
+    prefer_final_locals: true
+    prefer_final_fields: true
+    prefer_final_in_for_each: true
+    always_declare_return_types: true
+    unawaited_futures: true
+    avoid_dynamic_calls: true
+    use_build_context_synchronously: true
+    cancel_subscriptions: true
+    close_sinks: true

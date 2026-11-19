@@ -1,0 +1,71 @@
+# ===== Bí mật: TUYỆT ĐỐI không commit =====
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+key.properties
+.env
+.env.*
+!.env.example
+google-services.json
+GoogleService-Info.plist
+client_secret*.json
+service-account*.json
+*.vkv
+!app/test/vectors/*.vkv
+local.json
+.dev.vars
+secrets/
+
+# ===== Flutter / Dart =====
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+*.iml
+**/generated_plugin_registrant.*
+coverage/
+
+# ===== Android =====
+**/android/.gradle/
+**/android/captures/
+**/android/local.properties
+**/android/gradlew
+**/android/gradlew.bat
+**/android/**/GeneratedPluginRegistrant.*
+.cxx/
+.externalNativeBuild/
+
+# ===== Windows =====
+**/windows/flutter/ephemeral/
+*.exe
+*.msix
+*.appx
+
+# ===== Node / Cloudflare Worker =====
+node_modules/
+.wrangler/
+dist/
+*.log
+npm-debug.log*
+
+# ===== IDE / hệ điều hành =====
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+*.swp
+~$*
+
+# ===== Tạm =====
+tmp/
+*.tmp
+*.bak

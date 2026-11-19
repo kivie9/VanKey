@@ -1,0 +1,18 @@
+{
+  "_comment": "Test vector nguyên thủy (Argon2id + XChaCha20-Poly1305-IETF). Tạo bởi Dart package cryptography 2.9.0, đối chiếu khớp với libsodium-wrappers-sumo 0.8.4. Xem docs/spike-m0.md. Dữ liệu thử nghiệm, KHÔNG phải bí mật thật.",
+  "argon2id": {
+    "passphrase": "mật khẩu thử nghiệm Việt Nam 123!",
+    "saltHex": "a0a1a2a3a4a5a6a7a8a9aaabacadaeaf",
+    "opslimit": 3,
+    "memlimitBytes": 67108864,
+    "keyHex": "c97bf1c0dc442ded2aa71e354027e75d8bc19338d0489734ce4de5cd59ddd8d7"
+  },
+  "aead": {
+    "keyHex": "0104070a0d101316191c1f2225282b2e3134373a3d404346494c4f5255585b5e",
+    "nonceHex": "101112131415161718191a1b1c1d1e1f2021222324252627",
+    "aadHex": "564b56317c686561646572",
+    "plainHex": "7b226974656d73223a5b7b227469746c65223a224e67c3a26e2068c3a06e67222c227077223a22c490e1bab76e67205468e1bb8b204e67e1bb8d63227d5d7d",
+    "cipherHex": "8201b780c78daae05aea4b342411267c6e64e76cc982c228844b71e6eb5af5927ccbfed39618c1d918ecd1866aa5f15463de0bb06e1540200df380582e357a",
+    "tagHex": "d7784352c9be8de6ea3bd7e2814adebe"
+  }
+}

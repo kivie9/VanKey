@@ -1,0 +1,11 @@
+{
+  "name": "vankey-interop-check",
+  "private": true,
+  "description": "Đối chiếu kết quả mật mã của Dart với libsodium độc lập. Chỉ dùng để kiểm tra, không đóng gói vào app.",
+  "scripts": {
+    "check": "node check.js"
+  },
+  "dependencies": {
+    "libsodium-wrappers-sumo": "^0.8.4"
+  }
+}
