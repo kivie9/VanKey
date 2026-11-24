@@ -48,8 +48,11 @@ final class SyncService {
   final int networkRetries;
   final Future<void> Function(Duration) _delay;
 
+  /// Chờ ban đầu giữa các lần thử lại khi mất mạng (nhân đôi sau mỗi lần).
+  static const initialRetryWait = Duration(seconds: 1);
+
   Future<T> _withRetry<T>(Future<T> Function() op) async {
-    var wait = const Duration(seconds: 1);
+    var wait = initialRetryWait;
     for (var i = 0;; i++) {
       try {
         return await op();

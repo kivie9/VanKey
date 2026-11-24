@@ -11,6 +11,7 @@ import '../theme.dart';
 import '../vault_controller.dart';
 import '../widgets/ui.dart';
 import '../i18n.dart';
+import '../widgets/common.dart';
 
 class SyncScreen extends StatelessWidget {
   const SyncScreen({super.key, required this.controller});
@@ -51,7 +52,7 @@ class SyncScreen extends StatelessWidget {
                     subtitle: Text(tr('Điện thoại và máy tính dùng chung một kho')),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     minVerticalPadding: Gap.md,
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => CloudflareLoginScreen(controller: controller))),
+                    onTap: () => pushPage(context, CloudflareLoginScreen(controller: controller)),
                   ),
                   ListTile(
                     leading: const IconBadge(Icons.folder_outlined),
@@ -100,14 +101,14 @@ class SyncScreen extends StatelessWidget {
                         title: Text(tr('{p0} mục sửa ở cả hai máy', {'p0': controller.conflicts.length})),
                         subtitle: Text(tr('Đã tự chọn bản mới hơn. Bấm để xem và đổi.')),
                         trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ConflictsScreen(controller: controller))),
+                        onTap: () => pushPage(context, ConflictsScreen(controller: controller)),
                       ),
                     if (controller.cfSession != null)
                       ListTile(
                         leading: const IconBadge(Icons.devices),
                         title: Text(tr('Thiết bị đã đăng nhập')),
                         trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => CloudflareDevicesScreen(controller: controller))),
+                        onTap: () => pushPage(context, CloudflareDevicesScreen(controller: controller)),
                       ),
                   ]),
                 ],

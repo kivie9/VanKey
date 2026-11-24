@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -6,11 +7,12 @@ import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/import_export/exporters.dart';
+import '../constants.dart';
 import '../i18n.dart';
+import '../widgets/common.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
 import '../vault_controller.dart';
-import '../widgets/common.dart';
 import 'duplicates_screen.dart';
 import 'generator_screen.dart';
 import 'health_screen.dart';
@@ -45,8 +47,8 @@ class SettingsButton extends StatelessWidget {
         icon: const Icon(Icons.settings_outlined),
         onPressed: () => Navigator.of(context).push(PageRouteBuilder<void>(
           // Trượt từ trái sang (bánh răng nằm ở góc trái); thoát thì trượt về bên trái.
-          transitionDuration: const Duration(milliseconds: 280),
-          reverseTransitionDuration: const Duration(milliseconds: 240),
+          transitionDuration: Timing.pageIn,
+          reverseTransitionDuration: Timing.pageOut,
           pageBuilder: (_, _, _) => SettingsScreen(controller: controller),
           transitionsBuilder: (_, anim, _, child) => SlideTransition(
             position: Tween<Offset>(begin: const Offset(-1, 0), end: Offset.zero).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic, reverseCurve: Curves.easeInCubic)),
@@ -70,15 +72,15 @@ class SettingsTab extends StatelessWidget {
   const SettingsTab({super.key, required this.controller});
   final VaultController controller;
 
-  static List<(int, String)> get _lockChoices => [
-        (0, tr('Ngay khi thoát app')),
-        (30, tr('Sau 30 giây')),
-        (60, tr('Sau 1 phút')),
-        (300, tr('Sau 5 phút')),
-        (900, tr('Sau 15 phút')),
-      ];
+  /// Nhãn của một mức tự khóa (giây). Các mức nằm ở [LockPolicy.autoLockChoices].
+  static String _lockLabel(int seconds) => switch (seconds) {
+        0 => tr('Ngay khi thoát app'),
+        < 60 => tr('Sau {p0} giây', {'p0': seconds}),
+        60 => tr('Sau 1 phút'),
+        _ => tr('Sau {p0} phút', {'p0': seconds ~/ 60}),
+      };
 
-  void _push(BuildContext context, Widget page) => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
+  static List<(int, String)> get _lockChoices => [for (final s in LockPolicy.autoLockChoices) (s, _lockLabel(s))];
 
   /// Trang con: dựng lại mỗi khi trạng thái đổi.
   void _sub(BuildContext context, String title, List<Widget> Function(BuildContext) children) {
@@ -257,13 +259,13 @@ class SettingsTab extends StatelessWidget {
     if (choice == null || !context.mounted) return;
     if (choice == 0) {
       final bytes = await controller.backupBytes();
-      if (context.mounted) await _save(context, 'vankey-backup.vkv', bytes, 'application/octet-stream');
+      if (context.mounted) await _save(context, Storage.backupFileName, bytes, Storage.backupMime);
       return;
     }
 
     if (choice == 3) {
       final items = controller.data.items.where((i) => !i.inTrash).toList();
-      _push(context, QrShowScreen.forGoogleAuthenticator(items));
+      unawaited(pushPage(context, QrShowScreen.forGoogleAuthenticator(items)));
       return;
     }
 
@@ -308,7 +310,7 @@ class SettingsTab extends StatelessWidget {
 
   Future<void> _account(BuildContext context) async {
     // Không để màn chờ mãi nếu hệ thống không trả lời về vân tay.
-    final bio = !controller.noPassword && await controller.biometricAvailable().timeout(const Duration(milliseconds: 400), onTimeout: () => false);
+    final bio = !controller.noPassword && await controller.biometricAvailable().timeout(Timing.biometricProbe, onTimeout: () => false);
     if (!context.mounted) return;
     _sub(context, tr('Tài khoản'), (ctx) => [
         ListTile(
@@ -316,7 +318,7 @@ class SettingsTab extends StatelessWidget {
           title: Text(controller.cfSession != null ? controller.cfSession!.email : tr('Chỉ lưu trên máy này')),
           subtitle: Text(controller.syncLabel),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () => _push(ctx, SyncScreen(controller: controller)),
+          onTap: () => pushPage(ctx, SyncScreen(controller: controller)),
         ),
         if (controller.noPassword)
           ListTile(
@@ -351,17 +353,17 @@ class SettingsTab extends StatelessWidget {
   void _data(BuildContext context) => _sub(context, tr('Dữ liệu'), (ctx) {
         final trashed = controller.data.items.where((i) => i.inTrash).length;
         return [
-          ListTile(leading: const Icon(Icons.sync), title: Text(tr('Đồng bộ')), subtitle: Text(controller.syncLabel), onTap: () => _push(ctx, SyncScreen(controller: controller))),
-          ListTile(leading: const Icon(Icons.file_download_outlined), title: Text(tr('Nhập dữ liệu')), onTap: () => _push(ctx, ImportScreen(controller: controller))),
+          ListTile(leading: const Icon(Icons.sync), title: Text(tr('Đồng bộ')), subtitle: Text(controller.syncLabel), onTap: () => pushPage(ctx, SyncScreen(controller: controller))),
+          ListTile(leading: const Icon(Icons.file_download_outlined), title: Text(tr('Nhập dữ liệu')), onTap: () => pushPage(ctx, ImportScreen(controller: controller))),
           ListTile(leading: const Icon(Icons.file_upload_outlined), title: Text(tr('Xuất và sao lưu')), onTap: () => _export(ctx)),
           ListTile(leading: const Icon(Icons.science_outlined), title: Text(tr('Nạp dữ liệu mẫu')), subtitle: Text(tr('Thêm các mục giả để xem giao diện')), onTap: () => _demo(ctx)),
-          ListTile(leading: const Icon(Icons.content_copy), title: Text(tr('Mục trùng lặp')), onTap: () => _push(ctx, DuplicatesScreen(controller: controller))),
+          ListTile(leading: const Icon(Icons.content_copy), title: Text(tr('Mục trùng lặp')), onTap: () => pushPage(ctx, DuplicatesScreen(controller: controller))),
           ListTile(
             leading: const Icon(Icons.delete_outline),
             title: Text(tr('Thùng rác')),
             subtitle: Text(tr('Tự xóa vĩnh viễn sau 30 ngày')),
             trailing: trashed > 0 ? Text('$trashed') : null,
-            onTap: () => _push(ctx, TrashScreen(controller: controller)),
+            onTap: () => pushPage(ctx, TrashScreen(controller: controller)),
           ),
         ];
       });
@@ -384,8 +386,8 @@ class SettingsTab extends StatelessWidget {
               value: controller.blockScreenshots,
               onChanged: controller.setBlockScreenshots,
             ),
-          ListTile(leading: const Icon(Icons.health_and_safety_outlined), title: Text(tr('Kiểm tra bảo mật')), onTap: () => _push(ctx, HealthScreen(controller: controller))),
-          ListTile(leading: const Icon(Icons.notifications_none), title: Text(tr('Nhắc nhở')), onTap: () => _push(ctx, RemindersScreen(controller: controller))),
+          ListTile(leading: const Icon(Icons.health_and_safety_outlined), title: Text(tr('Kiểm tra bảo mật')), onTap: () => pushPage(ctx, HealthScreen(controller: controller))),
+          ListTile(leading: const Icon(Icons.notifications_none), title: Text(tr('Nhắc nhở')), onTap: () => pushPage(ctx, RemindersScreen(controller: controller))),
         ];
       });
 
@@ -403,7 +405,7 @@ class SettingsTab extends StatelessWidget {
           value: controller.showLogos,
           onChanged: controller.setShowLogos,
         ),
-        ListTile(leading: const Icon(Icons.password), title: Text(tr('Tạo mật khẩu')), onTap: () => _push(ctx, const GeneratorScreen())),
+        ListTile(leading: const Icon(Icons.password), title: Text(tr('Tạo mật khẩu')), onTap: () => pushPage(ctx, const GeneratorScreen())),
       ]);
 
   @override
@@ -412,10 +414,10 @@ class SettingsTab extends StatelessWidget {
       (Icons.person_outline, tr('Tài khoản'), controller.noPassword ? tr('Không mật khẩu') : tr('Có mật khẩu'), () => _account(context)),
       (Icons.storage_outlined, tr('Dữ liệu'), tr('Đồng bộ, nhập, xuất, thùng rác'), () => _data(context)),
       (Icons.shield_outlined, tr('Bảo mật'), tr('Tự khóa, kiểm tra, nhắc nhở'), () => _security(context)),
-      (Icons.palette_outlined, tr('Chủ đề'), tr('Sáng, tối, màu nhấn'), () => _push(context, ThemeScreen(controller: controller))),
+      (Icons.palette_outlined, tr('Chủ đề'), tr('Sáng, tối, màu nhấn'), () => pushPage(context, ThemeScreen(controller: controller))),
       (Icons.tune, tr('Chung'), tr('Ngôn ngữ, logo, tạo mật khẩu'), () => _general(context)),
-      (Icons.help_outline, tr('Hỗ trợ'), tr('Câu hỏi thường gặp'), () => _push(context, const HelpScreen())),
-      (Icons.info_outline, tr('Giới thiệu'), tr('Phiên bản {p0}', {'p0': appVersion}), () => _push(context, const AboutScreen())),
+      (Icons.help_outline, tr('Hỗ trợ'), tr('Câu hỏi thường gặp'), () => pushPage(context, const HelpScreen())),
+      (Icons.info_outline, tr('Giới thiệu'), tr('Phiên bản {p0}', {'p0': appVersion}), () => pushPage(context, const AboutScreen())),
     ];
     return ListView(padding: const EdgeInsets.fromLTRB(Gap.lg, Gap.sm, Gap.lg, Gap.xxl), children: [
       CardList(children: [

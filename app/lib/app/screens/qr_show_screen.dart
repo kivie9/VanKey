@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../constants.dart';
 import '../../core/import_export/exporters.dart';
 import '../../core/vault/models.dart';
 import '../i18n.dart';
@@ -53,7 +54,7 @@ class _QrShowScreenState extends State<QrShowScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              Center(child: QrView(key: ValueKey(_page), data: codes[_page], size: 300)),
+              Center(child: QrView(key: ValueKey(_page), data: codes[_page], size: Sizes.qrCode)),
               const SizedBox(height: 12),
               if (codes.length > 1)
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [

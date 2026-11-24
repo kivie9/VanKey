@@ -1,4 +1,5 @@
 import 'demo_data.dart';
+import 'constants.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -113,32 +114,32 @@ class VaultController extends ChangeNotifier {
       id = uuidV4().replaceAll('-', '');
       await idFile.writeAsString(id, flush: true);
     }
-    _settingsFile = File('${dir.path}${Platform.pathSeparator}settings.json');
+    _settingsFile = File('${dir.path}${Platform.pathSeparator}${Storage.settingsFile}');
     try {
       if (await _settingsFile.exists()) {
         final j = jsonDecode(await _settingsFile.readAsString()) as Map<String, dynamic>;
-        final v = j['lockAfter'];
-        if (v is int && v >= 0 && v <= 3600) lockAfterSeconds = v;
-        final lg = j['language'];
-        if (lg == 'vi' || lg == 'en' || lg == 'system') language = lg as String;
-        final t = j['theme'];
+        final v = j[SettingsKey.lockAfter];
+        if (v is int && v >= 0 && v <= LockPolicy.maxAutoLockSeconds) lockAfterSeconds = v;
+        final lg = j[SettingsKey.language];
+        if (lg == LangCode.vi || lg == LangCode.en || lg == LangCode.system) language = lg as String;
+        final t = j[SettingsKey.theme];
         if (t == 'light' || t == 'dark' || t == 'system') themeMode = t as String;
-        final a = j['accent'];
+        final a = j[SettingsKey.accent];
         if (a is int && a >= 0 && a < accentColors.length) accent = a;
-        final sc = j['sync'];
+        final sc = j[SettingsKey.sync];
         if (sc is Map<String, dynamic>) _syncConfig = sc;
-        final sn = j['snooze'];
+        final sn = j[SettingsKey.snooze];
         if (sn is Map<String, dynamic>) {
           snoozed = {for (final e in sn.entries) if (e.value is String && DateTime.tryParse(e.value as String) != null) e.key: DateTime.parse(e.value as String)};
         }
-        final so = j['sortBy'];
+        final so = j[SettingsKey.sortBy];
         if (so is String) sortBy = SortBy.values.firstWhere((e) => e.name == so, orElse: () => SortBy.name);
-        final lt = j['lastType'];
+        final lt = j[SettingsKey.lastType];
         if (lt is String) lastType = ItemType.fromName(lt);
-        if (j['showLogos'] is bool) showLogos = j['showLogos'] as bool;
+        if (j[SettingsKey.showLogos] is bool) showLogos = j[SettingsKey.showLogos] as bool;
         BrandConfig.enabled = showLogos;
-        if (j['blockScreenshots'] is bool) blockScreenshots = j['blockScreenshots'] as bool;
-        final g = j['groupBy'];
+        if (j[SettingsKey.blockScreenshots] is bool) blockScreenshots = j[SettingsKey.blockScreenshots] as bool;
+        final g = j[SettingsKey.groupBy];
         if (g is String) groupBy = GroupBy.values.firstWhere((e) => e.name == g, orElse: () => GroupBy.group);
       }
     } on Object {
@@ -354,8 +355,8 @@ class VaultController extends ChangeNotifier {
       return true;
     } on AuthenticationFailedException {
       error = tr('Sai mật khẩu, hoặc file kho đã bị sửa');
-      if (trackFailures && ++_failures >= 3) {
-        final secs = (5 * (1 << (_failures - 3).clamp(0, 6))).clamp(5, 300);
+      if (trackFailures && ++_failures >= LockPolicy.freeAttempts) {
+        final secs = LockPolicy.waitSecondsAfter(_failures);
         _blockedUntil = DateTime.now().add(Duration(seconds: secs));
         error = tr('Sai mật khẩu. Chờ {p0} giây trước khi thử lại.', {'p0': secs});
       }
@@ -391,7 +392,7 @@ class VaultController extends ChangeNotifier {
 
   void _scheduleNotifications() {
     _notifyTimer?.cancel();
-    _notifyTimer = Timer(const Duration(seconds: 2), () async {
+    _notifyTimer = Timer(Timing.notifyDebounce, () async {
       try {
         await NotificationService.instance.reschedule(data.items.where((i) => !i.inTrash));
       } on Object {
@@ -489,8 +490,8 @@ class VaultController extends ChangeNotifier {
   static bool isAllowedServerUrl(String url) {
     final u = Uri.tryParse(url.trim());
     if (u == null || !u.hasAuthority || u.host.isEmpty) return false;
-    if (u.scheme == 'https') return true;
-    return u.scheme == 'http' && (u.host == 'localhost' || u.host == '127.0.0.1' || u.host == '10.0.2.2');
+    if (u.scheme == ServerPolicy.secureScheme) return true;
+    return u.scheme == ServerPolicy.devScheme && ServerPolicy.devHosts.contains(u.host);
   }
 
   Future<void> _restoreCloudflare() async {
@@ -680,7 +681,7 @@ class VaultController extends ChangeNotifier {
   void _scheduleSync() {
     if (provider == null) return;
     _syncTimer?.cancel();
-    _syncTimer = Timer(const Duration(seconds: 3), () => unawaited(syncNow()));
+    _syncTimer = Timer(Timing.syncDebounce, () => unawaited(syncNow()));
   }
 
   /// Đồng bộ ngay. An toàn khi gọi nhiều lần: lần đang chạy thì bỏ qua.
@@ -755,7 +756,19 @@ class VaultController extends ChangeNotifier {
     notifyListeners();
     try {
       await _settingsFile.writeAsString(
-        jsonEncode({'lockAfter': lockAfterSeconds, 'theme': themeMode, 'language': language, 'accent': accent, 'groupBy': groupBy.name, 'sortBy': sortBy.name, 'blockScreenshots': blockScreenshots, 'showLogos': showLogos, 'lastType': lastType.name, 'snooze': {for (final e in snoozed.entries) e.key: e.value.toUtc().toIso8601String()}, if (_syncConfig != null) 'sync': _syncConfig}),
+        jsonEncode({
+          SettingsKey.lockAfter: lockAfterSeconds,
+          SettingsKey.theme: themeMode,
+          SettingsKey.language: language,
+          SettingsKey.accent: accent,
+          SettingsKey.groupBy: groupBy.name,
+          SettingsKey.sortBy: sortBy.name,
+          SettingsKey.blockScreenshots: blockScreenshots,
+          SettingsKey.showLogos: showLogos,
+          SettingsKey.lastType: lastType.name,
+          SettingsKey.snooze: {for (final e in snoozed.entries) e.key: e.value.toUtc().toIso8601String()},
+          if (_syncConfig != null) SettingsKey.sync: _syncConfig,
+        }),
         flush: true,
       );
     } on Object {
@@ -806,7 +819,7 @@ class VaultController extends ChangeNotifier {
     notifyListeners();
     if (_session == null) return; // chưa có phiên (test): không có gì để lưu
     _saveTimer?.cancel();
-    _saveTimer = Timer(const Duration(milliseconds: 500), () => unawaited(_writeNow()));
+    _saveTimer = Timer(Timing.saveDebounce, () => unawaited(_writeNow()));
     _scheduleSync();
     _scheduleNotifications();
   }

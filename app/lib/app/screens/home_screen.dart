@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../constants.dart';
 import '../../core/security/reminders.dart';
 import '../../core/vault/models.dart';
 import '../../core/vault/search.dart';
@@ -249,7 +250,7 @@ class _ItemsTabState extends State<_ItemsTab> {
                 return IconButton(
                   tooltip: tr('Nhắc nhở'),
                   icon: Badge(isLabelVisible: n > 0, label: Text('$n'), child: const Icon(Icons.notifications_none)),
-                  onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => RemindersScreen(controller: c))),
+                  onPressed: () => pushPage(context, RemindersScreen(controller: c)),
                 );
               }),
               if (!_searching && c.syncStatus != SyncStatus.off)
@@ -260,7 +261,7 @@ class _ItemsTabState extends State<_ItemsTab> {
                     SyncStatus.error => const Icon(Icons.cloud_off, color: Colors.orange),
                     _ => Icon(c.conflicts.isEmpty ? Icons.cloud_done_outlined : Icons.merge_type),
                   },
-                  onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => SyncScreen(controller: c))),
+                  onPressed: () => pushPage(context, SyncScreen(controller: c)),
                 ),
               if (!_searching) IconButton(
                 tooltip: tr('Sắp xếp và lọc'),
@@ -396,7 +397,7 @@ class _SpeedDialState extends State<_SpeedDial> {
       children: [
         for (final a in actions.reversed)
           AnimatedSize(
-            duration: const Duration(milliseconds: 180),
+            duration: Timing.fast,
             curve: Curves.easeOut,
             child: _open
                 ? Padding(
@@ -425,7 +426,7 @@ class _SpeedDialState extends State<_SpeedDial> {
             heroTag: 'main',
             tooltip: _open ? tr('Đóng') : tr('Thêm mục'),
             onPressed: () => widget.onOpenChanged(!_open),
-            child: AnimatedRotation(turns: _open ? 0.125 : 0, duration: const Duration(milliseconds: 180), child: const Icon(Icons.add)),
+            child: AnimatedRotation(turns: _open ? 0.125 : 0, duration: Timing.fast, child: const Icon(Icons.add)),
           ),
         ),
       ],

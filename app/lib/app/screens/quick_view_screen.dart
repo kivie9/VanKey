@@ -69,7 +69,7 @@ class _QuickViewScreenState extends State<QuickViewScreen> {
             onPressed: _input.text.trim().isEmpty ? null : _check,
             child: Padding(padding: EdgeInsets.all(12), child: Text(tr('Kiểm tra'))),
           ),
-          if (_error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(_error!, style: const TextStyle(color: Colors.red))),
+          if (_error != null) ErrorText(_error!),
           if (_params != null) ...[
             const SizedBox(height: 24),
             Clock(builder: (context, now) => Center(child: Transform.scale(scale: 1.4, child: TotpChip(params: _params!, now: now)))),

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../constants.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/vault/models.dart';
@@ -30,7 +31,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   /// Mọi thứ đã hiện ra tự ẩn lại sau 30 giây (và luôn ẩn khi vừa mở màn chi tiết).
   void _armAutoHide() {
     _hideTimer?.cancel();
-    _hideTimer = Timer(const Duration(seconds: 30), () {
+    _hideTimer = Timer(Timing.autoHideSecrets, () {
       if (mounted) {
         setState(() {
           _revealed.clear();
@@ -67,7 +68,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 IconButton(
                   tooltip: tr('Hiện mã QR'),
                   icon: const Icon(Icons.qr_code_2),
-                  onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => QrShowScreen.forItem(item))),
+                  onPressed: () => pushPage(context, QrShowScreen.forItem(item)),
                 ),
               IconButton(
                 tooltip: tr('Sửa'),
@@ -168,15 +169,15 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
               const Divider(),
               ListTile(
                 dense: true,
-                title: Text(_revealed.contains(1000 + n) ? item.pwHistory[n].value : '••••••••••'),
+                title: Text(_revealed.contains(Mask.historyRevealBase + n) ? item.pwHistory[n].value : Mask.dots),
                 subtitle: Text(item.pwHistory[n].changedAt.toLocal().toString().split('.').first),
                 trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                   IconButton(
                     tooltip: tr('Hiện/ẩn'),
-                    icon: Icon(_revealed.contains(1000 + n) ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                    icon: Icon(_revealed.contains(Mask.historyRevealBase + n) ? Icons.visibility_off_outlined : Icons.visibility_outlined),
                     onPressed: () {
-                      final show = !_revealed.contains(1000 + n);
-                      setState(() => show ? _revealed.add(1000 + n) : _revealed.remove(1000 + n));
+                      final show = !_revealed.contains(Mask.historyRevealBase + n);
+                      setState(() => show ? _revealed.add(Mask.historyRevealBase + n) : _revealed.remove(Mask.historyRevealBase + n));
                       if (show) _armAutoHide();
                     },
                   ),
@@ -200,7 +201,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(L.field(f), style: text.labelSmall?.copyWith(letterSpacing: 0.3)),
             const SizedBox(height: 3),
-            SelectableText(hidden ? '••••••••••' : f.value, style: text.bodyLarge?.copyWith(fontWeight: FontWeight.w500, color: colors.fg, letterSpacing: hidden ? 2 : 0)),
+            SelectableText(hidden ? Mask.dots : f.value, style: text.bodyLarge?.copyWith(fontWeight: FontWeight.w500, color: colors.fg, letterSpacing: hidden ? Mask.letterSpacing : 0)),
           ]),
         ),
         if (f.secret)

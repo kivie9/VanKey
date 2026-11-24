@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../constants.dart';
 import '../../core/errors.dart';
 import '../../core/security/password_generator.dart';
 import '../../core/security/password_strength.dart';
@@ -156,7 +157,7 @@ class _ItemEditorScreenState extends State<ItemEditorScreen> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(label, style: t.labelSmall),
               const SizedBox(height: 4),
-              Text('••••••••••••', style: t.bodyLarge?.copyWith(letterSpacing: 2)),
+              Text(Mask.dotsLong, style: t.bodyLarge?.copyWith(letterSpacing: Mask.letterSpacing)),
             ]),
           ),
           Icon(Icons.visibility_outlined, size: 20, color: c.muted),

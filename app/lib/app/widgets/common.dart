@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../constants.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -17,12 +18,28 @@ Future<void> copyText(BuildContext context, String text, {String? what}) async {
   if (context.mounted) {
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
-      ..showSnackBar(SnackBar(content: Text(what ?? tr('Đã chép')), duration: const Duration(seconds: 2)));
+      ..showSnackBar(SnackBar(content: Text(what ?? tr('Đã chép')), duration: Timing.copiedSnack));
   }
-  Timer(const Duration(seconds: 30), () async {
+  Timer(Timing.clipboardClear, () async {
     final cur = await Clipboard.getData(Clipboard.kTextPlain);
     if (cur?.text == text) await Clipboard.setData(const ClipboardData(text: ''));
   });
+}
+
+/// Mở một trang mới (đẩy lên ngăn xếp điều hướng). Dùng chung cho mọi nơi cần chuyển trang.
+Future<void> pushPage(BuildContext context, Widget page, {bool full = false}) =>
+    Navigator.of(context).push(MaterialPageRoute<void>(fullscreenDialog: full, builder: (_) => page));
+
+/// Dòng báo lỗi dưới form (màu lỗi của giao diện, không ghi cứng màu).
+class ErrorText extends StatelessWidget {
+  const ErrorText(this.message, {super.key});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(top: Gap.md),
+        child: Text(message, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+      );
 }
 
 /// Biểu tượng của mục: logo thương hiệu nếu nhận ra (Facebook, Google...), không thì chữ cái đầu trên nền màu trầm.
@@ -102,7 +119,7 @@ class _ClockState extends State<Clock> {
   @override
   void initState() {
     super.initState();
-    _t = Timer.periodic(const Duration(seconds: 1), (_) => _now.value = DateTime.now());
+    _t = Timer.periodic(Timing.clockTick, (_) => _now.value = DateTime.now());
   }
 
   @override

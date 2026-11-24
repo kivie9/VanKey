@@ -113,7 +113,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
       const SizedBox(height: Gap.lg),
       TextButton(
-        onPressed: c.busy ? null : () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => CloudflareLoginScreen(controller: c, join: true))),
+        onPressed: c.busy ? null : () => pushPage(context, CloudflareLoginScreen(controller: c, join: true)),
         child: Text(tr('Đã có tài khoản máy chủ? Đăng nhập để tải kho về'), textAlign: TextAlign.center),
       ),
     ];

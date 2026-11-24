@@ -80,8 +80,20 @@ final class CloudflareApiException implements Exception {
 
 /// Gọi API máy chủ VanKey (xem `server/`).
 final class CloudflareApi {
+  /// Chờ kết nối tối đa chừng này.
+  static const connectTimeout = Duration(seconds: 15);
+
+  /// Chờ một phản hồi tối đa chừng này.
+  static const responseTimeout = Duration(seconds: 30);
+
+  /// Phiên đăng nhập hết hạn sau chừng này nếu máy chủ không nói rõ (giây).
+  static const defaultSessionSeconds = 900;
+
+  /// Làm mới phiên khi còn ít hơn chừng này.
+  static const refreshMargin = Duration(seconds: 30);
+
   CloudflareApi({HttpClient? client}) : _client = client ?? HttpClient()
-    ..connectionTimeout = const Duration(seconds: 15);
+    ..connectionTimeout = connectTimeout;
 
   final HttpClient _client;
 
@@ -116,7 +128,7 @@ final class CloudflareApi {
         req.contentLength = bytes.length;
         req.add(bytes);
       }
-      final res = await req.close().timeout(const Duration(seconds: 30));
+      final res = await req.close().timeout(responseTimeout);
       final body = await res.fold<BytesBuilder>(BytesBuilder(copy: false), (b, d) => b..add(d));
       return (res.statusCode, body.takeBytes(), res.headers);
     } on SocketException catch (e) {
@@ -145,7 +157,7 @@ final class CloudflareApi {
       baseUrl: baseUrl,
       accessToken: j['accessToken'] as String,
       refreshToken: j['refreshToken'] as String,
-      expiresAt: (now ?? DateTime.now()).add(Duration(seconds: (j['expiresIn'] as int?) ?? 900)),
+      expiresAt: (now ?? DateTime.now()).add(Duration(seconds: (j['expiresIn'] as int?) ?? CloudflareApi.defaultSessionSeconds)),
       deviceId: j['deviceId'] as String,
       accountId: j['accountId'] as String,
       email: (j['email'] as String?) ?? '',
@@ -222,7 +234,7 @@ final class CloudflareSync implements SyncProvider {
   String get name => 'cloudflare';
 
   Future<void> _ensureFresh() async {
-    if (_session.expiresAt.difference(DateTime.now()) > const Duration(seconds: 30)) return;
+    if (_session.expiresAt.difference(DateTime.now()) > CloudflareApi.refreshMargin) return;
     await _refresh();
   }
 

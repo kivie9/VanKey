@@ -10,6 +10,7 @@ import '../../core/import_export/extra_importers.dart';
 import '../../core/import_export/importers.dart';
 import '../vault_controller.dart';
 import '../i18n.dart';
+import '../widgets/common.dart';
 
 /// Nhập từ file xuất của app khác, hoặc dán nội dung/link (otpauth://, otpauth-migration://).
 class ImportScreen extends StatefulWidget {
@@ -127,7 +128,7 @@ class _ImportScreenState extends State<ImportScreen> {
             onPressed: _text.text.trim().isEmpty ? null : _parse,
             child: Padding(padding: EdgeInsets.all(12), child: Text(tr('Đọc'))),
           ),
-          if (_error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(_error!, style: const TextStyle(color: Colors.red))),
+          if (_error != null) ErrorText(_error!),
         ] else ...[
           Text(tr('Tìm thấy {p0} mục. Mục trùng đã bỏ chọn sẵn.', {'p0': rows.length}), style: Theme.of(context).textTheme.titleSmall),
           if (_warnings.isNotEmpty)

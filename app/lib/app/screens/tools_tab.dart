@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/security/duplicates.dart';
 import '../../core/security/reminders.dart';
 import '../i18n.dart';
+import '../widgets/common.dart';
 import '../theme.dart';
 import '../vault_controller.dart';
 import 'duplicates_screen.dart';
@@ -21,9 +22,6 @@ class ToolsTab extends StatelessWidget {
   const ToolsTab({super.key, required this.controller});
   final VaultController controller;
 
-  void _push(BuildContext context, Widget page, {bool full = false}) =>
-      Navigator.of(context).push(MaterialPageRoute<void>(fullscreenDialog: full, builder: (_) => page));
-
   @override
   Widget build(BuildContext context) {
     final c = controller;
@@ -32,15 +30,15 @@ class ToolsTab extends StatelessWidget {
     final dups = findDuplicates(c.data.items.where((i) => !i.inTrash)).length;
     final trashed = c.data.items.where((i) => i.inTrash).length;
     final tools = <(IconData, String, int, VoidCallback)>[
-      (Icons.bolt, tr('Xem nhanh 2FA'), 0, () => _push(context, QuickViewScreen(controller: c))),
-      (Icons.password, tr('Tạo mật khẩu'), 0, () => _push(context, const GeneratorScreen())),
-      (Icons.health_and_safety_outlined, tr('Kiểm tra bảo mật'), 0, () => _push(context, HealthScreen(controller: c))),
-      (Icons.notifications_none, tr('Nhắc nhở'), alerts, () => _push(context, RemindersScreen(controller: c))),
-      (Icons.content_copy, tr('Mục trùng lặp'), dups, () => _push(context, DuplicatesScreen(controller: c))),
-      (Icons.delete_outline, tr('Thùng rác'), trashed, () => _push(context, TrashScreen(controller: c))),
-      (Icons.qr_code_scanner, tr('Quét QR'), 0, () => _push(context, QrScanScreen(controller: c))),
-      (Icons.file_download_outlined, tr('Nhập dữ liệu'), 0, () => _push(context, ImportScreen(controller: c))),
-      (Icons.sync, tr('Đồng bộ'), 0, () => _push(context, SyncScreen(controller: c))),
+      (Icons.bolt, tr('Xem nhanh 2FA'), 0, () => pushPage(context, QuickViewScreen(controller: c))),
+      (Icons.password, tr('Tạo mật khẩu'), 0, () => pushPage(context, const GeneratorScreen())),
+      (Icons.health_and_safety_outlined, tr('Kiểm tra bảo mật'), 0, () => pushPage(context, HealthScreen(controller: c))),
+      (Icons.notifications_none, tr('Nhắc nhở'), alerts, () => pushPage(context, RemindersScreen(controller: c))),
+      (Icons.content_copy, tr('Mục trùng lặp'), dups, () => pushPage(context, DuplicatesScreen(controller: c))),
+      (Icons.delete_outline, tr('Thùng rác'), trashed, () => pushPage(context, TrashScreen(controller: c))),
+      (Icons.qr_code_scanner, tr('Quét QR'), 0, () => pushPage(context, QrScanScreen(controller: c))),
+      (Icons.file_download_outlined, tr('Nhập dữ liệu'), 0, () => pushPage(context, ImportScreen(controller: c))),
+      (Icons.sync, tr('Đồng bộ'), 0, () => pushPage(context, SyncScreen(controller: c))),
       (Icons.science_outlined, tr('Nạp dữ liệu mẫu'), 0, () => loadDemoData(context, c)),
     ];
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

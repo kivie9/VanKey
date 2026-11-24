@@ -9,6 +9,7 @@ import '../vault_controller.dart';
 import 'import_screen.dart';
 import 'item_editor_screen.dart';
 import '../i18n.dart';
+import '../widgets/common.dart';
 import '../qr_image.dart';
 
 /// Quét QR bằng camera (hoặc chọn ảnh QR có sẵn). Hỗ trợ otpauth:// và otpauth-migration:// của Google Authenticator.
@@ -87,7 +88,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
                     const Icon(Icons.qr_code_2, size: 72),
                     const SizedBox(height: 12),
                     Text(tr('Máy tính không quét bằng camera. Hãy chụp màn hình mã QR (hoặc lưu ảnh) rồi chọn ảnh đó.'), textAlign: TextAlign.center),
-                    if (_message != null) Padding(padding: const EdgeInsets.only(top: 16), child: Text(_message!, style: const TextStyle(color: Colors.red))),
+                    if (_message != null) ErrorText(_message!),
                   ]),
                 ),
               )

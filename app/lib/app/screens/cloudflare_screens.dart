@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../constants.dart';
 import '../../core/sync/cloudflare_sync.dart';
 import '../i18n.dart';
 import '../theme.dart';
@@ -30,7 +31,7 @@ class _CloudflareLoginScreenState extends State<CloudflareLoginScreen> {
   @override
   void initState() {
     super.initState();
-    _url.text = 'https://';
+    _url.text = ServerPolicy.schemePrefix;
   }
 
   @override

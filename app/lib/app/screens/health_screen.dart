@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../constants.dart';
 import '../../core/security/health.dart';
 import '../../core/security/hibp.dart';
 import '../../core/vault/models.dart';
@@ -96,8 +97,8 @@ class _HealthScreenState extends State<HealthScreen> {
                   padding: const EdgeInsets.all(Gap.xl),
                   child: Column(children: [
                     SizedBox(
-                      width: 120,
-                      height: 120,
+                      width: Sizes.healthGauge,
+                      height: Sizes.healthGauge,
                       child: Stack(alignment: Alignment.center, children: [
                         SizedBox.expand(child: CircularProgressIndicator(value: r.score / 100, strokeWidth: 10, strokeCap: StrokeCap.round, color: color)),
                         Text('${r.score}', style: Theme.of(context).textTheme.displaySmall),
