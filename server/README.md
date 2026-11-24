@@ -56,6 +56,35 @@ Cần tài khoản Cloudflare (miễn phí) và Node.
 7. Trong app: Cài đặt → Dữ liệu → Đồng bộ → *Đồng bộ qua máy chủ Cloudflare của bạn*, nhập địa chỉ, email, mật khẩu tài khoản và bật **Tạo tài khoản mới**.
 8. Trên máy thứ hai: ở màn đầu tiên chọn *Đã có tài khoản máy chủ? Đăng nhập để tải kho về*, nhập thêm **mật khẩu của kho** (hoặc mã khôi phục).
 
+### Cách khác: triển khai qua Git (Workers Builds trên dashboard Cloudflare)
+
+Dùng khi bạn muốn Cloudflare tự build và deploy mỗi lần push lên GitHub, thay vì chạy `wrangler` trên máy.
+
+**Chuẩn bị (trước khi bấm Deploy):**
+
+1. Dashboard → Storage & Databases → D1 → *Create database*, đặt tên `vankey`, copy `database_id`.
+2. Sửa `wrangler.toml` trong repo: `database_id` = id vừa copy, `ALLOWED_EMAILS` = email của bạn. Commit và push.
+
+**Màn hình "Set up your application":**
+
+| Ô | Giá trị |
+|---|---|
+| Project name | `vankey` (phải trùng `name` trong `wrangler.toml`) |
+| Root directory (mục Advanced settings) | `server` (Worker nằm trong thư mục con, không phải gốc repo) |
+| Build command | để trống |
+| Deploy command | `npx wrangler d1 migrations apply vankey --remote && npx wrangler deploy` |
+| Preview command | để nguyên `npx wrangler preview` |
+
+Deploy command ở trên tạo bảng rồi mới deploy; migration đã áp dụng thì được bỏ qua nên chạy lại an toàn.
+
+**Sau lần deploy đầu:**
+
+1. Workers & Pages → `vankey` → Settings → Variables and Secrets → Add, loại **Secret**, tên `TOKEN_SECRET`, giá trị là chuỗi ngẫu nhiên từ 32 ký tự (cất lại ở nơi an toàn), rồi Deploy để áp dụng. Chưa có secret này thì máy chủ không đăng nhập được.
+2. Mở `https://vankey.<tài-khoản>.workers.dev`, phải thấy `{"ok":true,"service":"vankey"}`.
+3. Nối app như bước 7 ở trên.
+
+**Lỗi thường gặp:** không thấy `wrangler.toml` thì chưa đặt Root directory là `server`; lỗi `database_id` thì chưa dán id thật và push lên.
+
 ### Bật đăng nhập Google (tùy chọn)
 
 Cần tạo OAuth client trong Google Cloud, rồi bỏ comment `GOOGLE_CLIENT_IDS` trong `wrangler.toml` và deploy lại. Phía app chưa có nút Google (cần client ID của bạn).

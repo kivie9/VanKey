@@ -11,7 +11,7 @@ ALLOWED_EMAILS = "doi-thanh-email-cua-ban@example.com"
 [[d1_databases]]
 binding = "DB"
 database_name = "vankey"
-database_id = "DAN-DATABASE-ID-VAO-DAY"
+database_id = "a2381b9e-3de8-43e6-8e75-56caa5909430"
 migrations_dir = "migrations"
 
 # Bí mật KHÔNG đặt ở đây. Dùng:  npx wrangler secret put TOKEN_SECRET   (chuỗi ngẫu nhiên ≥ 32 ký tự)
