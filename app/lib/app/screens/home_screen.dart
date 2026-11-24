@@ -68,7 +68,14 @@ class _HomeScreenState extends State<HomeScreen> {
             : _SpeedDial(
                 open: _dialOpen,
                 onOpenChanged: (v) => setState(() => _dialOpen = v),
-                onManual: () => _push(ItemEditorScreen(controller: c), full: true),
+                // Tab 2FA mở sẵn loại "Mã 2FA"; tab Kho không mở sẵn loại 2FA dù lần trước vừa tạo mã.
+                onManual: () => _push(
+                  ItemEditorScreen(
+                    controller: c,
+                    startType: _tab == 1 ? ItemType.totp : (c.lastType == ItemType.totp ? ItemType.login : null),
+                  ),
+                  full: true,
+                ),
                 onScan: () => _push(QrScanScreen(controller: c)),
                 onImport: () => _push(ImportScreen(controller: c)),
               ),
@@ -104,7 +111,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-/// Tab Kho (mọi mục) hoặc tab 2FA (chỉ mục có mã).
+/// Mục có mã 2FA: tab 2FA chỉ hiện các mục này.
+bool _hasCode(Item i) => i.totp != null && i.totp!.secret.isNotEmpty;
+
+/// Tab Kho không hiện mục loại "Mã 2FA" (đã có tab riêng). Mục loại 2FA hỏng, không có khóa, vẫn hiện ở Kho để không bị ẩn mất.
+bool _inVault(Item i) => i.type != ItemType.totp || !_hasCode(i);
+
+/// Tab Kho (mật khẩu, thẻ, ghi chú...; không hiện mã) hoặc tab 2FA (chỉ mục có mã).
 class _ItemsTab extends StatefulWidget {
   const _ItemsTab({required this.controller, required this.onlyTotp});
   final VaultController controller;
@@ -203,7 +216,7 @@ class _ItemsTabState extends State<_ItemsTab> {
     final c = widget.controller;
     final items = c.data.items
         .where((i) => !i.inTrash)
-        .where((i) => !widget.onlyTotp || (i.totp != null && i.totp!.secret.isNotEmpty))
+        .where((i) => widget.onlyTotp ? _hasCode(i) : _inVault(i))
         .where((i) => matchesQuery(i, _q.text))
         .where((i) => _groupFilter.isEmpty || i.group == _groupFilter)
         .toList()
@@ -292,6 +305,7 @@ class _ItemsTabState extends State<_ItemsTab> {
                   Widget tile(List<Item> list, int i) => ItemTile(
                         item: list[i],
                         now: now,
+                        showCode: widget.onlyTotp,
                         onTap: () => _open(list[i]),
                         onLongPress: () => showItemActions(this.context, widget.controller, list[i]),
                         onNext: list[i].totp?.isHotp == true ? () => widget.controller.hotpNext(list[i]) : null,

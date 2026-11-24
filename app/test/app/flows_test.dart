@@ -4,6 +4,7 @@ import 'package:vankey/app/screens/home_screen.dart';
 import 'package:vankey/app/screens/item_detail_screen.dart';
 import 'package:vankey/app/screens/item_editor_screen.dart';
 import 'package:vankey/app/vault_controller.dart';
+import 'package:vankey/app/widgets/common.dart';
 import 'package:vankey/core/vault/models.dart';
 
 Widget _wrap(Widget child) => MaterialApp(home: child);
@@ -98,5 +99,31 @@ void main() {
     await tester.pump();
     expect(find.text('Ngân hàng'), findsOneWidget);
     expect(find.text('Facebook'), findsNothing);
+  });
+
+  testWidgets('tab Kho không hiện mục 2FA và không hiện mã; tab 2FA chỉ hiện mục có mã', (tester) async {
+    final c = _controller();
+    const secret = TotpParams(secret: 'JBSWY3DPEHPK3PXP');
+    c.upsert(Item.create(type: ItemType.login, title: 'Ngân hàng', clock: c.clock));
+    c.upsert(Item.create(type: ItemType.login, title: 'Gmail có 2FA', clock: c.clock, totp: secret));
+    c.upsert(Item.create(type: ItemType.totp, title: 'Dropbox 2FA', clock: c.clock, totp: secret));
+    await tester.binding.setSurfaceSize(const Size(420, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(_wrap(HomeScreen(controller: c)));
+    await tester.pump();
+
+    // Tab Kho: mật khẩu và mục đăng nhập (kể cả mục có gắn 2FA), nhưng không có mục loại 2FA và không có chip mã.
+    expect(find.text('Ngân hàng'), findsOneWidget);
+    expect(find.text('Gmail có 2FA'), findsOneWidget);
+    expect(find.text('Dropbox 2FA'), findsNothing);
+    expect(find.byType(TotpChip), findsNothing);
+
+    // Tab 2FA: chỉ mục có mã, kèm mã.
+    await tester.tap(find.text('2FA'));
+    await tester.pump();
+    expect(find.text('Ngân hàng'), findsNothing);
+    expect(find.text('Gmail có 2FA'), findsOneWidget);
+    expect(find.text('Dropbox 2FA'), findsOneWidget);
+    expect(find.byType(TotpChip), findsNWidgets(2));
   });
 }
