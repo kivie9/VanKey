@@ -69,7 +69,9 @@ abstract final class ServerPolicy {
   static const secureScheme = 'https';
   static const devScheme = 'http';
   static const devHosts = {'localhost', '127.0.0.1', '10.0.2.2'};
-  static const schemePrefix = 'https://';
+
+  /// Máy chủ mặc định điền sẵn ở màn đăng nhập (người dùng vẫn sửa được).
+  static const defaultUrl = 'https://vankey.devcloudly.workers.dev';
 }
 
 /// Tên file và khóa JSON lưu cục bộ.

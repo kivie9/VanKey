@@ -31,7 +31,7 @@ class _CloudflareLoginScreenState extends State<CloudflareLoginScreen> {
   @override
   void initState() {
     super.initState();
-    _url.text = ServerPolicy.schemePrefix;
+    _url.text = ServerPolicy.defaultUrl;
   }
 
   @override
