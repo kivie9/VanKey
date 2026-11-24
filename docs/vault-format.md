@@ -1,6 +1,6 @@
 # Đặc tả định dạng kho (`.vkv`) — bản nháp v0.1
 
-> Trạng thái: **NHÁP**. Chưa có dòng code nào kiểm chứng. Các giá trị đánh dấu **[M0]** phải đo/chốt ở bước spike (xem `TASKS.md`). Phần **test vector** (mục 9) chỉ điền được sau khi có code chạy.
+> Trạng thái: **bản nháp v0.2, đã có cài đặt tham chiếu bằng Dart (M1)**. Đặc tả này khớp với mã trong `app/lib/core/`. Chưa có người ngoài rà soát: **không dùng cho dữ liệu thật cho đến khi có rà soát (xem `TASKS.md` M7)**.
 > Mọi triển khai (Dart, và TypeScript cho extension/server sau này) phải đọc/ghi **byte-cho-byte giống nhau** theo tài liệu này.
 
 ---
@@ -117,6 +117,19 @@ offset      kích thước   trường
 - Hiển thị theo nhóm `XXXX-XXXX-XXXX-XXXX-XXXX-XXXX`. Khi nhập: bỏ khoảng trắng và gạch ngang, không phân biệt hoa thường.
 - `recovery_bytes` = 24 ký hiệu giải mã thành 15 byte. KEK = `HKDF-SHA256(ikm = recovery_bytes, salt, info)`.
 
+### 5.2 AAD của phép bọc khóa (wrap)
+`wrap.ct = XChaCha20-Poly1305(KEK, wrap.nonce, vault_key, aad)` với `aad` là chuỗi UTF-8:
+
+```
+passphrase : vankey/wrap/v1|<vaultId>|<slotId>|passphrase|argon2id13|<opslimit>|<memlimit>|<salt base64>
+recovery   : vankey/wrap/v1|<vaultId>|<slotId>|recovery|hkdf-sha256|<salt base64>|<info>
+```
+
+Nhờ vậy một khe **không thể chép sang kho khác** (khác `vaultId`) và **sửa tham số KDF trong header thì mở khóa thất bại**.
+
+### 5.3 Khe lạ
+Khe có `type` chưa biết (do bản app mới hơn thêm) được **bỏ qua khi mở và giữ nguyên khi ghi lại**; không cần có `kdf`/`wrap` hợp lệ. Header cũng giữ nguyên các trường lạ ở mức cao nhất.
+
 ---
 
 ## 6. Dữ liệu bên trong (sau khi giải mã)
@@ -139,7 +152,10 @@ JSON UTF-8:
   "id": "uuid",
   "type": "login|totp|key|crypto|card|wifi|note",
   "title": "GitHub",
-  "fields": [ { "label": "Tên đăng nhập", "value": "...", "secret": false, "kind": "text" } ],
+  "fields": [
+    { "key": "username", "value": "...", "secret": false, "kind": "text" },
+    { "label": "Câu hỏi bảo mật", "value": "...", "secret": true, "kind": "text" }
+  ],
   "totp": { "secret": "<base32>", "algo": "SHA1", "digits": 6, "period": 30 },
   "group": "Dev",
   "favorite": true,
@@ -148,13 +164,14 @@ JSON UTF-8:
   "createdAt": "...",
   "updatedAt": "...",
   "deletedAt": null,
-  "hlc": "<wallclockMs>:<counter>:<deviceId>",
-  "parentHlc": "<hlc của bản mà thay đổi này dựa trên>"
+  "hlc": "<wallclockMs>:<counter>:<deviceId>"
 }
 ```
-- `deletedAt != null` nghĩa là **trong thùng rác** (khôi phục được 30 ngày). Xóa vĩnh viễn → bỏ khỏi `items` và thêm vào `tombstones` để việc xóa lan sang thiết bị khác.
+- **Trường theo mẫu có `key` ổn định** (`username`, `password`, `url`, `backupCodes`, `account`, `service`, `key`, `expiry`, `wallet`, `address`, `seedPhrase`, `holder`, `number`, `cvv`, `pin`, `ssid`, `security`, `content`, `notes`) để giao diện dịch nhãn theo ngôn ngữ; **trường người dùng tự thêm** có `label` thay cho `key`. Mẫu nằm ở `ItemTemplates` (`app/lib/core/vault/models.dart`).
+- `deletedAt != null` nghĩa là **trong thùng rác** (khôi phục được 30 ngày; quá hạn thì tự xóa vĩnh viễn). Xóa vĩnh viễn → bỏ khỏi `items` và thêm vào `tombstones` để việc xóa lan sang thiết bị khác.
 - Trường `secret: true` không được dùng làm dòng phụ trong danh sách, không đưa vào tìm kiếm, không hiện khi chưa bấm.
-- Trường lạ trong JSON phải **được giữ nguyên khi ghi lại** (để bản app cũ không làm mất trường của bản mới).
+- Trường lạ trong JSON phải **được giữ nguyên khi ghi lại** (cả ở mức mục lẫn mức kho). `type` lạ được hiểu tạm là `note` khi hiển thị nhưng **ghi lại đúng giá trị gốc**.
+- `schema` lớn hơn bản app hiểu → từ chối mở (cần cập nhật ứng dụng).
 
 ### 6.3 Đệm kích thước
 Trước khi mã hóa, **đệm phần JSON bằng khoảng trắng (0x20) cho đến bội số của 4096 byte**. Khoảng trắng ở cuối là JSON hợp lệ nên không cần cơ chế gỡ đệm. Giảm lộ số lượng mục chính xác qua kích thước file.
@@ -166,11 +183,25 @@ Chưa nén ở v1 (đơn giản, tránh tấn công nén). Header có chỗ đ�
 
 ## 7. Gộp (merge)
 
-- **Đồng hồ lai (HLC):** `hlc = <wallclockMs>:<counter>:<deviceId>`. So sánh theo `(wallclockMs, counter, deviceId)`. Mỗi lần sửa mục, thiết bị tạo HLC mới lớn hơn HLC lớn nhất đã thấy.
-- **Theo từng mục:** với cùng `id`, bản có `hlc` lớn hơn thắng.
-- **Xung đột:** nếu cả hai bản có `hlc` khác nhau và **không bản nào có `parentHlc` bằng `hlc` của bản kia** (tức cả hai sửa từ một bản gốc), đó là xung đột → giao diện cho người dùng chọn, **không ghi đè âm thầm**.
-- Mục có trong tombstone của một bên và còn trong bên kia: so `hlc`; sửa sau xóa thì giữ bản sửa.
-- Merge phải **giao hoán, kết hợp, lũy đẳng** (có property test).
+> **Thay đổi so với bản nháp v0.1:** bản nháp dùng trường `parentHlc` để phát hiện xung đột. Cách đó **báo xung đột sai** khi một thiết bị sửa một mục nhiều lần liên tiếp rồi mới đồng bộ (thiết bị kia thấy bản mới nhất nhưng không có bản trung gian). Đã chuyển sang **gộp ba chiều**, trường `parentHlc` bị bỏ.
+
+**Đồng hồ lai (HLC):** `hlc = <wallclockMs>:<counter>:<deviceId>`; `deviceId` chỉ gồm chữ, số, `-`, `_`. So sánh theo `(wallclockMs, counter, deviceId)`: một thứ tự **toàn phần**, nên mọi thiết bị chọn cùng một bản thắng bất kể lệch giờ. Mỗi lần sửa mục (kể cả chuyển vào thùng rác, khôi phục) thiết bị sinh HLC mới **lớn hơn** mọi HLC đã sinh hoặc đã thấy. Chuỗi HLC hỏng được hiểu là cổ nhất.
+
+**Gộp ba chiều** `merge(local, remote, base)`: `base` là bản chung gần nhất đã đồng bộ thành công (thiết bị lưu lại sau mỗi lần đồng bộ; `null` nếu chưa từng đồng bộ). Với mỗi `id` (trạng thái: có mục / đã xóa vĩnh viễn / không có):
+
+| Tình huống | Kết quả |
+|---|---|
+| `local` và `remote` cùng phiên bản (cùng `hlc`, hoặc cùng là tombstone) | giữ nguyên (hai tombstone khác `hlc` thì lấy `hlc` lớn hơn, để kết quả không phụ thuộc thứ tự) |
+| Có `base`, chỉ một bên đổi so với `base` | lấy bên đã đổi, **không xung đột** (kể cả khi bên đó đổi nhiều lần) |
+| Có `base`, cả hai bên đều đổi | bản có `hlc` lớn hơn thắng; nếu cả hai đều là mục còn tồn tại thì **ghi nhận xung đột** để giao diện hỏi người dùng |
+| Không có `base`, một bên không có | lấy bên có |
+| Không có `base`, cả hai có và khác nhau | `hlc` lớn hơn thắng, ghi nhận xung đột |
+| Tombstone đối đầu với bản sửa | `hlc` lớn hơn thắng (sửa sau xóa thì giữ bản sửa), **không** ghi nhận xung đột |
+
+- **Giải quyết xung đột:** người dùng chọn giữ bản của mình hoặc của máy chủ; kết quả là một **phiên bản mới** (HLC lớn hơn cả hai) để lần đồng bộ sau mọi thiết bị đều nhận.
+- `groups`: hợp hai bên (chưa theo dõi việc xóa nhóm).
+- **Tính chất đã kiểm bằng thử ngẫu nhiên** (500 kịch bản, `test/core/vault/merge_test.dart`): giao hoán (đổi chỗ local/remote cho cùng kết quả và cùng tập xung đột), hội tụ (gộp tiếp kết quả với từng bên không làm đổi), không mất mục khi không có tombstone mới hơn.
+- Tìm thấy bằng thử ngẫu nhiên và đã sửa: khi cả hai máy cùng xóa vĩnh viễn một mục, kết quả phụ thuộc thứ tự nếu không chọn tombstone theo `hlc`.
 
 ---
 
@@ -181,7 +212,7 @@ Chưa nén ở v1 (đơn giản, tránh tấn công nén). Header có chỗ đ�
 2. Đệm JSON (6.3), sinh nonce **mới** 24 byte.
 3. Dựng byte từ magic đến hết header, dùng làm AAD.
 4. Mã hóa bằng vault key.
-5. Ghi ra **file tạm cùng thư mục**, `fsync`, rồi **đổi tên** đè file cũ (ghi nguyên tử, không bao giờ để kho nửa vời).
+5. Ghi ra **file tạm cùng thư mục** (`<tên>.tmp`), `flush`, giữ bản trước thành `<tên>.bak`, rồi **đổi tên** đè file cũ (ghi nguyên tử, không bao giờ để kho nửa vời). Cài đặt: `VaultStorage.writeAtomic`.
 
 **Đọc:**
 1. Kiểm magic, version, độ dài (giới hạn mục 4).
@@ -192,26 +223,47 @@ Chưa nén ở v1 (đơn giản, tránh tấn công nén). Header có chỗ đ�
 
 ---
 
-## 9. Test vector — **CHƯA CÓ** (điền ở M1)
+## 9. Test vector và kiểm thử
 
-Cần tạo và đưa vào `app/test/vectors/`, dùng chung cho TypeScript:
+Test vector dùng chung với TypeScript sau này nằm ở `app/test/vectors/`. Các kiểm thử đã có (Dart):
 
-- [x] Argon2id: passphrase cố định + salt cố định + tham số → khóa 32 byte (`app/test/vectors/primitives-v0.json`, đã đối chiếu với libsodium)
-- [x] XChaCha20-Poly1305: khóa, nonce, bản rõ, AAD → bản mã (cùng file; **tiếng Việt** trong bản rõ; đã đối chiếu với libsodium và test vector draft-irtf-cfrg-xchacha)
-- [ ] HKDF-SHA256 cho recovery key (kèm một recovery key mẫu)
-- [ ] Một file `.vkv` hoàn chỉnh nhỏ (2 keyslot, 3 mục) kèm passphrase và recovery key để mở thử
-- [ ] File hỏng: sửa 1 byte ở magic / header / ciphertext / tag → phải thất bại
-- [ ] NFKC: passphrase tiếng Việt dạng tổ hợp và dạng dựng sẵn phải cho cùng khóa
-- [ ] File có `format_version` cao hơn → phải từ chối, không ghi đè
+- [x] Argon2id: passphrase tiếng Việt + salt + tham số → khóa 32 byte, **đối chiếu với libsodium** (`primitives-v0.json`, `test/core/crypto/primitives_test.dart`)
+- [x] XChaCha20-Poly1305: vector chính thức draft-irtf-cfrg-xchacha A.3.1, và vector có tiếng Việt đối chiếu libsodium
+- [x] HKDF-SHA256: vector RFC 5869 (test case 1 và 3)
+- [x] NFKC: passphrase tiếng Việt dạng tổ hợp và dạng dựng sẵn mở được cùng một kho
+- [x] File hỏng: sai magic, cắt cụt, JSON header rác → `CorruptVaultException`; sửa từng byte rải khắp file → không bao giờ mở được
+- [x] `format_version` cao hơn hoặc cờ lạ → `UnsupportedVersionException`
+- [x] Tham số KDF quá yếu/quá nặng trong header → `WeakKdfParametersException`
+- [x] Chép khe sang kho khác (`vaultId` khác) → không mở được
+- [x] Khe lạ và trường header lạ được giữ nguyên khi mở rồi ghi lại
+- [x] Đệm kích thước: phần mã hóa luôn là bội số của 4096 (+ 16 byte tag)
+- [ ] **Một file `.vkv` hoàn chỉnh cố định** (kèm passphrase và recovery key) để **TypeScript đọc chéo**. Chưa tạo; cần khi làm extension/server. Việc đối chiếu chéo Dart ↔ libsodium cho các phép nguyên thủy đã đạt (xem `docs/spike-m0.md`), nhưng **chưa có đối chiếu chéo cho cả định dạng file**.
 
 ---
 
 ## 10. Câu hỏi còn mở
 
-| # | Câu hỏi | Dự kiến |
+| # | Câu hỏi | Tình trạng |
 |---|---|---|
-| 1 | Tham số Argon2id cuối cùng | Chốt sau khi đo ở M0 |
-| 2 | `sodium_libs` có cung cấp `crypto_kdf_hkdf_sha256` không, hay tự viết HKDF bằng HMAC | Tự viết HKDF trên `crypto` nếu thiếu (đơn giản, có test vector RFC 5869) |
-| 3 | Có cần **khóa xác thực server** dẫn xuất từ vault key (cho đăng nhập Cloudflare) | Tách riêng khỏi định dạng này; quyết ở M5 |
-| 4 | Tên trường/enum chính xác của `kind` | Chốt khi viết model ở M1 |
-| 5 | Có đưa `settings` đồng bộ được vào kho không | Hiện: không, cài đặt chỉ ở cục bộ |
+| 1 | Tham số Argon2id cuối cùng | Mặc định **3 vòng, 64 MiB** (0,88 s trên PC); chốt sau khi đo trên Android (xem `spike-m0.md`) |
+| 2 | HKDF | **Đã chốt:** dùng HKDF của thư viện `cryptography` (đúng vector RFC 5869) |
+| 3 | Khóa xác thực server dẫn xuất từ vault key (đăng nhập Cloudflare) | Tách riêng khỏi định dạng này; quyết ở M5 |
+| 4 | Tên trường/enum của `kind` | Hiện là chuỗi tự do (`text`, `multiline`, `url`); chuẩn hóa khi cần |
+| 5 | `settings` có đồng bộ trong kho không | Không, cài đặt chỉ ở cục bộ |
+| 6 | Khe `device` (mở nhanh bằng sinh trắc) | Giao diện sẽ làm ở M3; **không** nằm trong file đồng bộ (mục 3.2) |
+| 7 | Theo dõi việc xóa nhóm khi gộp | Chưa; nhóm chỉ hợp lại |
+| 8 | HOTP (bộ đếm) | Chưa hỗ trợ ở v1: `totp` chỉ có TOTP; link HOTP khi nhập bị bỏ qua có cảnh báo |
+
+---
+
+## 11. Cài đặt tham chiếu
+
+| Phần | Tệp |
+|---|---|
+| Nguyên thủy mật mã | `lib/core/crypto/{aead,kdf,csprng,passphrase,recovery_key}.dart` |
+| Khe khóa | `lib/core/crypto/keyslot.dart` |
+| File kho, header | `lib/core/vault/vault_file.dart` |
+| Phiên làm việc (tạo, mở, đổi passphrase, xoay khóa) | `lib/core/vault/vault_session.dart` |
+| Mô hình dữ liệu | `lib/core/vault/models.dart` |
+| HLC và gộp | `lib/core/vault/{hlc,merge}.dart` |
+| Ghi nguyên tử | `lib/core/vault/vault_storage.dart` |

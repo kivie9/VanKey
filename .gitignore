@@ -69,3 +69,8 @@ Thumbs.db
 tmp/
 *.tmp
 *.bak
+
+# server (Cloudflare Worker)
+server/node_modules/
+server/.wrangler/
+server/.dev.vars

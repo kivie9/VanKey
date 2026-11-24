@@ -76,7 +76,7 @@ cd E:\code\project\keymanager\app
 flutter test test/spike/crypto_spike_test.dart
 
 # đo thời gian (AOT)
-E:\code\flutter\bin\cache\dart-sdk\bin\dart.exe compile exe test/spike/argon2_bench.dart -o build/argon2_bench.exe
+E:\code\libs\flutter\bin\cache\dart-sdk\bin\dart.exe compile exe test/spike/argon2_bench.dart -o build/argon2_bench.exe
 .\build\argon2_bench.exe
 
 # đối chiếu với libsodium (cần Node), chạy SAU lệnh flutter test ở trên:

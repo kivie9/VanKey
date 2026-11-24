@@ -1,0 +1,17 @@
+name = "vankey"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+
+# Email được phép đăng ký/đăng nhập (ngăn cách bằng dấu phẩy). SỬA thành email của bạn trước khi deploy.
+[vars]
+ALLOWED_EMAILS = "doi-thanh-email-cua-ban@example.com"
+# GOOGLE_CLIENT_IDS = "xxxxxxxx.apps.googleusercontent.com"   # bỏ comment khi bật đăng nhập Google
+
+# Sau khi chạy `npx wrangler d1 create vankey`, dán database_id vào đây.
+[[d1_databases]]
+binding = "DB"
+database_name = "vankey"
+database_id = "DAN-DATABASE-ID-VAO-DAY"
+migrations_dir = "migrations"
+
+# Bí mật KHÔNG đặt ở đây. Dùng:  npx wrangler secret put TOKEN_SECRET   (chuỗi ngẫu nhiên ≥ 32 ký tự)

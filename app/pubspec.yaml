@@ -36,6 +36,21 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   cryptography: ^2.9.0
+  crypto: ^3.0.8
+  unorm_dart: ^0.3.3
+  path_provider: ^2.1.6
+  file_picker: ^13.4.0
+  mobile_scanner: ^7.5.0
+  flutter_secure_storage: ^11.2.0
+  local_auth: ^3.0.2
+  flutter_local_notifications: 21.0.0
+  timezone: ^0.11.2
+  archive: ^4.7.1
+  xml: ^6.6.1
+  zxing2: ^0.2.4
+  image: ^4.13.1
+  url_launcher: ^6.3.3
+  simple_icons: ^16.23.0
 
 dev_dependencies:
   flutter_test:

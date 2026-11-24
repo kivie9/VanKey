@@ -240,8 +240,8 @@ Máy hiện có: Git, Node, Java. **Chưa có:** Flutter, Visual Studio, Android
 
 **Bước 1 — chỉ Flutter SDK** (đủ để làm M0, M1 và chạy test):
 ```powershell
-git clone https://github.com/flutter/flutter.git -b stable E:\code\flutter
-# thêm E:\code\flutter\bin vào PATH, mở terminal mới
+git clone https://github.com/flutter/flutter.git -b stable E:\code\libs\flutter
+# thêm E:\code\libs\flutter\bin vào PATH, mở terminal mới
 flutter doctor
 ```
 **Bước 2 — khi làm giao diện Windows (M2):** Visual Studio 2022 Community, tick **Desktop development with C++**.

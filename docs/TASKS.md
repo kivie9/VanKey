@@ -21,8 +21,8 @@ Ký hiệu: **(P)** = có mẫu giao diện trong prototype · **(T)** = cần t
 ## M0 — Thiết lập và kiểm chứng (0,5–1 tuần)
 
 ### Môi trường
-- [x] Cài Flutter SDK: `git clone https://github.com/flutter/flutter.git -b stable E:\code\flutter`
-- [x] Thêm `E:\code\flutter\bin` vào PATH, mở terminal mới, chạy `flutter doctor`
+- [x] Cài Flutter SDK: `git clone https://github.com/flutter/flutter.git -b stable E:\code\libs\flutter`
+- [x] Thêm `E:\code\libs\flutter\bin` vào PATH, mở terminal mới, chạy `flutter doctor`
 - [x] Chốt **tên app, package id**: VanKey, `com.vankey.vankey` (org `com.vankey` + tên project `vankey`)
 - [x] `git init` trong `E:\code\project\keymanager` (nhánh `main`), đã có `.gitignore`
 - [x] Tạo project: `flutter create --org com.vankey --project-name vankey --platforms=windows,android app`
@@ -35,7 +35,7 @@ Ký hiệu: **(P)** = có mẫu giao diện trong prototype · **(T)** = cần t
 - [x] Viết chương trình thử: `app/test/spike/crypto_spike_test.dart` (7 test, gồm test vector chính thức XChaCha20-Poly1305) và `argon2_bench.dart`
 - [x] Chạy được bằng `flutter test` (thuần Dart, không cần thư viện gốc)
 - [x] Đo Argon2id 4 bộ tham số trên **Windows** (AOT): 64 MiB x3 vòng = 876 ms
-- [ ] Nếu đã có điện thoại Android và Android SDK: đo trên **Android** thật
+- [ ] Nếu đã có điện thoại Android và Android SDK: đo trên **Android** thật (**SDK đã cài xong 2026-11-19**; còn thiếu điện thoại cắm USB + màn hình đo trên điện thoại)
 - [ ] **Ngưỡng chấp nhận:** mở khóa ≤ ~1 giây trên PC và ≤ ~1,5 giây trên điện thoại tầm trung; bộ nhớ Argon2id từ 64 MiB trở lên
 - [x] Đã đi theo phương án thuần Dart (`cryptography`) và **đối chiếu byte-cho-byte với libsodium độc lập: khớp**
 - [x] Ghi kết quả vào `docs/spike-m0.md` và `docs/decisions.md` (D4)
@@ -49,62 +49,67 @@ Ký hiệu: **(P)** = có mẫu giao diện trong prototype · **(T)** = cần t
 > Toàn bộ nằm trong `lib/core/`, **không import Flutter UI**. Chạy test bằng `flutter test`.
 
 ### 1.1 Tài liệu (làm trước khi viết code mã hóa)
-- [ ] `docs/vault-format.md`: bố cục byte của file, trường header, keyslot, tham số KDF, JSON bên trong, quy tắc version và nâng cấp
-- [ ] `docs/vault-format.md`: **test vector** (khóa, nonce, bản rõ, bản mã mong đợi) để dùng chung với Dart và TypeScript sau này
-- [ ] `docs/threat-model.md`: tài sản cần bảo vệ, kẻ tấn công, cái bảo vệ được và không bảo vệ được
+- [x] `docs/vault-format.md`: bố cục byte của file, header, keyslot, tham số KDF, JSON bên trong, quy tắc version. **Bản nháp v0.2, khớp với mã; chưa có người ngoài rà soát**
+- [ ] `docs/vault-format.md`: **test vector.** Đã có vector nguyên thủy và bộ test file; **chưa có một file `.vkv` cố định** để TypeScript đọc chéo (cần khi làm extension/server)
+- [x] `docs/threat-model.md`: bản nháp, cần xem lại sau M3
 
 ### 1.2 Mật mã cơ bản (`core/crypto`)
-- [ ] `Csprng`: sinh byte ngẫu nhiên an toàn
-- [ ] `Kdf.argon2id(passphrase, salt, params)` trả khóa 32 byte
-- [ ] `Aead.encrypt / decrypt` (XChaCha20-Poly1305) với dữ liệu liên kết (AAD) là header
-- [ ] `SecureBytes`: bọc khóa, có `wipe()` (ghi đè số 0 khi khóa app)
-- [ ] (T) Test vector, sai khóa, sai nonce, bản mã bị sửa 1 byte → phải **lỗi đúng cách**, không crash, không trả dữ liệu sai
+- [x] `Csprng` (`Random.secure()`), có giao diện `RandomSource` để test thay bằng nguồn cố định; `uuidV4`
+- [x] `Kdf.argon2id` (kiểm cận tham số khi đọc) và `Kdf.hkdfSha256`
+- [x] `Aead.seal / open` (XChaCha20-Poly1305) có AAD
+- [ ] `SecureBytes`: **chưa làm lớp riêng**; hiện có `wipe` ở `RecoveryKey` và `VaultSession.close()` (mức cố gắng tối đa, Dart có bộ thu gom rác)
+- [x] (T) Test vector chính thức, sai khóa/nonce/AAD, sửa bản mã/tag → lỗi đúng cách
 
 ### 1.3 Keyslot (`core/crypto/keyslot`)
-- [ ] Tạo vault key ngẫu nhiên 32 byte
-- [ ] Keyslot **passphrase**: Argon2id → KEK → bọc vault key
-- [ ] Keyslot **recovery**: sinh recovery key (24 ký tự, 6 nhóm 4, bảng chữ dễ đọc), KEK dẫn xuất bằng HKDF (đủ entropy, không cần Argon2)
-- [ ] Keyslot **device**: khóa ngẫu nhiên lưu trong kho an toàn của OS (giao diện `SecureStore`, cài đặt thật ở M3)
-- [ ] Mở kho bằng bất kỳ keyslot nào; **đổi passphrase** = bọc lại vault key; thêm/xóa keyslot
-- [ ] (T) Mở bằng từng loại slot, đổi passphrase rồi mở lại bằng passphrase mới/cũ, xóa slot rồi không mở được
+- [x] Tạo vault key ngẫu nhiên 32 byte
+- [x] Keyslot **passphrase**: Argon2id → KEK → bọc vault key (có chuẩn hóa NFKC)
+- [x] Keyslot **recovery**: recovery key 24 ký tự (120 bit), KEK bằng HKDF-SHA256
+- [ ] Keyslot **device** (khóa trong kho an toàn của OS): làm ở M3, không nằm trong file đồng bộ
+- [x] Mở kho bằng passphrase hoặc recovery key; **đổi passphrase** = bọc lại vault key; tạo lại recovery key; **xoay vault key**. (Chưa có API thêm/xóa khe tùy ý.)
+- [x] (T) Mở bằng từng loại khe, đổi passphrase rồi mở bằng mới/cũ, tạo lại recovery key rồi khóa cũ vô hiệu
 
 ### 1.4 Mô hình dữ liệu (`core/vault`)
-- [ ] `Item`, `Field`, `TotpParams`, `PwHistoryEntry`, `Reminder` theo PLAN.md mục 4.3
-- [ ] 7 loại mục và **mẫu trường** cho từng loại (khớp prototype: Đăng nhập có Mã dự phòng, Thẻ có CVV/PIN...)
-- [ ] Serialize JSON có `schemaVersion`; đọc được phiên bản cũ (chuẩn bị migration)
-- [ ] `Vault`: danh sách mục, nhóm, thùng rác (`deletedAt`), CRUD, chuyển vào/khôi phục khỏi thùng rác, dọn thùng rác > 30 ngày
-- [ ] Hàm `subtitle(item)`: chỉ lấy trường **không bí mật** đầu tiên
-- [ ] Mở/lưu file `.vkv`: **ghi nguyên tử** (ghi ra file tạm rồi đổi tên), nonce mới mỗi lần ghi
-- [ ] (T) Vòng đi vòng lại (lưu → mở) cho mọi loại mục; file hỏng, file cắt cụt, version lạ
+- [x] `Item`, `Field`, `TotpParams`, `PwHistoryEntry`, `Reminder`, `Tombstone`, `VaultData`. **Trường theo mẫu có `key` ổn định** (để dịch nhãn), trường tự thêm có `label`
+- [x] 7 loại mục và mẫu trường (`ItemTemplates`)
+- [x] Serialize JSON có `schema`, giữ nguyên trường lạ và loại mục lạ. (Chưa có migration vì mới có schema 1.)
+- [x] `VaultData`: thêm/sửa (`upsert`), thùng rác, khôi phục, xóa vĩnh viễn (tombstone), **tự dọn thùng rác ≥ 30 ngày**
+- [x] `Item.subtitle`: chỉ lấy trường **không bí mật**
+- [x] Mở/lưu `.vkv`: nonce mới mỗi lần ghi; **ghi nguyên tử** (`VaultStorage`: file tạm, đổi tên, giữ `.bak`)
+- [x] (T) Vòng đi vòng lại, file hỏng/cắt cụt/sửa từng byte, version lạ, tham số KDF xấu, khe lạ
 
 ### 1.5 Merge và xung đột (`core/vault/merge`)
-- [ ] Đồng hồ lai **HLC** (timestamp + bộ đếm + id thiết bị)
-- [ ] `merge(local, remote)` theo từng mục: bản mới hơn thắng, giữ `deletedAt`
-- [ ] Phát hiện **xung đột** (cùng mục, cả hai sửa từ cùng một bản gốc) → trả danh sách để giao diện hỏi, không ghi đè
-- [ ] (T) Property test: giao hoán, kết hợp, lũy đẳng; kịch bản sửa/xóa đồng thời; lệch giờ giữa hai máy
+- [x] Đồng hồ lai **HLC**
+- [x] **Gộp ba chiều** `mergeVaults(local, remote, base)` (đã bỏ cách `parentHlc` vì báo xung đột sai, xem `vault-format.md` mục 7)
+- [x] Phát hiện xung đột, `resolveConflict` tạo phiên bản mới
+- [x] (T) Property test 500 kịch bản: giao hoán, hội tụ, không mất mục. **Tìm ra và sửa 1 lỗi** (hai tombstone khác HLC). Tính "kết hợp" chưa kiểm riêng
 
 ### 1.6 TOTP (`core/totp`)
-- [ ] Base32 mã hóa/giải mã (chịu được khoảng trắng, gạch ngang, chữ thường, padding)
-- [ ] `Totp.generate(secret, time, algo, digits, period)` — SHA1/256/512, 6 và 8 chữ số, chu kỳ 30 và 60 giây
-- [ ] `parseOtpauth(link)` và `buildOtpauth(...)`; từ chối link sai định dạng
-- [ ] `parseMigration(link)`: giải mã `otpauth-migration://offline?data=...` (base64 → protobuf `MigrationPayload`), hỗ trợ lô nhiều mã
-- [ ] Hàm tính thời gian còn lại của chu kỳ (cho vòng đếm ngược)
-- [ ] (T) **Test vector RFC 6238** (SHA1/256/512 tại 59, 1111111109, 1111111111, 1234567890, 2000000000, 20000000000); mẫu migration thật; link lỗi
+- [x] Base32 (chịu khoảng trắng, gạch ngang, chữ thường, padding)
+- [x] `Otp.hotp / totpAt / code`: SHA1/256/512, 6 đến 8 chữ số, chu kỳ tùy ý
+- [x] `OtpAuth.parse / toUri`; từ chối link sai. **Tìm ra và sửa 1 lỗi** (nhà phát hành chứa dấu `:`)
+- [x] `Migration.parseUri / encodeUri`: protobuf viết tay, hỗ trợ lô nhiều mã; chịu "+" thành khoảng trắng và base64 URL-safe
+- [x] `Otp.secondsRemaining / fractionRemaining / grouped`
+- [x] (T) **Vector RFC 6238** (cả 3 thuật toán, 6 mốc) và **RFC 4226**; mẫu migration công khai; quét 1.000 dữ liệu ngẫu nhiên không vượt biên
 
 ### 1.7 Nhập/xuất (`core/import_export`)
-- [ ] Giao diện `Importer` → danh sách `ImportedItem` (kèm cờ trùng)
-- [ ] Importer: Google Authenticator (migration), link `otpauth://` nhiều dòng, Aegis/2FAS (JSON), Bitwarden (JSON, CSV), 1Password (CSV), KeePass (CSV, XML), Chrome/Edge (CSV)
-- [ ] Exporter: sao lưu mã hóa (chính là file kho), link `otpauth://`, CSV (có hàm escape đúng chuẩn)
-- [ ] (T) Mẫu thật từng nguồn (đã xóa dữ liệu nhạy cảm), file rỗng, file sai định dạng, dòng có ký tự đặc biệt/xuống dòng trong ô
+- [x] `ImportResult` (kèm cảnh báo) và `markDuplicates`
+- [x] Importer: Google Authenticator (migration), link `otpauth://` nhiều dòng, Aegis, 2FAS, Bitwarden (JSON, CSV), 1Password (CSV), KeePass (CSV), Chrome/Edge (CSV), tự nhận diện định dạng
+- [x] Exporter: link `otpauth://`, **link Google Authenticator** (chia lô 10 mục), CSV. (Sao lưu mã hóa chính là file kho.)
+- [ ] (T) **Mẫu thật từng nguồn: CHƯA.** Test dùng dữ liệu **tự dựng theo định dạng tôi biết** (Bitwarden, Aegis, 2FAS, 1Password, KeePass, Chrome), chưa đối chiếu với file xuất thật. **Cần thử với file xuất thật của chính bạn** trước khi tin. Đã có: file rỗng/sai định dạng, ký tự đặc biệt, 1.500 dữ liệu rác không làm sập
 
 ### 1.8 Logic thuần chuyển từ prototype
-- [ ] `findDuplicates`: trùng mã 2FA, trùng tên + tài khoản, dùng chung mật khẩu; `mergeDuplicates` (giữ bản mới nhất, mang theo 2FA nếu thiếu)
-- [ ] `passwordStrength` (entropy) và `isWeak`
-- [ ] `healthReport`: yếu, dùng chung, chưa bật 2FA, rò rỉ → điểm
-- [ ] `generatePassword`: dùng CSPRNG, **tránh thiên lệch modulo**, loại ký tự dễ nhầm (0/O, 1/l)
-- [ ] `reminder`: tính ngày hết hạn, trạng thái (ok, sắp, quá hạn), hẹn lại, bỏ qua; đọc hạn thẻ (MM/YY) và hạn API key
-- [ ] `hibpPrefix`: băm SHA-1 mật khẩu, tách 5 ký tự đầu để tra
-- [ ] (T) Test cho từng hàm, gồm các trường hợp biên
+- [x] `findDuplicates` và `mergeDuplicateGroup` (giữ bản mới nhất, mang theo 2FA/nhóm/yêu thích, cất mật khẩu khác vào lịch sử)
+- [x] `PasswordStrength` (entropy có phạt dãy, lặp, mật khẩu thông dụng; **chỉ là ước lượng**)
+- [x] `healthReport` (công thức điểm **tự đặt**)
+- [x] `PasswordGenerator`: CSPRNG, không thiên lệch modulo, đảm bảo đủ loại ký tự, bỏ ký tự dễ nhầm; kiểm phân phối đều
+- [x] Nhắc hạn: `passwordReminder`, `expiryDate` (thẻ, API key), `pendingAlerts` (hẹn lại), `upcomingNotices` (cho bộ lập lịch M6), cộng tháng theo lịch
+- [x] `Hibp.split / countFromResponse / check` (chỉ 5 ký tự đầu mã băm rời khỏi hàm)
+- [x] (T) Test từng hàm, gồm các trường hợp biên. Thêm: tìm kiếm bỏ dấu tiếng Việt, **không tìm trong trường bí mật**
+
+- [ ] Chưa làm (nhập): **1Password 1pux** và **KeePass XML**
+- [ ] Chưa làm: lớp `SecureBytes`, API thêm/xóa khe tùy ý, migration lược đồ cũ
+
+**Kết quả M1 (2026-11-19):** 28 tệp mã trong `lib/core/` (~3.200 dòng), 11 tệp test (~2.150 dòng), **179 test qua**, `flutter analyze` không có vấn đề. Property test và thử dữ liệu rác đã **tìm ra 3 lỗi thật** (khe lạ bị báo hỏng, hai tombstone khác HLC, nhà phát hành chứa dấu `:`), đều đã sửa. Giới hạn đã biết: mật mã chạy thuần Dart (chưa đo trên Android); định dạng file **chưa có người ngoài rà soát**; bộ đọc nhập khẩu **chưa thử với file xuất thật**.
 
 **Xong khi:** toàn bộ test qua; test vector RFC 6238 và test vector định dạng file qua; `vault-format.md` khớp với code; có commit `m1`.
 

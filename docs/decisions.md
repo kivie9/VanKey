@@ -19,6 +19,12 @@ Mỗi dòng: **quyết định, lý do, ngày, trạng thái.** Trạng thái: `
 | D13 | Cài đặt giao diện (chủ đề, ngôn ngữ, mật độ) **chỉ lưu cục bộ**, không đồng bộ | Mỗi thiết bị có nhu cầu khác nhau; giữ kho nhỏ | 2026-11-19 | đề xuất |
 | D14 | Tên app: **VanKey** (thay tên làm việc KeyManager) | Chủ dự án chọn | 2026-11-19 | chốt |
 | D15 | Package id: `com.vankey.vankey`; định dạng kho đổi theo tên: đuôi `.vkv`, magic `VKV1`, xuất sao lưu `.vkbackup` | Không chứa thông tin cá nhân; định dạng còn ở bản nháp nên đổi tên được tự do trước khi có dữ liệu thật | 2026-11-19 | đề xuất (đổi được đến lúc phát hành lên cửa hàng) |
+| D16 | **Gộp ba chiều** (local, remote, bản chung đã đồng bộ) thay cho `parentHlc` | `parentHlc` báo xung đột sai khi một máy sửa nhiều lần liên tiếp rồi mới đồng bộ | 2026-11-19 | chốt (đã cài đặt và kiểm bằng property test) |
+| D17 | Trường mục có **`key` ổn định** cho trường theo mẫu, `label` chỉ cho trường tự thêm | Giao diện dịch nhãn theo ngôn ngữ; prototype lưu nhãn tiếng Việt cứng nên không đa ngôn ngữ được | 2026-11-19 | chốt |
+| D18 | v1 chỉ hỗ trợ **TOTP**; HOTP và Steam bị bỏ qua khi nhập, có cảnh báo | Hiếm gặp; tránh phải đồng bộ bộ đếm giữa các máy | 2026-11-19 | đề xuất |
+| D19 | Protobuf của Google Authenticator **viết tay** (không dùng thư viện `protobuf`) | Chỉ cần đọc/ghi 2 thông điệp nhỏ; ít phụ thuộc; có kiểm biên | 2026-11-19 | chốt |
+| D20 | Tìm kiếm **không bao giờ** xét trường bí mật; so khớp bỏ dấu tiếng Việt | Kết quả khớp có thể làm lộ nội dung bí mật | 2026-11-19 | chốt |
+| D21 | Xuất CSV giữ **nguyên văn** dữ liệu, không thêm ký tự chống công thức Excel | Thêm ký tự sẽ làm đổi mật khẩu; thay vào đó giao diện cảnh báo file không mã hóa | 2026-11-19 | đề xuất |
 
 ## Chưa quyết định
 
@@ -37,6 +43,9 @@ Mỗi dòng: **quyết định, lý do, ngày, trạng thái.** Trạng thái: `
 
 | Thành phần | Phiên bản / vị trí | Ngày | Ghi chú |
 |---|---|---|---|
-| Flutter SDK | 3.50.0 stable, Dart 3.14.0, tại `E:\code\flutter` | 2026-11-19 | `flutter doctor`: Flutter OK, Windows OK, Chrome OK |
-| Android toolchain | **chưa cài** | | Cần khi làm Android (M2 trở đi) |
+| Flutter SDK | 3.50.0 stable, Dart 3.14.0, tại `E:\code\libs\flutter` | 2026-11-19 | `flutter doctor`: Flutter OK, Windows OK, Chrome OK |
+| Android SDK (bản nhẹ, không Android Studio, không máy ảo) | `cmdline-tools` 23.0 (Android CLI 1.1), `platform-tools` 37.0.1, `platforms;android-36`, `build-tools;36.0.0`, tại `E:\code\libs\android-sdk`. NDK 28.2 sẽ do Gradle tải khi build cần | 2026-11-19 | `flutter doctor`: Android toolchain OK, "All Android licenses accepted". `ANDROID_HOME` đã đặt. Flutter 3.50 mặc định `minSdk 24`, `compileSdk 36`; kế hoạch dùng API 26 (chỉnh ở M2) |
 | Visual Studio (C++ desktop) | **chưa cài** | | Cần để build app Windows (M2) |
+| ffmpeg | 6.1.1 full build (gyan.dev) tại `E:\code\libs\ffmpeg` | 2026-11-19 | Không thuộc dự án VanKey; chỉ ghi vị trí. **Không** nằm trong PATH |
+
+Quy ước thư mục công cụ: mọi công cụ dùng chung nằm dưới `E:\code\libs\` (hiện có `flutter`, `ffmpeg`, `android-sdk`).
