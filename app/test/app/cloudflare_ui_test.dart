@@ -73,7 +73,7 @@ void main() {
     expect(find.widgetWithText(TextField, 'Mã khôi phục của kho'), findsOneWidget);
   });
 
-  testWidgets('tạo tài khoản mới đòi mật khẩu từ 8 ký tự; đăng nhập thường chỉ cần có mật khẩu', (tester) async {
+  testWidgets('tạo tài khoản mới đòi mật khẩu đủ dài và đủ khó; đăng nhập thường chỉ cần có mật khẩu', (tester) async {
     await tester.binding.setSurfaceSize(const Size(420, 1000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final c = VaultController()..debugUnlock();
@@ -88,7 +88,12 @@ void main() {
     await tester.tap(find.byType(Switch));
     await tester.pump();
     expect(enabled(), isFalse, reason: 'tạo tài khoản đòi mật khẩu dài');
-    await tester.enterText(find.widgetWithText(TextField, 'Mật khẩu tài khoản (từ 8 ký tự)'), 'mat-khau-du-dai-1');
+    final field = find.widgetWithText(TextField, 'Mật khẩu tài khoản (từ 10 ký tự)');
+    await tester.enterText(field, 'password123');
+    await tester.pump();
+    expect(enabled(), isFalse, reason: 'đủ dài nhưng quá dễ đoán');
+    expect(find.text('Mật khẩu quá dễ đoán. Hãy dài hơn, hoặc ghép vài từ không liên quan.'), findsOneWidget);
+    await tester.enterText(field, 'mat-khau-du-dai-1');
     await tester.pump();
     expect(enabled(), isTrue);
   });

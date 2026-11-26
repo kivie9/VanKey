@@ -2,6 +2,9 @@
 /// Tham số mật mã nằm riêng trong `core/crypto`. Không có khóa hay bí mật nào được ghi cứng.
 library;
 
+import '../core/security/password_strength.dart';
+import 'i18n.dart';
+
 /// Thời gian tự động (ẩn/xóa dữ liệu nhạy cảm, chờ, đệm).
 abstract final class Timing {
   /// Chép vào clipboard xong thì tự xóa sau chừng này (chỉ khi clipboard còn đúng nội dung đó).
@@ -67,10 +70,32 @@ abstract final class LockPolicy {
   }
 }
 
+/// Vì sao mật khẩu mới bị từ chối.
+enum PasswordIssue { tooShort, tooWeak }
+
 /// Quy tắc cho mật khẩu và tên đăng nhập khi tạo mới (khớp quy tắc phía máy chủ trong server/src/handler.ts).
 abstract final class AccountPolicy {
-  /// Một mật khẩu bảo vệ cả tài khoản lẫn kho: dài hơn mức cũ (8) vì kẻ tấn công có file kho có thể đoán ngoại tuyến.
-  static const minPasswordLength = 8;
+  /// Một mật khẩu bảo vệ cả tài khoản lẫn kho, và ai có file kho cũng đoán ngoại tuyến được: phải đủ dài **và** đủ khó.
+  /// Chỉ áp dụng khi đặt hoặc đổi mật khẩu; kho cũ có mật khẩu yếu hơn vẫn mở được.
+  static const minPasswordLength = 10;
+
+  /// Độ mạnh tối thiểu (bit ước lượng, xem [PasswordStrength]): 40 bit = mức "khá". Với Argon2id ~1 giây mỗi lần
+  /// thử trên điện thoại, đoán hết 2^40 khả năng tốn hàng chục năm GPU.
+  static const minPasswordBits = 40.0;
+
+  /// Lý do mật khẩu mới chưa đạt, hoặc `null` nếu đạt.
+  static PasswordIssue? checkNewPassword(String password) {
+    if (password.runes.length < minPasswordLength) return PasswordIssue.tooShort;
+    if (PasswordStrength.estimate(password).bits < minPasswordBits) return PasswordIssue.tooWeak;
+    return null;
+  }
+
+  /// Lời báo (đã dịch) nếu [password] chưa đạt để làm mật khẩu mới, hoặc `null` nếu đạt.
+  static String? newPasswordError(String password) => switch (checkNewPassword(password)) {
+        PasswordIssue.tooShort => tr('Mật khẩu cần ít nhất {p0} ký tự', {'p0': minPasswordLength}),
+        PasswordIssue.tooWeak => tr('Mật khẩu quá dễ đoán. Hãy dài hơn, hoặc ghép vài từ không liên quan.'),
+        null => null,
+      };
   static final _username = RegExp(r'^[a-z0-9][a-z0-9._-]{2,31}$');
 
   /// Chuẩn hóa tên đăng nhập (bỏ khoảng trắng đầu cuối, chữ thường); null nếu không hợp lệ.

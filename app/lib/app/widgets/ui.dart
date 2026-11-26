@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/security/password_strength.dart';
+import '../constants.dart';
 import '../i18n.dart';
 import '../theme.dart';
 
@@ -208,6 +209,26 @@ class StrengthMeter extends StatelessWidget {
         Text(label, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: color)),
       ]),
     );
+  }
+}
+
+/// Dưới ô mật khẩu mới: thanh độ mạnh và lý do chưa đạt (xem [AccountPolicy.checkNewPassword]). Trống khi chưa gõ.
+class NewPasswordHint extends StatelessWidget {
+  const NewPasswordHint(this.password, {super.key});
+  final String password;
+
+  @override
+  Widget build(BuildContext context) {
+    if (password.isEmpty) return const SizedBox.shrink();
+    final issue = AccountPolicy.newPasswordError(password);
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      StrengthMeter(PasswordStrength.estimate(password)),
+      if (issue != null)
+        Padding(
+          padding: const EdgeInsets.only(top: Gap.sm),
+          child: Text(issue, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.of(context).danger)),
+        ),
+    ]);
   }
 }
 

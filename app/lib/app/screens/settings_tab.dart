@@ -193,8 +193,8 @@ class SettingsTab extends StatelessWidget {
     final pw = await Navigator.of(context).push<String>(MaterialPageRoute(builder: (_) => const _NewPasswordDialog()));
     if (pw == null || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
-    await controller.setPassword(pw);
-    messenger.showSnackBar(SnackBar(content: Text(tr('Đã đặt mật khẩu. Từ giờ app sẽ hỏi mật khẩu khi mở.'))));
+    final err = await controller.setPassword(pw);
+    messenger.showSnackBar(SnackBar(content: Text(err ?? tr('Đã đặt mật khẩu. Từ giờ app sẽ hỏi mật khẩu khi mở.'))));
   }
 
   Future<void> _changePassword(BuildContext context) async {
@@ -488,7 +488,7 @@ class _NewPasswordDialogState extends State<_NewPasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final ok = _a.text.length >= AccountPolicy.minPasswordLength && _a.text == _b.text;
+    final ok = AccountPolicy.checkNewPassword(_a.text) == null && _a.text == _b.text;
     return _PasswordPage(
       title: tr('Đặt mật khẩu'),
       note: tr('Từ giờ app sẽ hỏi mật khẩu này mỗi khi mở. Hãy nhớ kỹ: quên mật khẩu thì chỉ mở lại được bằng mã khôi phục.'),
@@ -496,6 +496,7 @@ class _NewPasswordDialogState extends State<_NewPasswordDialog> {
       onConfirm: ok ? () => Navigator.pop(context, _a.text) : null,
       children: [
         _pwField(_a, tr('Mật khẩu (từ {p0} ký tự)', {'p0': AccountPolicy.minPasswordLength}), () => setState(() {})),
+        Padding(padding: const EdgeInsets.only(bottom: Gap.lg), child: NewPasswordHint(_a.text)),
         _pwField(_b, tr('Nhập lại'), () => setState(() {})),
       ],
     );
@@ -527,7 +528,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final ok = _cur.text.isNotEmpty && _a.text.length >= AccountPolicy.minPasswordLength && _a.text == _b.text;
+    final ok = _cur.text.isNotEmpty && AccountPolicy.checkNewPassword(_a.text) == null && _a.text == _b.text;
     return _PasswordPage(
       title: tr('Đổi mật khẩu kho'),
       confirmLabel: tr('Đổi'),
@@ -535,6 +536,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       children: [
         _field(_cur, tr('Mật khẩu hiện tại')),
         _field(_a, tr('Mật khẩu mới (từ {p0} ký tự)', {'p0': AccountPolicy.minPasswordLength})),
+        Padding(padding: const EdgeInsets.only(bottom: Gap.lg), child: NewPasswordHint(_a.text)),
         _field(_b, tr('Nhập lại mật khẩu mới')),
       ],
     );

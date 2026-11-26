@@ -17,4 +17,16 @@ void main() {
       expect(s, inInclusiveRange(LockPolicy.never, LockPolicy.maxAutoLockSeconds));
     }
   });
+
+  test('mật khẩu mới: đủ dài và đủ khó; mật khẩu thông dụng hay dãy phím bị từ chối dù đủ dài', () {
+    expect(AccountPolicy.checkNewPassword('Ab1!xyz'), PasswordIssue.tooShort);
+    expect(AccountPolicy.checkNewPassword('password123'), PasswordIssue.tooWeak);
+    expect(AccountPolicy.checkNewPassword('qwertyuiop'), PasswordIssue.tooWeak);
+    expect(AccountPolicy.checkNewPassword('1234567890'), PasswordIssue.tooWeak);
+    expect(AccountPolicy.checkNewPassword('aaaaaaaaaaaa'), PasswordIssue.tooWeak);
+    expect(AccountPolicy.checkNewPassword('ngựa vằn ăn phở lúc 3 giờ'), isNull);
+    expect(AccountPolicy.checkNewPassword('mat-khau-dung-123'), isNull);
+    expect(AccountPolicy.newPasswordError('mat-khau-dung-123'), isNull);
+    expect(AccountPolicy.newPasswordError('ngan'), isNotNull);
+  });
 }

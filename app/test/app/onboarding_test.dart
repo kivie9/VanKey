@@ -42,7 +42,7 @@ void main() {
     expect(_enabled(tester), isFalse, reason: 'tên đăng nhập sai quy tắc');
   });
 
-  testWidgets('tạo tài khoản: mật khẩu từ 8 ký tự, nhập lại phải khớp, có ô mã mời tùy chọn', (tester) async {
+  testWidgets('tạo tài khoản: mật khẩu từ 10 ký tự và đủ khó, nhập lại phải khớp, có ô mã mời tùy chọn', (tester) async {
     await _open(tester);
     await tester.tap(find.text('Dùng máy chủ VanKey'));
     await tester.pump();
@@ -56,8 +56,13 @@ void main() {
     await tester.enterText(find.widgetWithText(TextField, 'Mật khẩu'), 'ngan123');
     await tester.enterText(find.widgetWithText(TextField, 'Nhập lại mật khẩu'), 'ngan123');
     await tester.pump();
-    expect(_enabled(tester), isFalse, reason: 'dưới 8 ký tự');
-    expect(find.text('Cần ít nhất 8 ký tự'), findsOneWidget);
+    expect(_enabled(tester), isFalse, reason: 'dưới 10 ký tự');
+    expect(find.text('Mật khẩu cần ít nhất 10 ký tự'), findsOneWidget);
+
+    await tester.enterText(find.widgetWithText(TextField, 'Mật khẩu'), 'qwertyuiop12');
+    await tester.enterText(find.widgetWithText(TextField, 'Nhập lại mật khẩu'), 'qwertyuiop12');
+    await tester.pump();
+    expect(_enabled(tester), isFalse, reason: 'dãy phím: đủ dài nhưng dễ đoán');
 
     await tester.enterText(find.widgetWithText(TextField, 'Mật khẩu'), 'mat-khau-du-dai-1');
     await tester.enterText(find.widgetWithText(TextField, 'Nhập lại mật khẩu'), 'mat-khau-du-dai-2');

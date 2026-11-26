@@ -51,7 +51,7 @@ class _CloudflareLoginScreenState extends State<CloudflareLoginScreen> {
   bool get _valid =>
       VaultController.isAllowedServerUrl(_url.text) &&
       AccountPolicy.normalizeUsername(_user.text) != null &&
-      (_register && !widget.join ? _password.text.length >= AccountPolicy.minPasswordLength : _password.text.isNotEmpty) &&
+      (_register && !widget.join ? AccountPolicy.checkNewPassword(_password.text) == null : _password.text.isNotEmpty) &&
       (!widget.join || _vault.text.isNotEmpty);
 
   Future<void> _submit() async {
@@ -109,6 +109,7 @@ class _CloudflareLoginScreenState extends State<CloudflareLoginScreen> {
           _field(_url, tr('Địa chỉ máy chủ'), type: TextInputType.url, helper: tr('Ví dụ: https://vankey.ten-ban.workers.dev')),
           _field(_user, tr('Tên đăng nhập')),
           _field(_password, _register && !widget.join ? tr('Mật khẩu tài khoản (từ {p0} ký tự)', {'p0': AccountPolicy.minPasswordLength}) : tr('Mật khẩu tài khoản'), secret: true),
+          if (_register && !widget.join) Padding(padding: const EdgeInsets.only(bottom: 12), child: NewPasswordHint(_password.text)),
           if (widget.join) ...[
             _field(_vault, _useRecovery ? tr('Mã khôi phục của kho') : tr('Mật khẩu của kho'), secret: !_useRecovery),
             Align(

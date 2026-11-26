@@ -180,6 +180,7 @@ const Map<String, String> enStrings = {
   'Mở khóa bằng vân tay đã được nâng cấp để an toàn hơn. Sau khi mở bằng mật khẩu, hãy bật lại trong Cài đặt > Tài khoản.':
       'Fingerprint unlock has been upgraded to be more secure. After unlocking with your password, turn it on again in Settings > Account.',
   'Tắt tự khóa?': 'Turn off auto-lock?',
+  'Mật khẩu quá dễ đoán. Hãy dài hơn, hoặc ghép vài từ không liên quan.': 'This password is too easy to guess. Make it longer, or combine a few unrelated words.',
   'Khóa mở kho sẽ được cất trên máy này để mở app là vào thẳng, không hỏi mật khẩu. Ai cầm được điện thoại đang mở khóa màn hình là xem được toàn bộ mật khẩu và mã 2FA của bạn. Chỉ nên chọn nếu điện thoại luôn có khóa màn hình và không ai khác dùng.':
       'The vault key will be kept on this device so the app opens straight into your vault without asking for a password. Anyone holding your unlocked phone can see all your passwords and 2FA codes. Only choose this if your phone always has a screen lock and nobody else uses it.',
   'Giữ tự khóa': 'Keep auto-lock',

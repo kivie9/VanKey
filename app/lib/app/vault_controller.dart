@@ -299,8 +299,13 @@ class VaultController extends ChangeNotifier {
     }
   }
 
-  /// Chuyển sang chế độ có mật khẩu.
-  Future<void> setPassword(String passphrase) async {
+  /// Lời báo (đã dịch) nếu [password] chưa đủ để làm mật khẩu mới, hoặc `null` nếu đạt. Xem [AccountPolicy.checkNewPassword].
+  static String? newPasswordError(String password) => AccountPolicy.newPasswordError(password);
+
+  /// Chuyển sang chế độ có mật khẩu. Trả lời báo nếu mật khẩu chưa đủ mạnh (khi đó không đổi gì).
+  Future<String?> setPassword(String passphrase) async {
+    final weak = newPasswordError(passphrase);
+    if (weak != null) return weak;
     final s = _session!;
     final updated = await isoRewrap(s, passphrase, Argon2Params.standard);
     s.close();
@@ -312,6 +317,7 @@ class VaultController extends ChangeNotifier {
     await _remember();
     noPassword = false;
     notifyListeners();
+    return null;
   }
 
   Future<bool> verifyPassphrase(String passphrase) async {
@@ -330,6 +336,8 @@ class VaultController extends ChangeNotifier {
   /// Đang đăng nhập máy chủ thì đổi luôn mật khẩu tài khoản trên máy chủ (một mật khẩu cho cả hai), TRƯỚC khi đổi
   /// trên máy: máy chủ không đổi được thì không đổi gì, tránh lệch mật khẩu giữa máy và máy chủ.
   Future<String?> changeVaultPassword(String current, String next) async {
+    final weak = newPasswordError(next);
+    if (weak != null) return weak;
     if (!await verifyPassphrase(current)) return tr('Mật khẩu hiện tại không đúng');
     final p = provider;
     final user = _serverUsername;
@@ -346,8 +354,7 @@ class VaultController extends ChangeNotifier {
         return tr('Không kết nối được máy chủ ({p0}). Mật khẩu chưa được đổi.', {'p0': e.message});
       }
     }
-    await setPassword(next);
-    return null;
+    return setPassword(next);
   }
 
   /// Tên đăng nhập máy chủ đang dùng, nếu có.
@@ -718,6 +725,10 @@ class VaultController extends ChangeNotifier {
     if (!isAllowedServerUrl(base)) return tr('Địa chỉ máy chủ phải bắt đầu bằng https://');
     final name = AccountPolicy.normalizeUsername(username);
     if (name == null) return _badUsername;
+    if (register) {
+      final weak = newPasswordError(password);
+      if (weak != null) return weak;
+    }
     try {
       final s = register
           ? await _cfApi.register(base, name, await isoAuthKey(name, password), _deviceName, registerCode: registerCode.trim())
@@ -788,7 +799,8 @@ class VaultController extends ChangeNotifier {
     if (!isAllowedServerUrl(base)) return tr('Địa chỉ máy chủ phải bắt đầu bằng https://');
     final name = AccountPolicy.normalizeUsername(username);
     if (name == null) return _badUsername;
-    if (password.length < AccountPolicy.minPasswordLength) return tr('Mật khẩu cần ít nhất {p0} ký tự', {'p0': AccountPolicy.minPasswordLength});
+    final weak = newPasswordError(password);
+    if (weak != null) return weak;
     busy = true;
     error = null;
     notifyListeners();
@@ -997,7 +1009,8 @@ class VaultController extends ChangeNotifier {
   Future<String?> driveCreateVault(String password) async {
     final auth = _pendingDriveAuth;
     if (auth == null) return tr('Hãy đăng nhập Google trước.');
-    if (password.length < AccountPolicy.minPasswordLength) return tr('Mật khẩu cần ít nhất {p0} ký tự', {'p0': AccountPolicy.minPasswordLength});
+    final weak = newPasswordError(password);
+    if (weak != null) return weak;
     busy = true;
     error = null;
     notifyListeners();

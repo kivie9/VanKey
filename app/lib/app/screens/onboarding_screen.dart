@@ -1,6 +1,5 @@
 import 'package:material_ui/material_ui.dart';
 
-import '../../core/security/password_strength.dart';
 import '../constants.dart';
 import '../google_drive_auth.dart';
 import '../theme.dart';
@@ -136,7 +135,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   // ---- Bước 2a: đăng nhập / tạo tài khoản trên máy chủ ----
 
-  bool get _passLongEnough => _pass.text.length >= AccountPolicy.minPasswordLength;
+  bool get _passLongEnough => AccountPolicy.checkNewPassword(_pass.text) == null;
   bool get _passMatch => _pass.text == _confirm.text && _confirm.text.isNotEmpty;
 
   bool _serverValid(VaultController c) {
@@ -196,19 +195,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   /// Ô mật khẩu mới kèm thanh độ mạnh và lời nhắc độ dài (dùng cho tạo tài khoản và tạo kho trên máy).
   /// Phần độ mạnh nằm trong MỘT widget cố định để các ô bên dưới không bị dựng lại (mất tiêu điểm) khi bắt đầu gõ.
   List<Widget> _newPasswordFields(String label) {
-    final text = Theme.of(context).textTheme;
     return [
       _passwordField(_pass, label),
-      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        if (_pass.text.isNotEmpty) ...[
-          StrengthMeter(PasswordStrength.estimate(_pass.text)),
-          if (!_passLongEnough)
-            Padding(
-              padding: const EdgeInsets.only(top: Gap.sm),
-              child: Text(tr('Cần ít nhất {p0} ký tự', {'p0': AccountPolicy.minPasswordLength}), style: text.bodySmall),
-            ),
-        ],
-      ]),
+      NewPasswordHint(_pass.text),
       const SizedBox(height: Gap.md),
       _passwordField(_confirm, tr('Nhập lại mật khẩu'), errorText: _confirm.text.isNotEmpty && !_passMatch ? tr('Chưa khớp') : null),
     ];
