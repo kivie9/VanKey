@@ -35,8 +35,7 @@ List<(String, List<Item>)> groupItems(List<Item> items, GroupBy by) {
     final key = switch (by) {
       GroupBy.group => i.group.isEmpty ? tr('Chưa gắn thẻ') : i.group,
       GroupBy.type => L.type(i.type),
-      // "Dịch vụ" không chia theo tiêu đề nhóm: danh sách tự xếp chồng bằng stackByService.
-      GroupBy.service || GroupBy.none => '',
+      GroupBy.none => '',
     };
     groups.putIfAbsent(key, () => []).add(i);
   }

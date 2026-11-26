@@ -176,7 +176,7 @@ void main() {
     testWidgets(name, (t) async {
       await t.binding.setSurfaceSize(size);
       addTearDown(() => t.binding.setSurfaceSize(null));
-      final c = _sample()..groupBy = GroupBy.service;
+      final c = _sample()..groupBy = GroupBy.type;
       for (final (title, user) in [('FB bán hàng', 'shop.vanle@gmail.com'), ('Facebook', 'van.phu@gmail.com'), ('Google', 'van.le@congty.vn')]) {
         c.upsert(Item.create(type: ItemType.login, title: title, clock: c.clock, group: 'Công việc', values: {'username': user, 'url': title == 'Google' ? 'google.com' : 'facebook.com'}));
       }

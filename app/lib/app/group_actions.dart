@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'i18n.dart';
 import 'theme.dart';
 import 'vault_controller.dart';
+import 'widgets/tag_badge.dart';
 import 'widgets/ui.dart';
 
 /// Hộp nhập tên nhóm (tạo mới hoặc đổi tên). Trả về tên đã cắt khoảng trắng, hoặc null nếu hủy.
@@ -61,8 +62,8 @@ Future<String?> pickGroup(BuildContext context, VaultController c, {required Str
       final groups = c.groups;
       // Nhóm vừa gõ ở form nhưng chưa có mục nào dùng vẫn phải hiện để còn thấy là đang chọn.
       final all = {...groups, if (current.isNotEmpty) current}.toList()..sort();
-      Widget row(IconData icon, String label, bool selected, VoidCallback onTap, {String? trailing}) => ListTile(
-            leading: Icon(icon, color: selected ? colors.accent : colors.muted),
+      Widget row(Widget leading, String label, bool selected, VoidCallback onTap, {String? trailing}) => ListTile(
+            leading: leading,
             title: Text(label, style: TextStyle(color: selected ? colors.accent : colors.fg, fontWeight: selected ? FontWeight.w600 : null)),
             trailing: selected ? Icon(Icons.check_rounded, color: colors.accent) : (trailing == null ? null : Text(trailing, style: TextStyle(color: colors.muted))),
             onTap: onTap,
@@ -87,9 +88,9 @@ Future<String?> pickGroup(BuildContext context, VaultController c, {required Str
             ),
             Flexible(
               child: ListView(shrinkWrap: true, children: [
-                row(Icons.folder_off_outlined, tr('Không có thẻ'), current.isEmpty, () => Navigator.pop(ctx, '')),
-                for (final g in all) row(Icons.folder_outlined, g, g == current, () => Navigator.pop(ctx, g), trailing: '${c.countInGroup(g)}'),
-                row(Icons.create_new_folder_outlined, tr('Thẻ mới…'), false, () async {
+                row(Icon(Icons.folder_off_outlined, color: current.isEmpty ? colors.accent : colors.muted), tr('Không có thẻ'), current.isEmpty, () => Navigator.pop(ctx, '')),
+                for (final g in all) row(TagBadge(name: g, color: c.tagColor(g), size: 28), g, g == current, () => Navigator.pop(ctx, g), trailing: '${c.countInGroup(g)}'),
+                row(Icon(Icons.create_new_folder_outlined, color: colors.muted), tr('Thẻ mới…'), false, () async {
                   final name = await askGroupName(ctx, title: tr('Thẻ mới'), confirmLabel: tr('Tạo'));
                   if (name != null && ctx.mounted) Navigator.pop(ctx, name);
                 }),
@@ -130,7 +131,11 @@ Future<void> manageGroups(BuildContext context, VaultController c) {
                   child: ListView(shrinkWrap: true, children: [
                     for (final g in groups)
                       ListTile(
-                        leading: Icon(Icons.folder_outlined, color: colors.muted),
+                        leading: IconButton(
+                          tooltip: tr('Đổi màu'),
+                          onPressed: () => _pickTagColor(ctx, c, g),
+                          icon: TagBadge(name: g, color: c.tagColor(g), size: 30),
+                        ),
                         title: Text(g),
                         subtitle: Text(tr('{p0} mục', {'p0': c.countInGroup(g)})),
                         trailing: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -168,3 +173,39 @@ Future<void> manageGroups(BuildContext context, VaultController c) {
     ),
   );
 }
+
+/// Chọn màu cho logo của thẻ. Bỏ gán thì về màu mặc định theo tên.
+Future<void> _pickTagColor(BuildContext context, VaultController c, String name) => showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => ListenableBuilder(
+        listenable: c,
+        builder: (ctx, _) {
+          final current = c.tagColor(name).toARGB32();
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(Gap.xl),
+              child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(tr('Màu của thẻ "{p0}"', {'p0': name}), style: Theme.of(ctx).textTheme.titleMedium),
+                const SizedBox(height: Gap.lg),
+                Wrap(spacing: Gap.md, runSpacing: Gap.md, children: [
+                  for (final col in TagPalette.colors)
+                    InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: () => c.setTagColor(name, col),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(color: col, shape: BoxShape.circle),
+                        child: current == col.toARGB32() ? const Icon(Icons.check_rounded, color: Color(0xFFFFFFFF)) : null,
+                      ),
+                    ),
+                ]),
+                const SizedBox(height: Gap.lg),
+                TextButton(onPressed: () => c.setTagColor(name, null), child: Text(tr('Dùng màu mặc định'))),
+              ]),
+            ),
+          );
+        },
+      ),
+    );

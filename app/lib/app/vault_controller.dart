@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart' show Color;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:path_provider/path_provider.dart';
@@ -27,6 +28,7 @@ import '../core/vault/vault_session.dart';
 import '../core/vault/vault_storage.dart';
 import 'notification_service.dart';
 import 'brand.dart';
+import 'widgets/tag_badge.dart' show TagPalette;
 import 'isolate_ops.dart';
 import 'platform_bridge.dart';
 import 'theme.dart' show accentColors;
@@ -34,7 +36,7 @@ import './i18n.dart';
 
 enum Phase { loading, onboarding, locked, unlocked }
 
-enum GroupBy { group, type, service, none }
+enum GroupBy { group, type, none }
 
 enum SortBy { name, updated, created }
 
@@ -64,6 +66,8 @@ class VaultController extends ChangeNotifier {
   SortBy sortBy = SortBy.name;
   bool blockScreenshots = true;
   bool showLogos = true;
+  /// Màu gán cho từng thẻ (tên thẻ -> ARGB). Thẻ chưa gán màu thì dùng màu mặc định theo tên.
+  Map<String, int> tagColors = {};
   ItemType lastType = ItemType.login; // loại mục vừa tạo gần nhất: lần sau chọn sẵn
   Map<String, DateTime> snoozed = {};
 
@@ -165,6 +169,8 @@ class VaultController extends ChangeNotifier {
         if (j[SettingsKey.showLogos] is bool) showLogos = j[SettingsKey.showLogos] as bool;
         BrandConfig.enabled = showLogos;
         if (j[SettingsKey.blockScreenshots] is bool) blockScreenshots = j[SettingsKey.blockScreenshots] as bool;
+        final tc = j[SettingsKey.tagColors];
+        if (tc is Map) tagColors = {for (final e in tc.entries) if (e.key is String && e.value is int) e.key as String: e.value as int};
         final g = j[SettingsKey.groupBy];
         if (g is String) groupBy = GroupBy.values.firstWhere((e) => e.name == g, orElse: () => GroupBy.group);
       }
@@ -1270,6 +1276,23 @@ class VaultController extends ChangeNotifier {
   Future<void> setLanguage(String lang) => _updateSettings(() => language = lang);
   Future<void> setAccent(int i) => _updateSettings(() => accent = i);
   Future<void> setGroupBy(GroupBy g) => _updateSettings(() => groupBy = g);
+
+  /// Màu của thẻ: màu đã gán, hoặc màu mặc định theo tên.
+  Color tagColor(String name) {
+    final v = tagColors[name];
+    return v != null ? Color(v) : TagPalette.defaultFor(name);
+  }
+
+  /// Gán màu cho thẻ ([color] null = bỏ gán, về màu mặc định).
+  Future<void> setTagColor(String name, Color? color) => _updateSettings(() {
+        final m = {...tagColors};
+        if (color == null) {
+          m.remove(name);
+        } else {
+          m[name] = color.toARGB32();
+        }
+        tagColors = m;
+      });
   Future<void> setSortBy(SortBy s) => _updateSettings(() => sortBy = s);
   /// Ghi nhớ loại mục vừa tạo (không báo giao diện dựng lại).
   void rememberType(ItemType t) {
@@ -1302,6 +1325,7 @@ class VaultController extends ChangeNotifier {
           SettingsKey.sortBy: sortBy.name,
           SettingsKey.blockScreenshots: blockScreenshots,
           SettingsKey.showLogos: showLogos,
+          SettingsKey.tagColors: tagColors,
           SettingsKey.lastType: lastType.name,
           SettingsKey.snooze: {for (final e in snoozed.entries) e.key: e.value.toUtc().toIso8601String()},
           SettingsKey.dismissedServices: dismissedServices.toList(),

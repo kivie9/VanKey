@@ -136,6 +136,7 @@ abstract final class SettingsKey {
   static const accent = 'accent';
   static const groupBy = 'groupBy';
   static const sortBy = 'sortBy';
+  static const tagColors = 'tagColors';
   static const blockScreenshots = 'blockScreenshots';
   static const showLogos = 'showLogos';
   static const lastType = 'lastType';

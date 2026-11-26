@@ -3,12 +3,11 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/security/reminders.dart';
 import '../../core/vault/models.dart';
 import '../../core/vault/search.dart';
-import '../../core/vault/services.dart';
-import '../widgets/service_stack_header.dart';
 import '../vault_controller.dart';
 import '../item_actions.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import '../widgets/tag_badge.dart';
 import '../widgets/ui.dart';
 import 'item_detail_screen.dart';
 import 'import_screen.dart';
@@ -114,7 +113,6 @@ class _ItemsTabState extends State<_ItemsTab> {
   bool _searching = false;
   final _q = TextEditingController();
   final _collapsed = <String>{};
-  final _openStacks = <String>{}; // nhóm dịch vụ đang mở (mặc định đóng)
   String _groupFilter = ''; // rỗng = mọi nhóm
 
   @override
@@ -164,7 +162,7 @@ class _ItemsTabState extends State<_ItemsTab> {
                   ),
                 ]),
                 label(tr('Gom theo')),
-                chips<GroupBy>([(GroupBy.group, tr('Thẻ')), (GroupBy.type, tr('Loại')), (GroupBy.service, tr('Dịch vụ')), (GroupBy.none, tr('Không gom'))], c.groupBy, c.setGroupBy),
+                chips<GroupBy>([(GroupBy.group, tr('Thẻ')), (GroupBy.type, tr('Loại')), (GroupBy.none, tr('Không gom'))], c.groupBy, c.setGroupBy),
                 label(tr('Sắp xếp')),
                 chips<SortBy>([(SortBy.name, tr('Tên A–Z')), (SortBy.updated, tr('Mới sửa')), (SortBy.created, tr('Mới tạo'))], c.sortBy, c.setSortBy),
                 if (groups.isNotEmpty) ...[
@@ -300,43 +298,18 @@ class _ItemsTabState extends State<_ItemsTab> {
                             childCount: list.length,
                           ),
                         );
-                  // Gom theo dịch vụ: dịch vụ có từ hai tài khoản là một thẻ, bấm để mở. Đang tìm thì mở sẵn.
-                  Widget stacks() {
-                    final rows = <Widget>[];
-                    for (final s in stackByService(items, byName: c.sortBy == SortBy.name)) {
-                      if (!s.isStack) {
-                        rows.add(Card(child: tile(s.items, 0)));
-                        continue;
-                      }
-                      final open = _q.text.isNotEmpty || _openStacks.contains(s.key);
-                      rows.add(Card(
-                        child: Column(children: [
-                          ServiceStackHeader(stack: s, open: open, onTap: () => setState(() => _openStacks.contains(s.key) ? _openStacks.remove(s.key) : _openStacks.add(s.key))),
-                          if (open)
-                            for (var i = 0; i < s.items.length; i++) ...[
-                              const Divider(indent: Gap.lg),
-                              Padding(padding: const EdgeInsets.only(left: Gap.md), child: tile(s.items, i, labels: stackedLabels(s.items[i], s.name))),
-                            ],
-                        ]),
-                      ));
-                    }
-                    return SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(Gap.lg, Gap.md, Gap.lg, 0),
-                      sliver: SliverList.separated(itemCount: rows.length, separatorBuilder: (_, _) => const SizedBox(height: Gap.sm), itemBuilder: (_, i) => rows[i]),
-                    );
-                  }
-
                   return CustomScrollView(slivers: [
                     if (favs.isNotEmpty && _q.text.isEmpty) ...[
                       SliverToBoxAdapter(child: _Header(tr('Yêu thích'))),
                       tiles(favs),
                     ],
-                    if (c.groupBy == GroupBy.service) stacks() else for (final (n, list) in groups) ...[
+                    for (final (n, list) in groups) ...[
                       if (n.isNotEmpty)
                         SliverToBoxAdapter(
                           child: _Header(
                             n,
                             count: list.length,
+                            badge: c.groupBy == GroupBy.group ? TagBadge(name: n, color: c.tagColor(n), size: 22) : null,
                             collapsed: _collapsed.contains(n),
                             onTap: () => setState(() => _collapsed.contains(n) ? _collapsed.remove(n) : _collapsed.add(n)),
                           ),
@@ -353,14 +326,24 @@ class _ItemsTabState extends State<_ItemsTab> {
 }
 
 class _Header extends StatelessWidget {
-  const _Header(this.text, {this.count, this.collapsed = false, this.onTap});
+  const _Header(this.text, {this.count, this.collapsed = false, this.onTap, this.badge});
   final String text;
   final int? count;
   final bool collapsed;
   final VoidCallback? onTap;
 
+  /// Logo của thẻ (chữ cái + màu) đặt trước tên nhóm.
+  final Widget? badge;
+
   @override
-  Widget build(BuildContext context) => SectionHeader(text, count: count, collapsed: onTap == null ? null : collapsed, onTap: onTap);
+  Widget build(BuildContext context) {
+    final header = SectionHeader(text, count: count, collapsed: onTap == null ? null : collapsed, onTap: onTap);
+    if (badge == null) return header;
+    return Row(children: [
+      Padding(padding: const EdgeInsets.only(left: Gap.lg), child: badge),
+      Expanded(child: header),
+    ]);
+  }
 }
 
 class _Empty extends StatelessWidget {

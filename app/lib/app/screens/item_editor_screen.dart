@@ -7,11 +7,10 @@ import '../../core/security/password_strength.dart';
 import '../../core/totp/otpauth.dart';
 import '../../core/totp/totp.dart';
 import '../../core/vault/models.dart';
-import '../../core/vault/services.dart';
 import '../labels.dart';
 import '../theme.dart';
 import '../vault_controller.dart';
-import '../widgets/service_field.dart';
+import '../widgets/tag_badge.dart';
 import '../widgets/ui.dart';
 import '../group_actions.dart';
 import '../i18n.dart';
@@ -64,9 +63,6 @@ class _ItemEditorScreenState extends State<ItemEditorScreen> {
   late ItemType _type;
   final _title = TextEditingController();
   // Ô "Dịch vụ" chỉ để chọn nhanh: dịch vụ được tính từ địa chỉ web và tên, không lưu riêng.
-  final _service = TextEditingController();
-  final _serviceFocus = FocusNode();
-  String? _autoTitle; // tên do app tự điền: còn nguyên thì được thay khi chọn dịch vụ khác
   final _group = TextEditingController();
   final _secret = TextEditingController();
   final _notes =
@@ -104,11 +100,6 @@ class _ItemEditorScreenState extends State<ItemEditorScreen> {
     }
     if (o == null && widget.startType != null) _type = widget.startType!;
     _syncControllers();
-    _serviceFocus.addListener(_onServiceBlur);
-    if (o != null) {
-      final ref = serviceOf(o);
-      if (ref != null && !ref.key.startsWith('t:')) _service.text = ref.name;
-    }
     final pre = widget.prefillSecret;
     if (o == null && pre != null) {
       _secret.text = pre;
@@ -125,60 +116,8 @@ class _ItemEditorScreenState extends State<ItemEditorScreen> {
     }
   }
 
-  void _fillTitle(String name) {
-    if (_title.text.trim().isEmpty || _title.text == _autoTitle) {
-      _title.text = name;
-      _autoTitle = name;
-    }
-  }
-
-  /// Chọn một dịch vụ: điền địa chỉ web (nếu địa chỉ đang có không thuộc dịch vụ đó) và tên (nếu chưa tự đặt).
-  void _applyService(ServiceOption option) {
-    _service.text = option.name;
-    final url = _values['url'];
-    final domain = option.domain;
-    if (url != null && domain != null) {
-      final host = hostOf(url.text);
-      final known = host == null ? null : serviceOfHost(host);
-      final current = host == null
-          ? null
-          : (known != null ? 's:${known.id}' : 'd:${baseDomain(host)}');
-      if (current != option.key) url.text = domain;
-    }
-    _fillTitle(option.name);
-    setState(() {});
-  }
-
-  /// Rời ô mà chưa bấm gợi ý: gõ đúng tên dịch vụ thì coi như đã chọn; tên lạ thì dùng làm tên mục.
-  void _onServiceBlur() {
-    if (_serviceFocus.hasFocus || !mounted) return;
-    final typed = normalizeName(_service.text);
-    if (typed.isEmpty) return;
-    final match = serviceOptions(
-      _service.text,
-      widget.controller.data.items,
-    ).where((o) => !o.isNew && normalizeName(o.name) == typed);
-    if (match.isNotEmpty) {
-      _applyService(match.first);
-    } else if (_title.text.trim().isEmpty) {
-      _fillTitle(_service.text.trim());
-    }
-  }
-
-  /// Gõ hoặc dán địa chỉ web trước: ô dịch vụ tự nhận ra.
-  void _onUrlChanged(String value) {
-    final host = hostOf(value);
-    if (host == null) return;
-    final known = serviceOfHost(host);
-    _service.text = known?.name ?? baseDomain(host);
-    if (known != null) _fillTitle(known.name);
-  }
-
   @override
   void dispose() {
-    _serviceFocus.removeListener(_onServiceBlur);
-    _serviceFocus.dispose();
-    _service.dispose();
     _title.dispose();
     _group.dispose();
     _secret.dispose();
@@ -420,18 +359,38 @@ class _ItemEditorScreenState extends State<ItemEditorScreen> {
             ),
             const SizedBox(height: Gap.lg),
           ],
-          if (templates.any((t) => t.key == 'url')) ...[
-            ServiceField(
-              controller: _service,
-              focusNode: _serviceFocus,
-              items: widget.controller.data.items,
-              onSelected: _applyService,
-            ),
-            const SizedBox(height: 12),
-          ],
           TextField(
             controller: _title,
             decoration: InputDecoration(labelText: tr('Tên')),
+          ),
+          const SizedBox(height: 12),
+          // Thẻ ngay dưới tên: chọn nhanh, có logo chữ cái và màu của thẻ.
+          InkWell(
+            borderRadius: BorderRadius.circular(Radii.md),
+            onTap: () async {
+              final v = await pickGroup(
+                context,
+                widget.controller,
+                current: _group.text.trim(),
+              );
+              if (v != null) setState(() => _group.text = v);
+            },
+            child: InputDecorator(
+              isEmpty: false,
+              decoration: InputDecoration(
+                labelText: tr('Thẻ'),
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: TagBadge(name: _group.text.trim(), color: widget.controller.tagColor(_group.text.trim()), size: 24),
+                ),
+                suffixIcon: const Icon(Icons.unfold_more_rounded),
+              ),
+              child: Text(
+                _group.text.trim().isEmpty ? tr('Không có thẻ') : _group.text.trim(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ),
           const SizedBox(height: 12),
           for (final t in templates) ...[
@@ -452,7 +411,7 @@ class _ItemEditorScreenState extends State<ItemEditorScreen> {
                 enableSuggestions: false,
                 onChanged: t.key == 'password'
                     ? (_) => setState(() {})
-                    : (t.key == 'url' ? _onUrlChanged : null),
+                    : null,
                 decoration: InputDecoration(
                   labelText: L.fieldKey(t.key),
                   suffixIcon: t.secret && t.kind != 'multiline'
@@ -606,31 +565,6 @@ class _ItemEditorScreenState extends State<ItemEditorScreen> {
               ),
             const SizedBox(height: Gap.md),
           ],
-          InkWell(
-            borderRadius: BorderRadius.circular(Radii.md),
-            onTap: () async {
-              final v = await pickGroup(
-                context,
-                widget.controller,
-                current: _group.text.trim(),
-              );
-              if (v != null) setState(() => _group.text = v);
-            },
-            child: InputDecorator(
-              isEmpty: false,
-              decoration: InputDecoration(
-                labelText: tr('Thẻ'),
-                suffixIcon: const Icon(Icons.unfold_more_rounded),
-              ),
-              child: Text(
-                _group.text.trim().isEmpty
-                    ? tr('Không có thẻ')
-                    : _group.text.trim(),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
           if (_error != null)
             Padding(
               padding: const EdgeInsets.only(top: Gap.md),

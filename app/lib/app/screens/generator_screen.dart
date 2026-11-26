@@ -53,7 +53,11 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
       for (final ch in _pw.characters)
         TextSpan(
           text: ch,
-          style: TextStyle(color: RegExp('[0-9]').hasMatch(ch) ? c.warn : (RegExp('[A-Za-z]').hasMatch(ch) ? c.fg : c.accent)),
+          style: TextStyle(
+            color: RegExp('[0-9]').hasMatch(ch)
+                ? c.warn
+                : (RegExp('[A-Za-z]').hasMatch(ch) ? c.fg : c.accent),
+          ),
         ),
     ];
   }
@@ -62,7 +66,8 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final text = Theme.of(context).textTheme;
-    Widget toggle(String label, bool v, void Function(bool) on) => SwitchListTile(
+    Widget toggle(String label, bool v, void Function(bool) on) =>
+        SwitchListTile(
           title: Text(label),
           value: v,
           onChanged: (x) {
@@ -74,50 +79,125 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
         );
     return Scaffold(
       appBar: AppBar(title: Text(tr('Tạo mật khẩu'))),
-      body: ListView(padding: const EdgeInsets.fromLTRB(Gap.lg, Gap.sm, Gap.lg, Gap.xxl), children: [
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(Gap.lg),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              SelectableText.rich(
-                TextSpan(children: _spans(context), style: text.headlineSmall?.copyWith(fontFamily: Fonts.mono, fontWeight: FontWeight.w600, letterSpacing: 0.6, height: 1.4)),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(Gap.lg, Gap.sm, Gap.lg, Gap.xxl),
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(Gap.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SelectableText.rich(
+                    TextSpan(
+                      children: _spans(context),
+                      style: text.headlineSmall?.copyWith(
+                        fontFamily: Fonts.mono,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.6,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                  StrengthMeter(PasswordStrength.estimate(_pw)),
+                ],
               ),
-              StrengthMeter(PasswordStrength.estimate(_pw)),
-            ]),
+            ),
           ),
-        ),
-        const SizedBox(height: Gap.md),
-        Row(children: [
-          Expanded(child: FilledButton.icon(onPressed: () => copyText(context, _pw, what: tr('Đã chép mật khẩu')), icon: const Icon(Icons.copy_rounded), label: Text(tr('Chép')))),
-          const SizedBox(width: Gap.md),
-          Expanded(child: OutlinedButton.icon(onPressed: _regen, icon: const Icon(Icons.refresh_rounded), label: Text(tr('Tạo lại')))),
-        ]),
-        const SizedBox(height: Gap.lg),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(Gap.lg, Gap.md, Gap.sm, Gap.sm),
-            child: Row(children: [
-              SizedBox(width: 88, child: Text(tr('Độ dài: {p0}', {'p0': _length.round()}), style: text.bodyLarge?.copyWith(color: colors.fg, fontWeight: FontWeight.w600))),
-              IconButton(tooltip: tr('Giảm'), icon: const Icon(Icons.remove_rounded), onPressed: _length > 8 ? () => setState(() { _length--; _pw = _make(); }) : null),
+          const SizedBox(height: Gap.md),
+          Row(
+            children: [
               Expanded(
-                child: Slider(value: _length, min: 8, max: 64, divisions: 56, onChanged: (v) => setState(() {
-                  _length = v;
-                  _pw = _make();
-                })),
+                child: FilledButton.icon(
+                  onPressed: () =>
+                      copyText(context, _pw, what: tr('Đã chép mật khẩu')),
+                  icon: const Icon(Icons.copy_rounded),
+                  label: Text(tr('Chép')),
+                ),
               ),
-              IconButton(tooltip: tr('Tăng'), icon: const Icon(Icons.add_rounded), onPressed: _length < 64 ? () => setState(() { _length++; _pw = _make(); }) : null),
-            ]),
+              const SizedBox(width: Gap.md),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _regen,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: Text(tr('Tạo lại')),
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: Gap.md),
-        SectionCard(children: [
-          toggle(tr('Chữ HOA'), _upper, (v) => _upper = v),
-          toggle(tr('Chữ thường'), _lower, (v) => _lower = v),
-          toggle(tr('Số'), _digits, (v) => _digits = v),
-          toggle(tr('Ký hiệu'), _symbols, (v) => _symbols = v),
-          toggle(tr('Bỏ ký tự dễ nhầm (I, O, l, 0, 1)'), _clear, (v) => _clear = v),
-        ]),
-      ]),
+          const SizedBox(height: Gap.lg),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                Gap.lg,
+                Gap.md,
+                Gap.sm,
+                Gap.sm,
+              ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 88,
+                    child: Text(
+                      tr('Độ dài: {p0}', {'p0': _length.round()}),
+                      style: text.bodyLarge?.copyWith(
+                        color: colors.fg,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: tr('Giảm'),
+                    icon: const Icon(Icons.remove_rounded),
+                    onPressed: _length > 8
+                        ? () => setState(() {
+                            _length--;
+                            _pw = _make();
+                          })
+                        : null,
+                  ),
+                  Expanded(
+                    child: Slider(
+                      value: _length,
+                      min: 8,
+                      max: 64,
+                      divisions: 56,
+                      onChanged: (v) => setState(() {
+                        _length = v;
+                        _pw = _make();
+                      }),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: tr('Tăng'),
+                    icon: const Icon(Icons.add_rounded),
+                    onPressed: _length < 64
+                        ? () => setState(() {
+                            _length++;
+                            _pw = _make();
+                          })
+                        : null,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: Gap.md),
+          SectionCard(
+            children: [
+              toggle(tr('Chữ HOA'), _upper, (v) => _upper = v),
+              toggle(tr('Chữ thường'), _lower, (v) => _lower = v),
+              toggle(tr('Số'), _digits, (v) => _digits = v),
+              toggle(tr('Ký hiệu'), _symbols, (v) => _symbols = v),
+              toggle(
+                tr('Bỏ ký tự dễ nhầm (I, O, l, 0, 1)'),
+                _clear,
+                (v) => _clear = v,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

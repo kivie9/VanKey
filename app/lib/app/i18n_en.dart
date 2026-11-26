@@ -253,7 +253,15 @@ const Map<String, String> enStrings = {
   'Đã gộp {p0} mục (các bản cũ nằm trong thùng rác)': 'Merged {p0} items (older copies are in the trash)',
 
   // ---- Nhập / QR / xem nhanh ----
-  'Hỗ trợ: Google Authenticator (link xuất), Aegis, 2FAS, Bitwarden, CSV của 1Password/Chrome/KeePass, danh sách link otpauth://.': 'Supported: Google Authenticator (export link), Aegis, 2FAS, Bitwarden, CSV from 1Password/Chrome/KeePass, otpauth:// link lists.',
+  'Cách nhập': 'How to import',
+  'Không tìm thấy camera trên máy này.': 'No camera found on this computer.',
+  'Không mở được camera ({p0}). Hãy kiểm tra camera không bị app khác dùng, hoặc chọn ảnh QR bên dưới.': 'Could not open the camera ({p0}). Check that no other app is using it, or choose a QR image below.',
+  '1. Chọn file xuất từ app khác: Google Authenticator (xuất link), Aegis, 2FAS, Bitwarden, 1Password, Chrome, KeePass.': '1. Choose an export file from another app: Google Authenticator (export link), Aegis, 2FAS, Bitwarden, 1Password, Chrome, KeePass.',
+  '2. Hoặc dán vào ô bên dưới một trong hai dạng sau:': '2. Or paste one of these two formats into the box below:',
+  'Danh sách link otpauth:// (mỗi dòng một tài khoản 2FA)': 'List of otpauth:// links (one 2FA account per line)',
+  'CSV có dòng tiêu đề ở đầu (các cột có thể bỏ bớt):': 'CSV with a header row first (columns can be omitted):',
+  'Nội dung cần nhập': 'Content to import',
+  'Dán danh sách link otpauth:// hoặc CSV vào đây': 'Paste an otpauth:// link list or CSV here',
   'Hoặc dán nội dung/link vào đây': 'Or paste the content/link here',
   'Không đọc được file này (cần file văn bản: JSON, CSV hoặc danh sách link).': 'Could not read this file (it must be text: JSON, CSV or a list of links).',
   'Không tìm thấy mục nào để nhập.': 'No items found to import.',

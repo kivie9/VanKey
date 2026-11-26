@@ -10,8 +10,6 @@ import '../../core/security/reminders.dart';
 import '../../core/totp/totp.dart';
 import '../../core/vault/models.dart';
 import '../../core/vault/search.dart';
-import '../../core/vault/services.dart';
-import '../widgets/service_stack_header.dart';
 import '../i18n.dart';
 import '../item_actions.dart';
 import '../item_list.dart';
@@ -87,7 +85,6 @@ class _DesktopHomeState extends State<DesktopHome> {
   bool _searching = false;
   final _q = TextEditingController();
   final _collapsed = <String>{};
-  final _openStacks = <String>{}; // nhóm dịch vụ đang mở (mặc định đóng)
 
   VaultController get _c => widget.controller;
 
@@ -282,60 +279,12 @@ class _DesktopHomeState extends State<DesktopHome> {
 
                   // Khóa thu gọn riêng cho "Yêu thích" để không trùng với thẻ cùng tên.
                   const favKey = '\u0000fav';
-                  // Gom theo dịch vụ: thẻ lẻ và thẻ nhóm nằm chung lưới. Nhóm đang mở chiếm cả hàng,
-                  // các tài khoản của nó nằm ngay bên dưới. Đang tìm thì mở sẵn.
-                  List<Widget> stackSlivers() {
-                    final slivers = <Widget>[const SliverToBoxAdapter(child: SizedBox(height: Gap.md))];
-                    var cells = <Widget>[];
-                    void flush() {
-                      if (cells.isEmpty) return;
-                      final list = cells;
-                      cells = <Widget>[];
-                      slivers.add(SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(side, 0, side, Gap.sm),
-                        sliver: SliverGrid(
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: columns, mainAxisExtent: height, mainAxisSpacing: Gap.sm, crossAxisSpacing: gap),
-                          delegate: SliverChildBuilderDelegate((_, i) => list[i], childCount: list.length),
-                        ),
-                      ));
-                    }
-
-                    for (final s in stackByService(items, byName: _c.sortBy == SortBy.name)) {
-                      if (!s.isStack) {
-                        cells.add(_card(s.items.single, now, codes));
-                        continue;
-                      }
-                      final open = _q.text.isNotEmpty || _openStacks.contains(s.key);
-                      final header = Material(
-                        color: _surfaces(context).side,
-                        borderRadius: BorderRadius.circular(Radii.md),
-                        clipBehavior: Clip.antiAlias,
-                        child: ServiceStackHeader(stack: s, open: open, compact: true, onTap: () => setState(() => _openStacks.contains(s.key) ? _openStacks.remove(s.key) : _openStacks.add(s.key))),
-                      );
-                      if (!open) {
-                        cells.add(header);
-                        continue;
-                      }
-                      flush();
-                      slivers.add(SliverToBoxAdapter(child: Padding(padding: const EdgeInsets.fromLTRB(side, 0, side, Gap.sm), child: SizedBox(height: height, child: header))));
-                      slivers.add(SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(side + Gap.xl, 0, side, Gap.md),
-                        sliver: SliverGrid(
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: columns, mainAxisExtent: height, mainAxisSpacing: Gap.sm, crossAxisSpacing: gap),
-                          delegate: SliverChildBuilderDelegate((_, i) => _card(s.items[i], now, codes, labels: stackedLabels(s.items[i], s.name)), childCount: s.items.length),
-                        ),
-                      ));
-                    }
-                    flush();
-                    return slivers;
-                  }
-
                   return CustomScrollView(slivers: [
                     if (favs.isNotEmpty && _q.text.isEmpty) ...[
                       header(favKey, tr('Yêu thích'), favs.length),
                       if (!_collapsed.contains(favKey)) grid(favs),
                     ],
-                    if (_c.groupBy == GroupBy.service) ...stackSlivers() else for (final (n, list) in groups) ...[
+                    for (final (n, list) in groups) ...[
                       if (n.isNotEmpty) header(n, n, list.length) else const SliverToBoxAdapter(child: SizedBox(height: Gap.md)),
                       if (n.isEmpty || !_collapsed.contains(n)) grid(list),
                     ],
@@ -390,7 +339,7 @@ class _DesktopHomeState extends State<DesktopHome> {
           const SizedBox(width: Gap.sm),
           _Segmented<GroupBy>(
             label: tr('Gom theo'),
-            options: [(GroupBy.group, tr('Thẻ')), (GroupBy.type, tr('Loại')), (GroupBy.service, tr('Dịch vụ')), (GroupBy.none, tr('Không gom'))],
+            options: [(GroupBy.group, tr('Thẻ')), (GroupBy.type, tr('Loại')), (GroupBy.none, tr('Không gom'))],
             value: _c.groupBy,
             onChanged: _c.setGroupBy,
           ),

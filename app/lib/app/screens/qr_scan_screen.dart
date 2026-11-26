@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:camera/camera.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -9,7 +11,6 @@ import '../vault_controller.dart';
 import 'import_screen.dart';
 import 'item_editor_screen.dart';
 import '../i18n.dart';
-import '../widgets/common.dart';
 import '../qr_image.dart';
 
 /// Quét QR bằng camera (hoặc chọn ảnh QR có sẵn). Hỗ trợ otpauth:// và otpauth-migration:// của Google Authenticator.
@@ -22,17 +23,97 @@ class QrScanScreen extends StatefulWidget {
 }
 
 class _QrScanScreenState extends State<QrScanScreen> {
-  /// Windows/Linux không có camera cho bộ quét này: chỉ đọc từ ảnh (Dart thuần).
-  static final bool _hasCamera = Platform.isAndroid || Platform.isIOS;
+  /// Điện thoại: quét bằng ML Kit (mobile_scanner). Máy tính (Windows): mở camera bằng package camera,
+  /// chụp định kỳ rồi đọc mã bằng bộ đọc Dart thuần (qr_image.dart).
+  static final bool _mlKit = Platform.isAndroid || Platform.isIOS;
 
-  final _scanner = MobileScannerController(formats: const [BarcodeFormat.qrCode]);
+  final MobileScannerController? _scanner = _mlKit
+      ? MobileScannerController(formats: const [BarcodeFormat.qrCode])
+      : null;
+  CameraController? _cam;
+  Timer? _tick;
+  bool _busy = false;
+  String? _camError;
   bool _handled = false;
   String? _message;
 
   @override
+  void initState() {
+    super.initState();
+    if (!_mlKit) _startDesktopCamera();
+  }
+
+  @override
   void dispose() {
-    _scanner.dispose();
+    _tick?.cancel();
+    _cam?.dispose();
+    _scanner?.dispose();
     super.dispose();
+  }
+
+  Future<void> _startDesktopCamera() async {
+    try {
+      final cams = await availableCameras();
+      if (cams.isEmpty) {
+        if (mounted)
+          setState(() => _camError = tr('Không tìm thấy camera trên máy này.'));
+        return;
+      }
+      final c = CameraController(
+        cams.first,
+        ResolutionPreset.medium,
+        enableAudio: false,
+      );
+      await c.initialize();
+      if (!mounted) {
+        await c.dispose();
+        return;
+      }
+      _cam = c;
+      setState(() {});
+      _tick = Timer.periodic(
+        const Duration(milliseconds: 700),
+        (_) => _scanFrame(),
+      );
+    } on Object catch (e) {
+      if (mounted)
+        setState(
+          () => _camError = tr(
+            'Không mở được camera ({p0}). Hãy kiểm tra camera không bị app khác dùng, hoặc chọn ảnh QR bên dưới.',
+            {'p0': e.toString()},
+          ),
+        );
+    }
+  }
+
+  /// Chụp một khung hình và tìm mã QR trong đó. Lỗi một khung thì bỏ qua, thử lại ở lần sau.
+  Future<void> _scanFrame() async {
+    final c = _cam;
+    if (_busy ||
+        _handled ||
+        c == null ||
+        !c.value.isInitialized ||
+        c.value.isTakingPicture)
+      return;
+    _busy = true;
+    String? path;
+    try {
+      final shot = await c.takePicture();
+      path = shot.path;
+      final v = QrImageDecoder.decode(await File(path).readAsBytes());
+      if (v != null && mounted) _onValue(v);
+    } on Object {
+      // khung hình lỗi: bỏ qua
+    } finally {
+      if (path != null) {
+        try {
+          await File(path).delete();
+        } on Object {
+          // file tạm không xóa được thì thôi
+        }
+      }
+      _busy = false;
+    }
   }
 
   void _onValue(String? v) {
@@ -42,26 +123,42 @@ class _QrScanScreenState extends State<QrScanScreen> {
     final c = widget.controller;
     if (text.startsWith('otpauth-migration://')) {
       _handled = true;
-      nav.pushReplacement(MaterialPageRoute<void>(builder: (_) => ImportScreen(controller: c, initialText: text)));
+      nav.pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => ImportScreen(controller: c, initialText: text),
+        ),
+      );
     } else if (text.startsWith('otpauth://')) {
       _handled = true;
-      nav.pushReplacement(MaterialPageRoute<void>(
-        fullscreenDialog: true,
-        builder: (_) => ItemEditorScreen(controller: c, prefillSecret: text, startType: ItemType.totp),
-      ));
+      nav.pushReplacement(
+        MaterialPageRoute<void>(
+          fullscreenDialog: true,
+          builder: (_) => ItemEditorScreen(
+            controller: c,
+            prefillSecret: text,
+            startType: ItemType.totp,
+          ),
+        ),
+      );
     } else {
       setState(() => _message = tr('Mã QR này không phải mã 2FA.'));
     }
   }
 
   Future<void> _fromImage() async {
-    final files = await widget.controller.external(() => FilePicker.pickFiles(type: FileType.image));
+    final files = await widget.controller.external(
+      () => FilePicker.pickFiles(type: FileType.image),
+    );
     if (files.isEmpty || files.first.path == null) return;
     final path = files.first.path!;
     String? v;
-    if (_hasCamera) {
+    final s = _scanner;
+    if (s != null) {
       try {
-        final cap = await _scanner.analyzeImage(path, formats: const [BarcodeFormat.qrCode]);
+        final cap = await s.analyzeImage(
+          path,
+          formats: const [BarcodeFormat.qrCode],
+        );
         final codes = cap?.barcodes ?? const <Barcode>[];
         v = codes.isEmpty ? null : codes.first.rawValue;
       } on Object {
@@ -77,46 +174,98 @@ class _QrScanScreenState extends State<QrScanScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text(tr('Quét mã QR'))),
-        body: !_hasCamera
-            ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    const Icon(Icons.qr_code_2, size: 72),
-                    const SizedBox(height: 12),
-                    Text(tr('Máy tính không quét bằng camera. Hãy chụp màn hình mã QR (hoặc lưu ảnh) rồi chọn ảnh đó.'), textAlign: TextAlign.center),
-                    if (_message != null) ErrorText(_message!),
-                  ]),
+  Widget _mobileBody() {
+    return Stack(
+      children: [
+        MobileScanner(
+          controller: _scanner!,
+          onDetect: (cap) => _onValue(
+            cap.barcodes.isEmpty ? null : cap.barcodes.first.rawValue,
+          ),
+          errorBuilder: (context, error) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                tr(
+                  'Không mở được camera. Hãy cấp quyền camera cho VanKey trong cài đặt điện thoại, hoặc chọn ảnh QR bên dưới.\n({p0})',
+                  {'p0': error.errorCode.name},
                 ),
-              )
-            : Stack(children: [
-          MobileScanner(
-            controller: _scanner,
-            onDetect: (cap) => _onValue(cap.barcodes.isEmpty ? null : cap.barcodes.first.rawValue),
-            errorBuilder: (context, error) => Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  tr('Không mở được camera. Hãy cấp quyền camera cho VanKey trong cài đặt điện thoại, hoặc chọn ảnh QR bên dưới.\n({p0})', {'p0': error.errorCode.name}),
-                  textAlign: TextAlign.center,
-                ),
+                textAlign: TextAlign.center,
               ),
             ),
           ),
-          if (_message != null) Positioned(top: 16, left: 16, right: 16, child: Card(child: Padding(padding: const EdgeInsets.all(12), child: Text(_message!)))),
-        ]),
-        bottomNavigationBar: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: OutlinedButton.icon(
-              onPressed: _fromImage,
-              icon: const Icon(Icons.image_outlined),
-              label: Padding(padding: EdgeInsets.all(12), child: Text(tr('Chọn ảnh QR có sẵn'))),
+        ),
+        if (_message != null)
+          Positioned(
+            top: 16,
+            left: 16,
+            right: 16,
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(_message!),
+              ),
             ),
           ),
+      ],
+    );
+  }
+
+  Widget _desktopBody() {
+    final cam = _cam;
+    final Widget view;
+    if (_camError != null) {
+      view = Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(_camError!, textAlign: TextAlign.center),
         ),
       );
+    } else if (cam == null || !cam.value.isInitialized) {
+      view = const Center(child: CircularProgressIndicator());
+    } else {
+      view = Center(
+        child: AspectRatio(
+          aspectRatio: cam.value.aspectRatio,
+          child: CameraPreview(cam),
+        ),
+      );
+    }
+    return Stack(
+      children: [
+        Positioned.fill(child: view),
+        if (_message != null)
+          Positioned(
+            top: 16,
+            left: 16,
+            right: 16,
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(_message!),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text(tr('Quét mã QR'))),
+    body: _mlKit ? _mobileBody() : _desktopBody(),
+    bottomNavigationBar: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: OutlinedButton.icon(
+          onPressed: _fromImage,
+          icon: const Icon(Icons.image_outlined),
+          label: Padding(
+            padding: EdgeInsets.all(12),
+            child: Text(tr('Chọn ảnh QR có sẵn')),
+          ),
+        ),
+      ),
+    ),
+  );
 }
