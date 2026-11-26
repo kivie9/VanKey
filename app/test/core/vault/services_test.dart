@@ -66,21 +66,6 @@ void main() {
     expect(stacks.map((s) => (s.name, s.items.length, s.isStack)), [('Facebook', 2, true), ('Netflix', 1, false)]);
   });
 
-  test('gợi ý cho mục cũ: lỗi gõ và tên có chứa dịch vụ; không đoán khi mơ hồ', () {
-    String? s(String title, {String url = '', ItemType type = ItemType.login}) => suggestService(_item(title, url: url, type: type))?.id;
-    expect(s('Facebok'), 'facebook');
-    expect(s('Faecbook'), 'facebook');
-    expect(s('Gooogle'), 'google');
-    expect(s('FB bán hàng'), 'facebook');
-    expect(s('Netflix gia đình'), 'netflix');
-    expect(s('Facebook'), isNull, reason: 'đã đúng tên');
-    expect(s('FB bán hàng', url: 'example.com'), isNull, reason: 'đã có địa chỉ');
-    expect(s('Google và Facebook'), isNull, reason: 'hai dịch vụ');
-    expect(s('Ngân hàng'), isNull);
-    expect(s('x'), isNull);
-    expect(s('FB', type: ItemType.note), isNull);
-  });
-
   test('bảng dịch vụ không trùng tên miền hay mã', () {
     final domains = [for (final s in knownServices) ...s.domains];
     expect(domains.toSet().length, domains.length);

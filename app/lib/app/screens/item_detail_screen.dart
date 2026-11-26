@@ -12,7 +12,6 @@ import '../widgets/common.dart';
 import '../widgets/ui.dart';
 import 'item_editor_screen.dart';
 import 'qr_show_screen.dart';
-import 'service_suggestions_screen.dart';
 import '../group_actions.dart';
 import '../i18n.dart';
 
@@ -132,10 +131,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   ),
                 ]),
                 const SizedBox(height: Gap.lg),
-                if (c.serviceSuggestionFor(item) case final service?) ...[
-                  ServiceSuggestionCard(controller: c, item: item, service: service),
-                  const SizedBox(height: Gap.md),
-                ],
                 if (hasTotp) ...[
                   Card(
                     child: Padding(

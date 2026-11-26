@@ -141,7 +141,6 @@ abstract final class SettingsKey {
   static const showLogos = 'showLogos';
   static const lastType = 'lastType';
   static const snooze = 'snooze';
-  static const dismissedServices = 'dismissedServices';
   static const sync = 'sync';
 }
 

@@ -191,34 +191,3 @@ List<ServiceStack> stackByService(List<Item> items, {required bool byName}) {
   }
   return list;
 }
-
-/// Hai chuỗi lệch nhau nhiều nhất một lỗi gõ: thừa, thiếu, sai một ký tự hoặc đảo hai ký tự liền nhau.
-bool _oneTypo(String a, String b) {
-  if (a == b || (a.length - b.length).abs() > 1) return false;
-  var i = 0;
-  while (i < a.length && i < b.length && a[i] == b[i]) {
-    i++;
-  }
-  if (a.length > b.length) return a.substring(i + 1) == b.substring(i);
-  if (b.length > a.length) return b.substring(i + 1) == a.substring(i);
-  if (a.substring(i + 1) == b.substring(i + 1)) return true;
-  return i + 1 < a.length && a[i] == b[i + 1] && a[i + 1] == b[i] && a.substring(i + 2) == b.substring(i + 2);
-}
-
-/// Tài khoản đăng nhập **chưa có địa chỉ web** mà tên có vẻ là một dịch vụ biết sẵn ("Facebok", "FB bán hàng").
-/// Chỉ để hỏi người dùng; app không tự sửa. `null` nếu không chắc (không khớp, hoặc khớp nhiều dịch vụ).
-KnownService? suggestService(Item item) {
-  if (item.type != ItemType.login || item.inTrash) return null;
-  if ((item.valueOf('url') ?? '').trim().isNotEmpty) return null;
-  if (serviceNamed(item.title) != null) return null; // đã gom đúng theo tên
-  final title = normalizeName(item.title);
-  final words = title.split(RegExp(r'[^a-z0-9]+')).where((w) => w.isNotEmpty).toSet();
-  final compact = words.join();
-  final found = <KnownService>{};
-  for (final s in knownServices) {
-    final names = {normalizeName(s.name), s.id, ...s.aliases};
-    // Tên một ký tự ("x") quá dễ trùng chữ thường. Lỗi gõ chỉ xét tên đủ dài.
-    if (names.any((n) => n.length >= 2 && words.contains(n)) || names.any((n) => n.length >= 5 && _oneTypo(compact, n))) found.add(s);
-  }
-  return found.length == 1 ? found.single : null;
-}
