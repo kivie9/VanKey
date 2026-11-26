@@ -9,8 +9,10 @@ Chạy miễn phí trên gói free của Cloudflare. Một máy chủ phục v�
 - **Một mật khẩu cho cả tài khoản và kho.** Khóa mở kho được dẫn xuất riêng ở phía app (salt khác, nằm trong file kho), nên khóa đăng nhập máy chủ giữ không mở được kho.
 - **Đăng ký mở**: ai cũng tạo được tài khoản, có giới hạn để bảo vệ hạn mức miễn phí: tối đa `MAX_USERS` tài khoản (mặc định 200), mỗi IP tối đa 10 lần đăng ký (quá thì khóa 1 giờ), mỗi tài khoản tối đa 20 thiết bị (thiết bị lâu không dùng nhất bị gỡ).
 - **Mã mời (tùy chọn)**: đặt secret `REGISTER_CODE` (từ 12 ký tự) thì tạo tài khoản phải nhập đúng mã. Dùng khi muốn mời riêng hoặc tạm đóng đăng ký (đặt một mã không ai biết). Đặt ngắn hơn 12 ký tự = đóng đăng ký.
-- Access token sống 15 phút; refresh token 90 ngày, **xoay vòng** mỗi lần dùng, máy chủ chỉ lưu mã băm. Gỡ một thiết bị có hiệu lực ngay.
-- Đăng nhập sai (hoặc nhập sai mã mời) 5 lần liên tiếp theo IP thì bị khóa tăng dần (30 giây, gấp đôi mỗi lần, tối đa 15 phút); IPv6 gom theo /64. Theo tài khoản có ngưỡng cao hơn (20 lần) để người lạ khó khóa tài khoản của bạn. Bộ đếm cập nhật nguyên tử, tên không có thật không tạo thêm dòng trong cơ sở dữ liệu, và dòng cũ được dọn.
+- Access token sống 15 phút; refresh token **xoay vòng** mỗi lần dùng, máy chủ chỉ lưu mã băm. Hạn 90 ngày tính từ lúc đăng nhập, **không gia hạn thêm** khi xoay vòng. Gỡ một thiết bị có hiệu lực ngay.
+- **Phát hiện lộ token:** nếu một refresh token cũ (đã được thay) bị dùng lại, máy chủ gỡ thiết bị đó, và máy thật phải đăng nhập lại. Đây là cái giá có chủ đích: trường hợp máy gửi trùng lặp cũng bị đăng xuất.
+- Đăng nhập sai (hoặc nhập sai mã mời) 5 lần liên tiếp theo IP thì bị khóa tăng dần (30 giây, gấp đôi mỗi lần, tối đa 15 phút); IPv6 gom theo /64. Theo tài khoản có ngưỡng cao hơn (20 lần), nhưng khóa theo tài khoản tối đa chỉ 1 phút. Bộ đếm cập nhật nguyên tử, tên không có thật không tạo thêm dòng trong cơ sở dữ liệu, và dòng cũ được dọn.
+- **Bắt buộc có IP thật:** máy chủ lấy IP từ header `cf-connecting-ip`. Nếu thiếu header, đăng ký, đăng nhập và đổi mật khẩu trả lỗi 500 `misconfigured` thay vì gom mọi người vào một khóa chung. Chạy trên Cloudflare thì header này luôn có. Tự dựng máy chủ sau proxy khác thì proxy phải đặt header này (và chỉ đặt từ phía ngoài, không để client tự gửi). Máy chủ thử cục bộ `dev/serve.ts` lấy IP từ socket.
 - Ghi kho dùng `If-Match`: nếu máy khác đã ghi trước, máy chủ trả 409 và app tự gộp rồi thử lại.
 
 ## Thử cục bộ (không cần Cloudflare)

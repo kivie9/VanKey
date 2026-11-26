@@ -38,6 +38,13 @@ const MAX_JSON_BYTES = 8 * 1024;
 export const KDF_ITERATIONS = 5000;
 const MAX_FAILURES_IP = 5; // sai mật khẩu hoặc mã mời liên tiếp, theo IP
 const MAX_FAILURES_USER = 20; // theo tài khoản: ngưỡng cao để người lạ khó khóa tài khoản của bạn
+/** Khóa tối đa theo IP: 15 phút. */
+const LOCK_MAX = 900;
+/**
+ * Khóa tối đa theo tài khoản: 1 phút. Kẻ phá không giữ được tài khoản bị khóa lâu;
+ * chỉ vẫn còn tác dụng làm chậm việc dò mật khẩu từ nhiều IP.
+ */
+const ACCOUNT_LOCK_MAX = 60;
 const ATTEMPT_TTL = 24 * 3600; // dòng đếm lần sai không cập nhật quá lâu thì bị dọn
 const USERNAME_RE = /^[a-z0-9][a-z0-9._-]{2,31}$/;
 
@@ -54,6 +61,17 @@ function ipKey(ip: string): string {
   const full = ip.split('::')[0].split(':');
   return full.slice(0, 4).join(':');
 }
+
+/**
+ * IP thật của người gửi, lấy từ header do Cloudflare đặt (client không tự đặt được).
+ * Trả null nếu thiếu: không đoán và không gom mọi người vào một khóa chung.
+ */
+function clientIp(req: Request): string | null {
+  const ip = req.headers.get('cf-connecting-ip');
+  return ip && ip.length > 0 && ip.length <= 100 ? ip : null;
+}
+
+const noClientIp = () => err(500, 'misconfigured', 'Máy chủ không xác định được IP của yêu cầu. Cần chạy sau Cloudflare, hoặc proxy phải đặt header cf-connecting-ip.');
 
 function json(status: number, body: unknown, headers: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', ...headers } });
@@ -108,7 +126,9 @@ export function createHandler(deps: Deps): (req: Request) => Promise<Response> {
     // Dòng mới: tiện thể dọn các dòng cũ (chỉ chạy khi bảng có thể lớn thêm).
     if (count === 1) await store.purgeAttempts(now() - ATTEMPT_TTL);
     // Từ lần thứ `max`: khóa 30 s, rồi gấp đôi mỗi lần, tối đa 15 phút.
-    if (count >= max) await store.lockUntil(key, now() + Math.min(900, 30 * 2 ** (count - max)));
+    // Khóa theo tài khoản tối đa ACCOUNT_LOCK_MAX giây, theo IP tối đa LOCK_MAX giây.
+    const cap = key.startsWith('login:') ? ACCOUNT_LOCK_MAX : LOCK_MAX;
+    if (count >= max) await store.lockUntil(key, now() + Math.min(cap, 30 * 2 ** (count - max)));
   }
 
   async function lockedResponse(keys: string[]): Promise<Response | null> {
@@ -128,7 +148,8 @@ export function createHandler(deps: Deps): (req: Request) => Promise<Response> {
     let deviceId: string;
     if (existing) {
       deviceId = existing.id;
-      await store.updateDevice(existing.id, { refreshHash, lastSeen: t, expiresAt: t + REFRESH_TTL });
+      // Giữ hash của token vừa bị thay để phát hiện khi có người dùng lại nó (xem refresh()).
+      await store.updateDevice(existing.id, { refreshHash, lastSeen: t, expiresAt: t + REFRESH_TTL, prevRefreshHash: existing.refreshHash });
     } else {
       // Giới hạn số thiết bị: gỡ thiết bị lâu không dùng nhất để không phình bảng.
       const active = await store.devicesOf(user.id);
@@ -175,8 +196,10 @@ export function createHandler(deps: Deps): (req: Request) => Promise<Response> {
    * token bị lộ không đủ để chiếm hay xóa tài khoản. Sai bị đếm và khóa như đăng nhập.
    */
   async function reauth(req: Request, user: User, authKey: unknown): Promise<Response | null> {
+    const ip = clientIp(req);
+    if (!ip) return noClientIp();
     const checks: [string, number][] = [
-      [`ip:${ipKey(req.headers.get('cf-connecting-ip') ?? 'unknown')}`, MAX_FAILURES_IP],
+      [`ip:${ipKey(ip)}`, MAX_FAILURES_IP],
       [`login:${user.username}`, MAX_FAILURES_USER],
     ];
     const locked = await lockedResponse(checks.map(([k]) => k));
@@ -192,6 +215,8 @@ export function createHandler(deps: Deps): (req: Request) => Promise<Response> {
   // ---------- Các route ----------
 
   async function register(req: Request): Promise<Response> {
+    const rawIp = clientIp(req);
+    if (!rawIp) return noClientIp();
     const body = await readJson(req);
     const rawName = str(body?.username);
     const authKey = str(body?.authKey, 100);
@@ -201,7 +226,7 @@ export function createHandler(deps: Deps): (req: Request) => Promise<Response> {
     const key = parseKey(authKey);
     if (!key) return err(400, 'bad_request', 'authKey phải là base64 của 32 byte');
 
-    const ip = ipKey(req.headers.get('cf-connecting-ip') ?? 'unknown');
+    const ip = ipKey(rawIp);
     // Mỗi IP chỉ được đăng ký một số lần: chặn người lạ tạo hàng loạt tài khoản.
     const regKey = `reg:${ip}`;
     const regLocked = await lockedResponse([regKey]);
@@ -235,12 +260,14 @@ export function createHandler(deps: Deps): (req: Request) => Promise<Response> {
   }
 
   async function login(req: Request): Promise<Response> {
+    const rawIp = clientIp(req);
+    if (!rawIp) return noClientIp();
     const body = await readJson(req);
     const rawName = str(body?.username);
     const authKey = str(body?.authKey, 100);
     if (!rawName || !authKey) return err(400, 'bad_request', 'Thiếu tên đăng nhập hoặc authKey');
     const username = normalizeUsername(rawName);
-    const ip = ipKey(req.headers.get('cf-connecting-ip') ?? 'unknown');
+    const ip = ipKey(rawIp);
     const user = username ? await store.userByUsername(username) : null;
     // Khóa theo tài khoản chỉ khi tài khoản có thật: tên tùy ý của kẻ tấn công không tạo thêm dòng trong bảng.
     const checks: [string, number][] = [[`ip:${ip}`, MAX_FAILURES_IP]];
@@ -266,10 +293,21 @@ export function createHandler(deps: Deps): (req: Request) => Promise<Response> {
     if (!token) return err(400, 'bad_request', 'Thiếu refreshToken');
     const hash = toHex(await sha256(utf8(token)));
     const device = await store.deviceByRefreshHash(hash);
-    if (!device || device.revoked || device.expiresAt <= now()) return err(401, 'invalid_refresh', 'Refresh token không hợp lệ hoặc đã hết hạn');
+    if (!device) {
+      // Token này đã được thay bằng token mới trước đó. Có người dùng lại token cũ
+      // (bị đánh cắp, hoặc máy bị lỗi và gửi lại): gỡ thiết bị để buộc đăng nhập lại.
+      const stale = await store.deviceByPrevRefreshHash(hash);
+      if (stale && !stale.revoked) await store.updateDevice(stale.id, { revoked: true });
+      return err(401, 'invalid_refresh', 'Refresh token không hợp lệ hoặc đã hết hạn');
+    }
+    // Hết hạn tuyệt đối: tính từ lúc đăng nhập, không gia hạn mãi bằng cách xoay vòng.
+    if (device.revoked || device.expiresAt <= now() || device.createdAt + REFRESH_TTL <= now()) {
+      await store.updateDevice(device.id, { revoked: true });
+      return err(401, 'invalid_refresh', 'Refresh token không hợp lệ hoặc đã hết hạn');
+    }
     const user = await store.userById(device.userId);
     if (!user) return err(401, 'invalid_refresh', 'Tài khoản không còn hợp lệ');
-    // Xoay vòng: token cũ không dùng lại được.
+    // Xoay vòng: token cũ không dùng lại được (và bị phát hiện nếu dùng lại).
     return issueSession(user, device.name, device);
   }
 

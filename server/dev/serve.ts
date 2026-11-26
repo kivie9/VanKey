@@ -19,6 +19,8 @@ const server = createServer(async (req, res) => {
   const body = Buffer.concat(chunks);
   const headers = new Headers();
   for (const [k, v] of Object.entries(req.headers)) if (typeof v === 'string') headers.set(k, v);
+  // Chạy thử không có Cloudflare: IP lấy từ socket, ghi đè header client tự gửi (client không được giả IP).
+  headers.set('cf-connecting-ip', req.socket.remoteAddress ?? '127.0.0.1');
   const request = new Request(`http://localhost:${port}${req.url}`, {
     method: req.method,
     headers,

@@ -12,14 +12,15 @@ const CODE = 'ma-moi-thu-nghiem-1';
 function setup(over: Partial<Config> = {}) {
   const store = new MemoryStore();
   let t = 1_700_000_000;
-  const clock = { advance: (s: number) => (t += s) };
+  const clock = { advance: (s: number) => (t += s), now: () => t };
   const handler = createHandler({
     store,
     config: { tokenSecret: SECRET, ...over },
     now: () => t,
   });
   async function call(method: string, path: string, opts: { body?: unknown; token?: string; headers?: Record<string, string>; raw?: Uint8Array } = {}) {
-    const headers: Record<string, string> = { ...(opts.headers ?? {}) };
+    // Mặc định mọi yêu cầu có một IP; test nào cần IP cụ thể thì truyền headers riêng để ghi đè.
+    const headers: Record<string, string> = { 'cf-connecting-ip': '198.51.100.250', ...(opts.headers ?? {}) };
     if (opts.token) headers.authorization = `Bearer ${opts.token}`;
     let body: BodyInit | undefined;
     if (opts.raw) body = opts.raw as BodyInit;
@@ -102,7 +103,61 @@ test('refresh xoay vòng: token cũ không dùng lại được', async () => {
 
   const reuse = await s.call('POST', '/auth/refresh', { body: { refreshToken: body.refreshToken } });
   assert.equal(reuse.status, 401);
-  assert.equal((await s.call('POST', '/auth/refresh', { body: { refreshToken: n.refreshToken } })).status, 200);
+  // Dùng lại token cũ bị coi là lộ token: thiết bị bị gỡ, token mới cũng mất hiệu lực.
+  assert.equal((await s.call('POST', '/auth/refresh', { body: { refreshToken: n.refreshToken } })).status, 401);
+  assert.equal((await s.call('GET', '/devices', { token: n.accessToken })).status, 401);
+});
+
+test('dùng lại refresh token cũ gỡ thiết bị, kể cả khi kẻ tấn công dùng trước máy thật', async () => {
+  const s = setup();
+  const { body } = await register(s);
+  // Máy thật xoay vòng trước.
+  const real = (await (await s.call('POST', '/auth/refresh', { body: { refreshToken: body.refreshToken } })).json()) as any;
+  // Kẻ tấn công có token cũ, dùng lại.
+  assert.equal((await s.call('POST', '/auth/refresh', { body: { refreshToken: body.refreshToken } })).status, 401);
+  // Máy thật bị đăng xuất để đăng nhập lại: đây là cái giá có chủ đích.
+  assert.equal((await s.call('POST', '/auth/refresh', { body: { refreshToken: real.refreshToken } })).status, 401);
+  assert.equal(s.store.devices.get(body.deviceId)!.revoked, true);
+});
+
+test('refresh không gia hạn mãi: sau 90 ngày kể từ lúc đăng nhập thì bắt buộc đăng nhập lại', async () => {
+  const s = setup();
+  let { body } = await register(s);
+  // Xoay vòng mỗi ngày (máy dùng đều đặn): vẫn phải hết hạn sau 90 ngày tuyệt đối.
+  for (let day = 1; day < 90; day++) {
+    s.clock.advance(24 * 3600);
+    const r = await s.call('POST', '/auth/refresh', { body: { refreshToken: body.refreshToken } });
+    assert.equal(r.status, 200, `ngày ${day}`);
+    body = await r.json();
+  }
+  s.clock.advance(24 * 3600);
+  assert.equal((await s.call('POST', '/auth/refresh', { body: { refreshToken: body.refreshToken } })).status, 401);
+});
+
+test('không có cf-connecting-ip thì từ chối đăng ký, đăng nhập, đổi mật khẩu; không gom mọi người vào một khóa chung', async () => {
+  const s = setup();
+  const noIp = { 'cf-connecting-ip': '' };
+  const reg0 = await s.call('POST', '/auth/register', { body: { username: USER, authKey: authKey() }, headers: noIp });
+  assert.equal(reg0.status, 500);
+  assert.equal(((await reg0.json()) as any).error, 'misconfigured');
+  assert.equal(s.store.users.size, 0);
+  const a = (await register(s)).body;
+  const before = s.store.attempts.size;
+  assert.equal((await s.call('POST', '/auth/login', { body: { username: USER, authKey: authKey(9) }, headers: noIp })).status, 500);
+  assert.equal((await s.call('POST', '/auth/password', { token: a.accessToken, body: { authKey: authKey(), newAuthKey: authKey(2) }, headers: noIp })).status, 500);
+  assert.equal(s.store.attempts.size, before, 'yêu cầu thiếu IP không ghi dòng đếm nào');
+  assert.ok(![...s.store.attempts.keys()].some((k) => k.includes('unknown')), 'không có khóa "unknown" dùng chung');
+});
+
+test('khóa theo tài khoản tối đa 60 giây, không giữ người dùng bị khóa hàng chục phút', async () => {
+  const s = setup();
+  await register(s);
+  for (let i = 0; i < 60; i++) {
+    await s.call('POST', '/auth/login', { body: { username: USER, authKey: authKey(9) }, headers: { 'cf-connecting-ip': `198.51.100.${i + 1}` } });
+    const a = await s.store.getAttempt(`login:${USER}`);
+    if (a.lockedUntil > 0) assert.ok(a.lockedUntil - s.clock.now() <= 60, `lần ${i}: khóa ${a.lockedUntil - s.clock.now()} giây`);
+    s.clock.advance(61); // kẻ tấn công thử lại sau khi khóa hết
+  }
 });
 
 test('access token hết hạn bị từ chối, refresh cấp token mới', async () => {

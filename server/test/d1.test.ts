@@ -11,7 +11,7 @@ import { pbkdf2, toBase64 } from '../src/util.ts';
 function sqliteD1(): D1Like {
   const db = new DatabaseSync(':memory:');
   db.exec('PRAGMA foreign_keys = ON');
-  for (const f of ['0001_init.sql', '0002_attempts_updated_at.sql', '0003_users_username.sql', '0004_users_kdf_iter.sql']) db.exec(readFileSync(new URL(`../migrations/${f}`, import.meta.url), 'utf8'));
+  for (const f of ['0001_init.sql', '0002_attempts_updated_at.sql', '0003_users_username.sql', '0004_users_kdf_iter.sql', '0005_devices_prev_refresh.sql']) db.exec(readFileSync(new URL(`../migrations/${f}`, import.meta.url), 'utf8'));
   return {
     prepare(sql: string) {
       const stmt = db.prepare(sql);
@@ -45,7 +45,7 @@ function setup() {
   let t = 1_700_000_000;
   const handler = createHandler({ store, config: { tokenSecret: 'x'.repeat(40) }, now: () => t });
   const call = (method: string, path: string, o: { body?: unknown; token?: string; headers?: Record<string, string>; raw?: Uint8Array } = {}) => {
-    const headers: Record<string, string> = { ...(o.headers ?? {}) };
+    const headers: Record<string, string> = { 'cf-connecting-ip': '198.51.100.250', ...(o.headers ?? {}) };
     if (o.token) headers.authorization = `Bearer ${o.token}`;
     let body: BodyInit | undefined;
     if (o.raw) body = o.raw as BodyInit;
@@ -66,11 +66,14 @@ test('D1: đăng ký, đăng nhập, refresh xoay vòng, thu hồi thiết bị'
 
   const r = await s.call('POST', '/auth/refresh', { body: { refreshToken: b.refreshToken } });
   assert.equal(r.status, 200);
-  assert.equal((await s.call('POST', '/auth/refresh', { body: { refreshToken: b.refreshToken } })).status, 401);
 
   const list = ((await (await s.call('GET', '/devices', { token: a.accessToken })).json()) as any).devices;
   assert.equal(list.length, 2);
   assert.equal((await s.call('DELETE', `/devices/${b.deviceId}`, { token: a.accessToken })).status, 204);
+  assert.equal(((await (await s.call('GET', '/devices', { token: a.accessToken })).json()) as any).devices.length, 1);
+
+  // Token cũ của B bị dùng lại: bị từ chối (và thiết bị B bị gỡ, nên phải làm sau các bước trên).
+  assert.equal((await s.call('POST', '/auth/refresh', { body: { refreshToken: b.refreshToken } })).status, 401);
   assert.equal(((await (await s.call('GET', '/devices', { token: a.accessToken })).json()) as any).devices.length, 1);
 });
 
@@ -174,6 +177,15 @@ test('D1: đổi mật khẩu, băm lại tài khoản cũ, xóa tài khoản x�
   assert.equal(await s.store.getVault(a.accountId), null);
   assert.equal((await s.store.devicesOf(a.accountId)).length, 0);
   assert.equal(await s.store.deviceById(a.deviceId), null);
+});
+
+test('D1: dùng lại refresh token cũ (cột prev_refresh_hash, migration 0005) gỡ thiết bị', async () => {
+  const s = setup();
+  const a = (await (await s.call('POST', '/auth/register', { body: { username: USER, authKey: key(), deviceName: 'A' } })).json()) as any;
+  const r1 = (await (await s.call('POST', '/auth/refresh', { body: { refreshToken: a.refreshToken } })).json()) as any;
+  assert.equal(r1.refreshToken === undefined, false);
+  assert.equal((await s.call('POST', '/auth/refresh', { body: { refreshToken: a.refreshToken } })).status, 401);
+  assert.equal((await s.call('GET', '/devices', { token: r1.accessToken })).status, 401);
 });
 
 test('D1: migration 0004 cho tài khoản cũ kdf_iter = 100000', async () => {
