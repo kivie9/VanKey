@@ -20,6 +20,20 @@ class RemindersScreen extends StatelessWidget {
 
   static String _when(int days) => days < 0 ? tr('quá hạn {p0} ngày', {'p0': -days}) : (days == 0 ? tr('hôm nay') : tr('còn {p0} ngày', {'p0': days}));
 
+  // Compact, light buttons: one tonal primary action, the rest as muted text links.
+  static const _compact = ButtonStyle(
+    visualDensity: VisualDensity.compact,
+    padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 12)),
+    textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+  );
+
+  static ButtonStyle get _quiet => TextButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+        foregroundColor: const Color(0xFF6B7280),
+      );
+
   Future<void> _enableNotifications(BuildContext context) async {
     final ok = await NotificationService.instance.requestPermission();
     if (context.mounted) {
@@ -70,18 +84,28 @@ class RemindersScreen extends StatelessWidget {
                           ]),
                         ),
                       ]),
-                      const SizedBox(height: 8),
-                      Wrap(spacing: 8, children: [
+                      const SizedBox(height: 4),
+                      Wrap(spacing: 4, runSpacing: 2, crossAxisAlignment: WrapCrossAlignment.center, children: [
                         if (a.kind == AlertKind.passwordExpiry)
                           FilledButton.tonal(
+                            style: _compact,
                             onPressed: () => Navigator.of(context).push(
                               MaterialPageRoute<void>(fullscreenDialog: true, builder: (_) => ItemEditorScreen(controller: controller, existing: a.item)),
                             ),
                             child: Text(tr('Đổi mật khẩu')),
                           ),
-                        OutlinedButton(onPressed: () => controller.snooze(a.snoozeKey, 7), child: Text(tr('Nhắc lại sau 7 ngày'))),
-                        TextButton(onPressed: () => controller.snooze(a.snoozeKey, 365), child: Text(tr('Bỏ qua'))),
                         TextButton(
+                          style: _quiet,
+                          onPressed: () => controller.snooze(a.snoozeKey, 7),
+                          child: Text(tr('Nhắc lại sau 7 ngày')),
+                        ),
+                        TextButton(
+                          style: _quiet,
+                          onPressed: () => controller.snooze(a.snoozeKey, 365),
+                          child: Text(tr('Bỏ qua')),
+                        ),
+                        TextButton(
+                          style: _quiet,
                           onPressed: () => Navigator.of(context).push(
                             MaterialPageRoute<void>(builder: (_) => ItemDetailScreen(controller: controller, itemId: a.item.id)),
                           ),

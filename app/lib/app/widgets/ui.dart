@@ -7,7 +7,12 @@ import '../theme.dart';
 
 /// Khối nhóm: một thẻ bo góc chứa nhiều dòng, ngăn cách bằng đường kẻ mảnh. Dùng cho Cài đặt, chi tiết, form.
 class SectionCard extends StatelessWidget {
-  const SectionCard({super.key, required this.children, this.padding = EdgeInsets.zero, this.dividerIndent = Gap.lg});
+  const SectionCard({
+    super.key,
+    required this.children,
+    this.padding = EdgeInsets.zero,
+    this.dividerIndent = Gap.lg,
+  });
   final List<Widget> children;
   final EdgeInsetsGeometry padding;
 
@@ -21,7 +26,16 @@ class SectionCard extends StatelessWidget {
       if (i > 0) rows.add(Divider(indent: dividerIndent, height: 1));
       rows.add(children[i]);
     }
-    return Card(child: Padding(padding: padding, child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: rows)));
+    return Card(
+      child: Padding(
+        padding: padding,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: rows,
+        ),
+      ),
+    );
   }
 }
 
@@ -33,21 +47,32 @@ class CardList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var i = 0; i < children.length; i++) ...[
-            if (i > 0) SizedBox(height: gap),
-            Card(child: children[i]),
-          ],
-        ],
-      );
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      for (var i = 0; i < children.length; i++) ...[
+        if (i > 0) SizedBox(height: gap),
+        Card(child: children[i]),
+      ],
+    ],
+  );
 }
 
 /// Tiêu đề nhóm nhỏ, chữ hoa mờ (dùng phía trên một [SectionCard] hoặc danh sách).
 class SectionHeader extends StatelessWidget {
-  const SectionHeader(this.text, {super.key, this.count, this.collapsed, this.onTap, this.padding = const EdgeInsets.fromLTRB(Gap.xl, Gap.xl, Gap.lg, Gap.sm)});
+  const SectionHeader(
+    this.text, {
+    super.key,
+    this.count,
+    this.collapsed,
+    this.onTap,
+    this.leading,
+    this.padding = const EdgeInsets.fromLTRB(Gap.xl, Gap.xl, Gap.lg, Gap.sm),
+  });
   final String text;
+
+  /// Biểu tượng đặt trước chữ, cùng dòng và căn giữa theo chữ (ví dụ logo thẻ).
+  final Widget? leading;
   final int? count;
   final bool? collapsed;
   final VoidCallback? onTap;
@@ -61,19 +86,37 @@ class SectionHeader extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: padding,
-        child: Row(children: [
-          Text(text.toUpperCase(), style: t.labelSmall?.copyWith(color: c.muted, letterSpacing: 0.9)),
-          if (count != null) ...[
-            const SizedBox(width: Gap.sm),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
-              decoration: BoxDecoration(color: c.line, borderRadius: BorderRadius.circular(Radii.pill)),
-              child: Text('$count', style: t.labelSmall?.copyWith(color: c.muted)),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (leading != null) ...[leading!, const SizedBox(width: Gap.sm)],
+            Text(
+              text.toUpperCase(),
+              style: t.labelSmall?.copyWith(color: c.muted, letterSpacing: 0.9),
             ),
+            if (count != null) ...[
+              const SizedBox(width: Gap.sm),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
+                decoration: BoxDecoration(
+                  color: c.line,
+                  borderRadius: BorderRadius.circular(Radii.pill),
+                ),
+                child: Text(
+                  '$count',
+                  style: t.labelSmall?.copyWith(color: c.muted),
+                ),
+              ),
+            ],
+            const Spacer(),
+            if (collapsed != null)
+              Icon(
+                collapsed! ? Icons.expand_more : Icons.expand_less,
+                size: 20,
+                color: c.muted,
+              ),
           ],
-          const Spacer(),
-          if (collapsed != null) Icon(collapsed! ? Icons.expand_more : Icons.expand_less, size: 20, color: c.muted),
-        ]),
+        ),
       ),
     );
   }
@@ -93,7 +136,10 @@ class IconBadge extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(color: fg.withValues(alpha: 0.13), borderRadius: BorderRadius.circular(Radii.md - 2)),
+      decoration: BoxDecoration(
+        color: fg.withValues(alpha: 0.13),
+        borderRadius: BorderRadius.circular(Radii.md - 2),
+      ),
       child: Icon(icon, size: size * 0.52, color: fg),
     );
   }
@@ -112,8 +158,18 @@ class AppLogo extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(size * 0.28),
-        gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [c.accent, Color.lerp(c.accent, Colors.black, 0.25)!]),
-        boxShadow: [BoxShadow(color: c.accent.withValues(alpha: 0.20), blurRadius: size * 0.45, offset: Offset(0, size * 0.12))],
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [c.accent, Color.lerp(c.accent, Colors.black, 0.25)!],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: c.accent.withValues(alpha: 0.20),
+            blurRadius: size * 0.45,
+            offset: Offset(0, size * 0.12),
+          ),
+        ],
       ),
       child: CustomPaint(painter: _LogoMarkPainter(c.accent)),
     );
@@ -161,7 +217,12 @@ class _LogoMarkPainter extends CustomPainter {
 
 /// Dải thông báo nhỏ (cảnh báo, lỗi, gợi ý) trong thẻ màu.
 class Notice extends StatelessWidget {
-  const Notice(this.text, {super.key, this.icon = Icons.info_outline, this.tone = NoticeTone.info});
+  const Notice(
+    this.text, {
+    super.key,
+    this.icon = Icons.info_outline,
+    this.tone = NoticeTone.info,
+  });
   final String text;
   final IconData icon;
   final NoticeTone tone;
@@ -169,15 +230,31 @@ class Notice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
-    final color = switch (tone) { NoticeTone.info => c.accent, NoticeTone.warn => c.warn, NoticeTone.error => c.danger };
+    final color = switch (tone) {
+      NoticeTone.info => c.accent,
+      NoticeTone.warn => c.warn,
+      NoticeTone.error => c.danger,
+    };
     return Container(
       padding: const EdgeInsets.all(Gap.md),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.10), borderRadius: BorderRadius.circular(Radii.md)),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Icon(icon, size: 20, color: color),
-        const SizedBox(width: Gap.md),
-        Expanded(child: Text(text, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: c.fg))),
-      ]),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(Radii.md),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: Gap.md),
+          Expanded(
+            child: Text(
+              text,
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: c.fg),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -200,14 +277,28 @@ class StrengthMeter extends StatelessWidget {
     };
     return Padding(
       padding: const EdgeInsets.only(top: Gap.sm),
-      child: Row(children: [
-        for (var i = 0; i < 4; i++) ...[
-          Expanded(child: Container(height: 5, decoration: BoxDecoration(color: i < filled ? color : c.line, borderRadius: BorderRadius.circular(Radii.pill)))),
-          if (i < 3) const SizedBox(width: 4),
+      child: Row(
+        children: [
+          for (var i = 0; i < 4; i++) ...[
+            Expanded(
+              child: Container(
+                height: 5,
+                decoration: BoxDecoration(
+                  color: i < filled ? color : c.line,
+                  borderRadius: BorderRadius.circular(Radii.pill),
+                ),
+              ),
+            ),
+            if (i < 3) const SizedBox(width: 4),
+          ],
+          const SizedBox(width: Gap.md),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium
+                ?.copyWith(color: color),
+          ),
         ],
-        const SizedBox(width: Gap.md),
-        Text(label, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: color)),
-      ]),
+      ),
     );
   }
 }
@@ -221,14 +312,21 @@ class NewPasswordHint extends StatelessWidget {
   Widget build(BuildContext context) {
     if (password.isEmpty) return const SizedBox.shrink();
     final issue = AccountPolicy.newPasswordError(password);
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      StrengthMeter(PasswordStrength.estimate(password)),
-      if (issue != null)
-        Padding(
-          padding: const EdgeInsets.only(top: Gap.sm),
-          child: Text(issue, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.of(context).danger)),
-        ),
-    ]);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        StrengthMeter(PasswordStrength.estimate(password)),
+        if (issue != null)
+          Padding(
+            padding: const EdgeInsets.only(top: Gap.sm),
+            child: Text(
+              issue,
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: AppColors.of(context).danger),
+            ),
+          ),
+      ],
+    );
   }
 }
 
@@ -240,20 +338,29 @@ class CenteredPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: maxWidth),
-              child: ListView(shrinkWrap: true, padding: const EdgeInsets.fromLTRB(Gap.xl, Gap.xl, Gap.xl, Gap.xxl), children: children),
-            ),
+    body: SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.fromLTRB(Gap.xl, Gap.xl, Gap.xl, Gap.xxl),
+            children: children,
           ),
         ),
-      );
+      ),
+    ),
+  );
 }
 
 /// Trạng thái rỗng: icon lớn mờ, tiêu đề, dòng mô tả.
 class EmptyState extends StatelessWidget {
-  const EmptyState({super.key, required this.icon, required this.title, this.message});
+  const EmptyState({
+    super.key,
+    required this.icon,
+    required this.title,
+    this.message,
+  });
   final IconData icon;
   final String title;
   final String? message;
@@ -265,20 +372,30 @@ class EmptyState extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(Gap.xxl),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Container(
-            width: 84,
-            height: 84,
-            decoration: BoxDecoration(color: c.accentSoft, shape: BoxShape.circle),
-            child: Icon(icon, size: 38, color: c.accent),
-          ),
-          const SizedBox(height: Gap.lg),
-          Text(title, style: t.titleMedium, textAlign: TextAlign.center),
-          if (message != null) ...[
-            const SizedBox(height: Gap.sm),
-            Text(message!, style: t.bodyMedium?.copyWith(color: c.muted), textAlign: TextAlign.center),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 84,
+              height: 84,
+              decoration: BoxDecoration(
+                color: c.accentSoft,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 38, color: c.accent),
+            ),
+            const SizedBox(height: Gap.lg),
+            Text(title, style: t.titleMedium, textAlign: TextAlign.center),
+            if (message != null) ...[
+              const SizedBox(height: Gap.sm),
+              Text(
+                message!,
+                style: t.bodyMedium?.copyWith(color: c.muted),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ],
-        ]),
+        ),
       ),
     );
   }
@@ -296,13 +413,25 @@ Future<bool> confirmDialog(
   final ok = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      icon: danger ? Icon(Icons.delete_outline_rounded, color: c.danger, size: 28) : null,
+      icon: danger
+          ? Icon(Icons.delete_outline_rounded, color: c.danger, size: 28)
+          : null,
       title: Text(title),
       content: Text(message),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Hủy'))),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text(tr('Hủy')),
+        ),
         FilledButton(
-          style: danger ? FilledButton.styleFrom(backgroundColor: c.danger, foregroundColor: c.onAccent == Colors.white ? Colors.white : Colors.black) : null,
+          style: danger
+              ? FilledButton.styleFrom(
+                  backgroundColor: c.danger,
+                  foregroundColor: c.onAccent == Colors.white
+                      ? Colors.white
+                      : Colors.black,
+                )
+              : null,
           onPressed: () => Navigator.pop(ctx, true),
           child: Text(confirmLabel),
         ),

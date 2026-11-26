@@ -9,6 +9,10 @@ import 'app/vault_controller.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // Giới hạn bộ nhớ đệm ảnh (logo thương hiệu, ảnh nền...) để không giữ quá nhiều khi dùng lâu.
+  final cache = PaintingBinding.instance.imageCache;
+  cache.maximumSize = 100;
+  cache.maximumSizeBytes = 32 << 20; // 32 MB
   runApp(const VanKeyApp());
 }
 

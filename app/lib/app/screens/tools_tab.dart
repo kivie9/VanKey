@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../core/security/duplicates.dart';
 import '../../core/security/reminders.dart';
+import '../group_actions.dart';
 import '../i18n.dart';
 import '../widgets/common.dart';
 import '../theme.dart';
@@ -35,6 +36,7 @@ class ToolsTab extends StatelessWidget {
       (Icons.password, tr('Tạo mật khẩu'), 0, () => pushPage(context, const GeneratorScreen())),
       (Icons.health_and_safety_outlined, tr('Kiểm tra bảo mật'), 0, () => pushPage(context, HealthScreen(controller: c))),
       (Icons.notifications_none, tr('Nhắc nhở'), alerts, () => pushPage(context, RemindersScreen(controller: c))),
+      (Icons.label_outline, tr('Quản lý thẻ'), c.groups.length, () => manageGroups(context, c)),
       (Icons.content_copy, tr('Mục trùng lặp'), dups, () => pushPage(context, DuplicatesScreen(controller: c))),
       (Icons.delete_outline, tr('Thùng rác'), trashed, () => pushPage(context, TrashScreen(controller: c))),
       (Icons.qr_code_scanner, tr('Quét QR'), 0, () => pushPage(context, QrScanScreen(controller: c))),

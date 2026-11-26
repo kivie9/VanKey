@@ -222,7 +222,42 @@ class _ItemEditorScreenState extends State<ItemEditorScreen> {
     return [Field(key: 'notes', value: t, secret: true, kind: 'multiline')];
   }
 
-  void _save() {
+  /// Mục khác (không ở thùng rác) đã dùng đúng khóa 2FA này.
+  Item? _findSameSecret(String secret) {
+    final s = secret.toUpperCase();
+    for (final i in widget.controller.data.items) {
+      if (i.inTrash || i.id == _old?.id) continue;
+      final t = i.totp;
+      if (t != null && t.secret.toUpperCase() == s) return i;
+    }
+    return null;
+  }
+
+  /// true = vẫn lưu, false = dùng mục có sẵn (không lưu), null = đóng hộp thoại.
+  Future<bool?> _askDuplicateSecret(Item dup) => showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(tr('Khóa 2FA này đã có')),
+      content: Text(
+        tr(
+          'Khóa này đã được lưu trong mục «{p0}». Có thể bạn không cần lưu thêm một bản nữa.',
+          {'p0': dup.title},
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text(tr('Dùng mục có sẵn')),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: Text(tr('Vẫn lưu')),
+        ),
+      ],
+    ),
+  );
+
+  Future<void> _save() async {
     final title = _title.text.trim();
     if (title.isEmpty) {
       setState(() => _error = tr('Nhập tên cho mục'));
@@ -243,6 +278,29 @@ class _ItemEditorScreenState extends State<ItemEditorScreen> {
     if (_type == ItemType.totp && totp == null) {
       setState(() => _error = tr('Nhập khóa 2FA'));
       return;
+    }
+    // Khóa mới (hoặc vừa đổi) trùng mục đã có: hỏi trước khi lưu thêm một bản.
+    if (totp != null &&
+        _old?.totp?.secret.toUpperCase() != totp.secret.toUpperCase()) {
+      final dup = _findSameSecret(totp.secret);
+      if (dup != null) {
+        final keep = await _askDuplicateSecret(dup);
+        if (!mounted) return;
+        if (keep != true) {
+          if (keep == false) {
+            final messenger = ScaffoldMessenger.of(context);
+            Navigator.of(context).pop();
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text(
+                  tr('Đã có sẵn trong mục «{p0}»', {'p0': dup.title}),
+                ),
+              ),
+            );
+          }
+          return;
+        }
+      }
     }
     final c = widget.controller;
     final values = {
@@ -335,248 +393,259 @@ class _ItemEditorScreenState extends State<ItemEditorScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: LayoutBuilder(builder: (context, box) => ListView(
-        padding: _formPadding(box.maxWidth),
-        children: [
-          if (_old == null) ...[
-            // Chọn loại: chỉ icon, cả 7 loại nằm gọn trên một hàng (nhấn giữ để xem tên).
-            Row(
-              children: [
-                for (var i = 0; i < ItemType.values.length; i++) ...[
-                  if (i > 0) const SizedBox(width: Gap.sm),
-                  Expanded(
-                    child: _TypeTile(
-                      type: ItemType.values[i],
-                      selected: _type == ItemType.values[i],
-                      onTap: () => setState(() {
-                        _type = ItemType.values[i];
-                        _syncControllers();
-                      }),
+      body: LayoutBuilder(
+        builder: (context, box) => ListView(
+          padding: _formPadding(box.maxWidth),
+          children: [
+            if (_old == null) ...[
+              // Chọn loại: chỉ icon, cả 7 loại nằm gọn trên một hàng (nhấn giữ để xem tên).
+              Row(
+                children: [
+                  for (var i = 0; i < ItemType.values.length; i++) ...[
+                    if (i > 0) const SizedBox(width: Gap.sm),
+                    Expanded(
+                      child: _TypeTile(
+                        type: ItemType.values[i],
+                        selected: _type == ItemType.values[i],
+                        onTap: () => setState(() {
+                          _type = ItemType.values[i];
+                          _syncControllers();
+                        }),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: Gap.lg),
+            ],
+            TextField(
+              controller: _title,
+              decoration: InputDecoration(labelText: tr('Tên')),
+            ),
+            const SizedBox(height: 12),
+            // Thẻ ngay dưới tên: chọn nhanh, có logo chữ cái và màu của thẻ.
+            InkWell(
+              borderRadius: BorderRadius.circular(Radii.md),
+              onTap: () async {
+                final v = await pickGroup(
+                  context,
+                  widget.controller,
+                  current: _group.text.trim(),
+                );
+                if (v != null) setState(() => _group.text = v);
+              },
+              child: InputDecorator(
+                isEmpty: false,
+                decoration: InputDecoration(
+                  labelText: tr('Thẻ'),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: TagBadge(
+                      name: _group.text.trim(),
+                      color: widget.controller.tagColor(_group.text.trim()),
+                      size: 24,
                     ),
                   ),
-                ],
-              ],
-            ),
-            const SizedBox(height: Gap.lg),
-          ],
-          TextField(
-            controller: _title,
-            decoration: InputDecoration(labelText: tr('Tên')),
-          ),
-          const SizedBox(height: 12),
-          // Thẻ ngay dưới tên: chọn nhanh, có logo chữ cái và màu của thẻ.
-          InkWell(
-            borderRadius: BorderRadius.circular(Radii.md),
-            onTap: () async {
-              final v = await pickGroup(
-                context,
-                widget.controller,
-                current: _group.text.trim(),
-              );
-              if (v != null) setState(() => _group.text = v);
-            },
-            child: InputDecorator(
-              isEmpty: false,
-              decoration: InputDecoration(
-                labelText: tr('Thẻ'),
-                prefixIcon: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: TagBadge(name: _group.text.trim(), color: widget.controller.tagColor(_group.text.trim()), size: 24),
+                  suffixIcon: const Icon(Icons.unfold_more_rounded),
                 ),
-                suffixIcon: const Icon(Icons.unfold_more_rounded),
-              ),
-              child: Text(
-                _group.text.trim().isEmpty ? tr('Không có thẻ') : _group.text.trim(),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                child: Text(
+                  _group.text.trim().isEmpty
+                      ? tr('Không có thẻ')
+                      : _group.text.trim(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
-          for (final t in templates) ...[
-            if (t.secret &&
-                t.kind == 'multiline' &&
-                _isLocked(t.key, _values[t.key]!))
-              _maskedBlock(t.key, L.fieldKey(t.key))
-            else
+            const SizedBox(height: 12),
+            for (final t in templates) ...[
+              if (t.secret &&
+                  t.kind == 'multiline' &&
+                  _isLocked(t.key, _values[t.key]!))
+                _maskedBlock(t.key, L.fieldKey(t.key))
+              else
+                TextField(
+                  controller: _values[t.key],
+                  obscureText:
+                      t.secret &&
+                      t.kind != 'multiline' &&
+                      !_shown.contains(t.key),
+                  minLines: t.kind == 'multiline' ? 3 : 1,
+                  maxLines: t.kind == 'multiline' ? 6 : 1,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  onChanged: t.key == 'password'
+                      ? (_) => setState(() {})
+                      : null,
+                  decoration: InputDecoration(
+                    labelText: L.fieldKey(t.key),
+                    suffixIcon: t.secret && t.kind != 'multiline'
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (t.key == 'password')
+                                IconButton(
+                                  tooltip: tr('Tạo mật khẩu'),
+                                  icon: const Icon(Icons.auto_fix_high),
+                                  onPressed: () => setState(() {
+                                    _values[t.key]!.text =
+                                        PasswordGenerator.generate(length: 20);
+                                    _shown.add(t.key);
+                                  }),
+                                ),
+                              IconButton(
+                                tooltip: _shown.contains(t.key)
+                                    ? tr('Ẩn')
+                                    : tr('Hiện'),
+                                icon: Icon(
+                                  _shown.contains(t.key)
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
+                                onPressed: () => setState(
+                                  () => _shown.contains(t.key)
+                                      ? _shown.remove(t.key)
+                                      : _shown.add(t.key),
+                                ),
+                              ),
+                            ],
+                          )
+                        : null,
+                  ),
+                ),
+              if (t.key == 'password' && _values[t.key]!.text.isNotEmpty)
+                StrengthMeter(PasswordStrength.estimate(_values[t.key]!.text)),
+              const SizedBox(height: 12),
+            ],
+            if (_type == ItemType.login ||
+                _type == ItemType.totp ||
+                _type == ItemType.key ||
+                _type == ItemType.crypto ||
+                _old?.totp != null) ...[
               TextField(
-                controller: _values[t.key],
-                obscureText:
-                    t.secret &&
-                    t.kind != 'multiline' &&
-                    !_shown.contains(t.key),
-                minLines: t.kind == 'multiline' ? 3 : 1,
-                maxLines: t.kind == 'multiline' ? 6 : 1,
+                controller: _secret,
+                obscureText: !_showTotpKey,
                 autocorrect: false,
                 enableSuggestions: false,
-                onChanged: t.key == 'password'
-                    ? (_) => setState(() {})
-                    : null,
+                onChanged: _onSecretChanged,
                 decoration: InputDecoration(
-                  labelText: L.fieldKey(t.key),
-                  suffixIcon: t.secret && t.kind != 'multiline'
-                      ? Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (t.key == 'password')
-                              IconButton(
-                                tooltip: tr('Tạo mật khẩu'),
-                                icon: const Icon(Icons.auto_fix_high),
-                                onPressed: () => setState(() {
-                                  _values[t.key]!.text =
-                                      PasswordGenerator.generate(length: 20);
-                                  _shown.add(t.key);
-                                }),
-                              ),
-                            IconButton(
-                              tooltip: _shown.contains(t.key)
-                                  ? tr('Ẩn')
-                                  : tr('Hiện'),
-                              icon: Icon(
-                                _shown.contains(t.key)
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                              ),
-                              onPressed: () => setState(
-                                () => _shown.contains(t.key)
-                                    ? _shown.remove(t.key)
-                                    : _shown.add(t.key),
-                              ),
-                            ),
-                          ],
-                        )
-                      : null,
-                ),
-              ),
-            if (t.key == 'password' && _values[t.key]!.text.isNotEmpty)
-              StrengthMeter(PasswordStrength.estimate(_values[t.key]!.text)),
-            const SizedBox(height: 12),
-          ],
-          if (_type == ItemType.login ||
-              _type == ItemType.totp ||
-              _type == ItemType.key ||
-              _type == ItemType.crypto ||
-              _old?.totp != null) ...[
-            TextField(
-              controller: _secret,
-              obscureText: !_showTotpKey,
-              autocorrect: false,
-              enableSuggestions: false,
-              onChanged: _onSecretChanged,
-              decoration: InputDecoration(
-                labelText: _type == ItemType.totp
-                    ? tr('Khóa 2FA hoặc link otpauth://')
-                    : tr('Khóa 2FA (không bắt buộc)'),
-                helperText: tr('Dán khóa Base32 hoặc cả link otpauth://'),
-                suffixIcon: IconButton(
-                  tooltip: _showTotpKey ? tr('Ẩn') : tr('Hiện'),
-                  icon: Icon(
-                    _showTotpKey
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                  ),
-                  onPressed: () => setState(() => _showTotpKey = !_showTotpKey),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-          if (templates.any((t) => t.key == 'password')) ...[
-            DropdownButtonFormField<int>(
-              initialValue: _reminderMonths,
-              borderRadius: BorderRadius.circular(Radii.md),
-              icon: const Icon(Icons.expand_more_rounded),
-              decoration: InputDecoration(labelText: tr('Nhắc đổi mật khẩu')),
-              items: [
-                DropdownMenuItem(value: 0, child: Text(tr('Không nhắc'))),
-                DropdownMenuItem(value: 1, child: Text(tr('Mỗi 1 tháng'))),
-                DropdownMenuItem(value: 3, child: Text(tr('Mỗi 3 tháng'))),
-                DropdownMenuItem(value: 6, child: Text(tr('Mỗi 6 tháng'))),
-                DropdownMenuItem(value: 12, child: Text(tr('Mỗi 12 tháng'))),
-              ],
-              onChanged: (v) => setState(() => _reminderMonths = v ?? 0),
-            ),
-            const SizedBox(height: 12),
-          ],
-          for (var i = 0; i < _custom.length; i++) ...[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: TextField(
-                    controller: _custom[i].label,
-                    decoration: InputDecoration(labelText: tr('Tên trường')),
+                  labelText: _type == ItemType.totp
+                      ? tr('Khóa 2FA hoặc link otpauth://')
+                      : tr('Khóa 2FA (không bắt buộc)'),
+                  helperText: tr('Dán khóa Base32 hoặc cả link otpauth://'),
+                  suffixIcon: IconButton(
+                    tooltip: _showTotpKey ? tr('Ẩn') : tr('Hiện'),
+                    icon: Icon(
+                      _showTotpKey
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                    ),
+                    onPressed: () =>
+                        setState(() => _showTotpKey = !_showTotpKey),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 3,
-                  child: TextField(
-                    controller: _custom[i].value,
-                    obscureText: _custom[i].secret,
-                    autocorrect: false,
-                    enableSuggestions: false,
-                    decoration: InputDecoration(labelText: tr('Giá trị')),
+              ),
+              const SizedBox(height: 12),
+            ],
+            if (templates.any((t) => t.key == 'password')) ...[
+              DropdownButtonFormField<int>(
+                initialValue: _reminderMonths,
+                borderRadius: BorderRadius.circular(Radii.md),
+                icon: const Icon(Icons.expand_more_rounded),
+                decoration: InputDecoration(labelText: tr('Nhắc đổi mật khẩu')),
+                items: [
+                  DropdownMenuItem(value: 0, child: Text(tr('Không nhắc'))),
+                  DropdownMenuItem(value: 1, child: Text(tr('Mỗi 1 tháng'))),
+                  DropdownMenuItem(value: 3, child: Text(tr('Mỗi 3 tháng'))),
+                  DropdownMenuItem(value: 6, child: Text(tr('Mỗi 6 tháng'))),
+                  DropdownMenuItem(value: 12, child: Text(tr('Mỗi 12 tháng'))),
+                ],
+                onChanged: (v) => setState(() => _reminderMonths = v ?? 0),
+              ),
+              const SizedBox(height: 12),
+            ],
+            for (var i = 0; i < _custom.length; i++) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: TextField(
+                      controller: _custom[i].label,
+                      decoration: InputDecoration(labelText: tr('Tên trường')),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 3,
+                    child: TextField(
+                      controller: _custom[i].value,
+                      obscureText: _custom[i].secret,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      decoration: InputDecoration(labelText: tr('Giá trị')),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: _custom[i].secret ? tr('Hiện') : tr('Ẩn'),
+                    icon: Icon(
+                      _custom[i].secret
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed: () =>
+                        setState(() => _custom[i].secret = !_custom[i].secret),
+                  ),
+                  IconButton(
+                    tooltip: tr('Xóa trường'),
+                    icon: const Icon(Icons.remove_circle_outline),
+                    onPressed: () =>
+                        setState(() => _custom.removeAt(i).dispose()),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () =>
+                    setState(() => _custom.add(_CustomRow(secret: true))),
+                icon: const Icon(Icons.add),
+                label: Text(tr('Thêm trường tùy ý')),
+              ),
+            ),
+            const SizedBox(height: 4),
+            if (_type != ItemType.note) ...[
+              if (_isLocked('notes', _notes))
+                _maskedBlock('notes', tr('Ghi chú'))
+              else
+                TextField(
+                  controller: _notes,
+                  minLines: 3,
+                  maxLines: 8,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: InputDecoration(
+                    labelText: tr('Ghi chú'),
+                    hintText: tr('Thông tin thêm cho mục này (tùy chọn)'),
+                    alignLabelWithHint: true,
                   ),
                 ),
-                IconButton(
-                  tooltip: _custom[i].secret ? tr('Hiện') : tr('Ẩn'),
-                  icon: Icon(
-                    _custom[i].secret ? Icons.visibility_off : Icons.visibility,
-                  ),
-                  onPressed: () =>
-                      setState(() => _custom[i].secret = !_custom[i].secret),
-                ),
-                IconButton(
-                  tooltip: tr('Xóa trường'),
-                  icon: const Icon(Icons.remove_circle_outline),
-                  onPressed: () =>
-                      setState(() => _custom.removeAt(i).dispose()),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-          ],
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              onPressed: () =>
-                  setState(() => _custom.add(_CustomRow(secret: true))),
-              icon: const Icon(Icons.add),
-              label: Text(tr('Thêm trường tùy ý')),
-            ),
-          ),
-          const SizedBox(height: 4),
-          if (_type != ItemType.note) ...[
-            if (_isLocked('notes', _notes))
-              _maskedBlock('notes', tr('Ghi chú'))
-            else
-              TextField(
-                controller: _notes,
-                minLines: 3,
-                maxLines: 8,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(
-                  labelText: tr('Ghi chú'),
-                  hintText: tr('Thông tin thêm cho mục này (tùy chọn)'),
-                  alignLabelWithHint: true,
+              const SizedBox(height: Gap.md),
+            ],
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: Gap.md),
+                child: Notice(
+                  _error!,
+                  tone: NoticeTone.error,
+                  icon: Icons.error_outline,
                 ),
               ),
-            const SizedBox(height: Gap.md),
+            const SizedBox(height: 90),
           ],
-          if (_error != null)
-            Padding(
-              padding: const EdgeInsets.only(top: Gap.md),
-              child: Notice(
-                _error!,
-                tone: NoticeTone.error,
-                icon: Icons.error_outline,
-              ),
-            ),
-          const SizedBox(height: 90),
-        ],
-      )),
+        ),
+      ),
       bottomNavigationBar: DecoratedBox(
         decoration: BoxDecoration(
           color: AppColors.of(context).card,

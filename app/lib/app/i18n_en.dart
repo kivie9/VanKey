@@ -47,13 +47,15 @@ const Map<String, String> enStrings = {
   'Gom theo loại': 'Group by type',
   'Không gom': 'No grouping',
   'Mã 2FA': '2FA codes',
-  'Mã 2FA {p0}, còn {p1} giây. Bấm để chép': '2FA code {p0}, {p1} seconds left. Tap to copy',
+  'Mã 2FA {p0}, còn {p1} giây. Bấm để chép':
+      '2FA code {p0}, {p1} seconds left. Tap to copy',
   'Khóa 2FA lỗi': 'Invalid 2FA key',
   'Đã chép': 'Copied',
   'Đã chép {p0}': 'Copied {p0}',
   'Đã chép mã 2FA': '2FA code copied',
   'Đã chép mã khôi phục': 'Recovery key copied',
-  'Đã chép mã khôi phục (tự xóa clipboard sau 30 giây)': 'Recovery key copied (clipboard clears after 30 seconds)',
+  'Đã chép mã khôi phục (tự xóa clipboard sau 30 giây)':
+      'Recovery key copied (clipboard clears after 30 seconds)',
   'Đã chép mật khẩu': 'Password copied',
   'Đã chép mật khẩu cũ': 'Old password copied',
   'Thêm mục': 'Add item',
@@ -96,9 +98,12 @@ const Map<String, String> enStrings = {
   'Nhập khóa 2FA': 'Enter the 2FA key',
   'Khóa 2FA hoặc link otpauth://': '2FA key or otpauth:// link',
   'Khóa 2FA (không bắt buộc)': '2FA key (optional)',
-  'Dán khóa Base32 hoặc cả link otpauth://': 'Paste a Base32 key or a whole otpauth:// link',
-  'Khóa 2FA không hợp lệ (chỉ gồm chữ A–Z và số 2–7)': 'Invalid 2FA key (letters A–Z and digits 2–7 only)',
-  'Khóa không hợp lệ (chỉ gồm chữ A–Z và số 2–7)': 'Invalid key (letters A–Z and digits 2–7 only)',
+  'Dán khóa Base32 hoặc cả link otpauth://':
+      'Paste a Base32 key or a whole otpauth:// link',
+  'Khóa 2FA không hợp lệ (chỉ gồm chữ A–Z và số 2–7)':
+      'Invalid 2FA key (letters A–Z and digits 2–7 only)',
+  'Khóa không hợp lệ (chỉ gồm chữ A–Z và số 2–7)':
+      'Invalid key (letters A–Z and digits 2–7 only)',
   'Link không hợp lệ: {p0}': 'Invalid link: {p0}',
   'Nhắc đổi mật khẩu': 'Password change reminder',
   'Không nhắc': 'No reminder',
@@ -111,7 +116,8 @@ const Map<String, String> enStrings = {
   'Chữ thường': 'Lowercase',
   'Số': 'Digits',
   'Ký hiệu': 'Symbols',
-  'Bỏ ký tự dễ nhầm (I, O, l, 0, 1)': 'Avoid look-alike characters (I, O, l, 0, 1)',
+  'Bỏ ký tự dễ nhầm (I, O, l, 0, 1)':
+      'Avoid look-alike characters (I, O, l, 0, 1)',
   'Độ dài: {p0}': 'Length: {p0}',
   'Tạo lại': 'Regenerate',
   'Yếu': 'Weak',
@@ -129,7 +135,8 @@ const Map<String, String> enStrings = {
   'Tạo kho': 'Create vault',
   'Lưu mã khôi phục': 'Save your recovery key',
   'Nếu quên mật khẩu, đây là cách DUY NHẤT mở lại kho. Mã chỉ hiện một lần. Hãy chép và cất ở nơi an toàn, ngoài chiếc điện thoại này.': 'If you forget your password, this is the ONLY way to reopen the vault. It is shown once. Copy it and keep it somewhere safe, away from this phone.',
-  'Tôi đã lưu mã khôi phục ở nơi an toàn': 'I have saved the recovery key somewhere safe',
+  'Tôi đã lưu mã khôi phục ở nơi an toàn':
+      'I have saved the recovery key somewhere safe',
   'Bắt đầu dùng': 'Get started',
   'Mở khóa': 'Unlock',
   'Mở khóa VanKey': 'Unlock VanKey',
@@ -141,9 +148,12 @@ const Map<String, String> enStrings = {
   'Xóa toàn bộ kho?': 'Delete the entire vault?',
   'Mọi mật khẩu, mã 2FA và ghi chú trong kho này sẽ mất vĩnh viễn, không khôi phục được. Chỉ làm khi bạn chắc chắn không cần dữ liệu đó.': 'Every password, 2FA code and note in this vault will be lost permanently and cannot be restored. Only do this if you are sure you do not need that data.',
   'Recovery key không đúng định dạng': 'The recovery key format is not valid',
-  'Nhập sai nhiều lần. Thử lại sau {p0} giây.': 'Too many wrong attempts. Try again in {p0} seconds.',
-  'Sai mật khẩu. Chờ {p0} giây trước khi thử lại.': 'Wrong password. Wait {p0} seconds before trying again.',
-  'Sai mật khẩu, hoặc file kho đã bị sửa': 'Wrong password, or the vault file was modified',
+  'Nhập sai nhiều lần. Thử lại sau {p0} giây.':
+      'Too many wrong attempts. Try again in {p0} seconds.',
+  'Sai mật khẩu. Chờ {p0} giây trước khi thử lại.':
+      'Wrong password. Wait {p0} seconds before trying again.',
+  'Sai mật khẩu, hoặc file kho đã bị sửa':
+      'Wrong password, or the vault file was modified',
   'Không thấy file kho': 'Vault file not found',
   'Không mở được kho: {p0}': 'Could not open the vault: {p0}',
   'Không tạo được kho: {p0}': 'Could not create the vault: {p0}',
@@ -158,7 +168,8 @@ const Map<String, String> enStrings = {
   'Thêm dịch vụ "{p0}"': 'Add service "{p0}"',
   '{p0} tài khoản': '{p0} accounts',
   '"{p0}" có phải là {p1}?': 'Is "{p0}" a {p1} account?',
-  'Bấm "Đúng" sẽ điền địa chỉ {p0}, tên giữ nguyên.': '"Yes" fills in the address {p0} and keeps the name.',
+  'Bấm "Đúng" sẽ điền địa chỉ {p0}, tên giữ nguyên.':
+      '"Yes" fills in the address {p0} and keeps the name.',
   'Không': 'No',
   'Đúng': 'Yes',
   'Gợi ý dịch vụ': 'Service suggestions',
@@ -166,10 +177,13 @@ const Map<String, String> enStrings = {
   'Mục chưa có địa chỉ web mà tên giống một dịch vụ sẽ hiện ở đây.': 'Items without a web address whose name looks like a known service show up here.',
   'Tự khóa': 'Auto-lock',
   'Không tự khóa': 'Never auto-lock',
-  'Máy chủ chưa đổi được mật khẩu: {p0}': 'The server could not change the password: {p0}',
-  'Không kết nối được máy chủ ({p0}). Mật khẩu chưa được đổi.': 'Could not reach the server ({p0}). The password was not changed.',
+  'Máy chủ chưa đổi được mật khẩu: {p0}':
+      'The server could not change the password: {p0}',
+  'Không kết nối được máy chủ ({p0}). Mật khẩu chưa được đổi.':
+      'Could not reach the server ({p0}). The password was not changed.',
   'Chưa đăng nhập tài khoản máy chủ.': 'Not signed in to a server account.',
-  'Không kết nối được máy chủ ({p0}). Tài khoản chưa bị xóa.': 'Could not reach the server ({p0}). The account was not deleted.',
+  'Không kết nối được máy chủ ({p0}). Tài khoản chưa bị xóa.':
+      'Could not reach the server ({p0}). The account was not deleted.',
   'Xóa tài khoản?': 'Delete account?',
   'Tài khoản {p0}, kho trên máy chủ và kho trên máy này sẽ bị xóa vĩnh viễn. Các thiết bị khác bị đăng xuất. Không thể hoàn tác. Hãy xuất bản sao lưu trước nếu còn cần dữ liệu.': 'Account {p0}, the vault on the server and the vault on this device will be permanently deleted. Other devices will be signed out. This cannot be undone. Export a backup first if you still need the data.',
   'Nhập mật khẩu để xóa tài khoản': 'Enter your password to delete the account',
@@ -182,29 +196,31 @@ const Map<String, String> enStrings = {
   '{p0} giây': '{p0} seconds',
   'Đặt mật khẩu': 'Set password',
   'Hiện app mở thẳng, không hỏi gì. Đặt mật khẩu để bảo vệ kho.': 'The app opens directly without asking. Set a password to protect the vault.',
-  'Đã đặt mật khẩu. Từ giờ app sẽ hỏi mật khẩu khi mở.': 'Password set. The app will now ask for it when opening.',
+  'Đã đặt mật khẩu. Từ giờ app sẽ hỏi mật khẩu khi mở.':
+      'Password set. The app will now ask for it when opening.',
   'Chặn chụp màn hình': 'Block screenshots',
-  'Cũng che nội dung khi xem danh sách ứng dụng gần đây': 'Also hides content in the recent apps list',
+  'Cũng che nội dung khi xem danh sách ứng dụng gần đây':
+      'Also hides content in the recent apps list',
   'Mở khóa bằng vân tay': 'Unlock with fingerprint',
-  'Vân tay trên máy đã thay đổi. Hãy nhập mật khẩu rồi bật lại mở khóa bằng vân tay.':
-      'The fingerprints on this device have changed. Enter your password, then turn fingerprint unlock on again.',
-  'Mở khóa bằng vân tay đã được nâng cấp để an toàn hơn. Sau khi mở bằng mật khẩu, hãy bật lại trong Cài đặt > Tài khoản.':
-      'Fingerprint unlock has been upgraded to be more secure. After unlocking with your password, turn it on again in Settings > Account.',
+  'Vân tay trên máy đã thay đổi. Hãy nhập mật khẩu rồi bật lại mở khóa bằng vân tay.': 'The fingerprints on this device have changed. Enter your password, then turn fingerprint unlock on again.',
+  'Mở khóa bằng vân tay đã được nâng cấp để an toàn hơn. Sau khi mở bằng mật khẩu, hãy bật lại trong Cài đặt > Tài khoản.': 'Fingerprint unlock has been upgraded to be more secure. After unlocking with your password, turn it on again in Settings > Account.',
   'Tắt tự khóa?': 'Turn off auto-lock?',
   'Mật khẩu quá dễ đoán. Hãy dài hơn, hoặc ghép vài từ không liên quan.': 'This password is too easy to guess. Make it longer, or combine a few unrelated words.',
-  'Khóa mở kho sẽ được cất trên máy này để mở app là vào thẳng, không hỏi mật khẩu. Ai cầm được điện thoại đang mở khóa màn hình là xem được toàn bộ mật khẩu và mã 2FA của bạn. Chỉ nên chọn nếu điện thoại luôn có khóa màn hình và không ai khác dùng.':
-      'The vault key will be kept on this device so the app opens straight into your vault without asking for a password. Anyone holding your unlocked phone can see all your passwords and 2FA codes. Only choose this if your phone always has a screen lock and nobody else uses it.',
+  'Khóa mở kho sẽ được cất trên máy này để mở app là vào thẳng, không hỏi mật khẩu. Ai cầm được điện thoại đang mở khóa màn hình là xem được toàn bộ mật khẩu và mã 2FA của bạn. Chỉ nên chọn nếu điện thoại luôn có khóa màn hình và không ai khác dùng.': 'The vault key will be kept on this device so the app opens straight into your vault without asking for a password. Anyone holding your unlocked phone can see all your passwords and 2FA codes. Only choose this if your phone always has a screen lock and nobody else uses it.',
   'Giữ tự khóa': 'Keep auto-lock',
   'Vẫn tắt': 'Turn off anyway',
-  'Đang không tự khóa: ai cầm điện thoại đang mở là vào được kho. Nên chọn một mức tự khóa, nhất là khi đã bật mở bằng vân tay.':
-      'Auto-lock is off: anyone holding your unlocked phone can open the vault. Pick an auto-lock time, especially if fingerprint unlock is on.',
-  'Vẫn dùng được mật khẩu khi vân tay không nhận': 'You can still use your password if the fingerprint fails',
+  'Đang không tự khóa: ai cầm điện thoại đang mở là vào được kho. Nên chọn một mức tự khóa, nhất là khi đã bật mở bằng vân tay.': 'Auto-lock is off: anyone holding your unlocked phone can open the vault. Pick an auto-lock time, especially if fingerprint unlock is on.',
+  'Vẫn dùng được mật khẩu khi vân tay không nhận':
+      'You can still use your password if the fingerprint fails',
   'Nhập mật khẩu để bật vân tay': 'Enter your password to enable fingerprint',
-  'Xác nhận để bật mở khóa bằng vân tay': 'Confirm to enable fingerprint unlock',
+  'Xác nhận để bật mở khóa bằng vân tay':
+      'Confirm to enable fingerprint unlock',
   'Đã bật mở khóa bằng vân tay': 'Fingerprint unlock enabled',
-  'Tạo mã mới (mã cũ sẽ hết hiệu lực)': 'Create a new key (the old one stops working)',
+  'Tạo mã mới (mã cũ sẽ hết hiệu lực)':
+      'Create a new key (the old one stops working)',
   'Tạo mã khôi phục mới?': 'Create a new recovery key?',
-  'Mã cũ (nếu có) sẽ không dùng được nữa. Mã mới chỉ hiện một lần.': 'The old key (if any) will stop working. The new key is shown only once.',
+  'Mã cũ (nếu có) sẽ không dùng được nữa. Mã mới chỉ hiện một lần.':
+      'The old key (if any) will stop working. The new key is shown only once.',
   'Cất ở nơi an toàn, ngoài chiếc điện thoại này. Đây là cách duy nhất mở lại kho khi quên mật khẩu hoặc mất máy.': 'Keep it somewhere safe, away from this phone. It is the only way to reopen the vault if you forget the password or lose the device.',
   'Tôi đã lưu': 'I have saved it',
   'Giao diện': 'Appearance',
@@ -220,10 +236,13 @@ const Map<String, String> enStrings = {
   'Nhập dữ liệu': 'Import data',
   'Xuất và sao lưu': 'Export and backup',
   'Sao lưu mã hóa (.vkv)': 'Encrypted backup (.vkv)',
-  'An toàn. Chỉ VanKey mở được, cần mật khẩu hoặc mã khôi phục.': 'Safe. Only VanKey can open it, with the password or recovery key.',
-  'Chỉ mở lại được bằng mã khôi phục: hãy tạo mã trước.': 'Can only be reopened with a recovery key: create one first.',
+  'An toàn. Chỉ VanKey mở được, cần mật khẩu hoặc mã khôi phục.':
+      'Safe. Only VanKey can open it, with the password or recovery key.',
+  'Chỉ mở lại được bằng mã khôi phục: hãy tạo mã trước.':
+      'Can only be reopened with a recovery key: create one first.',
   'Xuất CSV không mã hóa': 'Export unencrypted CSV',
-  'Chứa mật khẩu và khóa 2FA dạng chữ thường.': 'Contains passwords and 2FA keys in plain text.',
+  'Chứa mật khẩu và khóa 2FA dạng chữ thường.':
+      'Contains passwords and 2FA keys in plain text.',
   'Xuất danh sách link 2FA không mã hóa': 'Export unencrypted 2FA link list',
   'Để chuyển sang app 2FA khác.': 'For moving to another 2FA app.',
   'Xuất không mã hóa?': 'Export without encryption?',
@@ -235,7 +254,8 @@ const Map<String, String> enStrings = {
   'Mục trùng lặp': 'Duplicates',
   'Thùng rác': 'Trash',
   'Tự xóa vĩnh viễn sau 30 ngày': 'Permanently deleted after 30 days',
-  'Bản thử nghiệm. Dữ liệu chỉ nằm trên máy này, chưa đồng bộ.': 'Test build. Data stays on this device and is not synced yet.',
+  'Bản thử nghiệm. Dữ liệu chỉ nằm trên máy này, chưa đồng bộ.':
+      'Test build. Data stays on this device and is not synced yet.',
   'Giấy phép mã nguồn mở': 'Open-source licenses',
 
   // ---- Thùng rác, trùng lặp ----
@@ -249,25 +269,37 @@ const Map<String, String> enStrings = {
   'Cùng tên và tài khoản': 'Same name and account',
   'Dùng chung một mật khẩu': 'Share one password',
   'Gộp, giữ bản mới nhất': 'Merge, keep the newest',
-  'Chỉ cảnh báo: hãy đổi mật khẩu để mỗi tài khoản một mật khẩu riêng.': 'Warning only: change passwords so each account has its own.',
-  'Đã gộp {p0} mục (các bản cũ nằm trong thùng rác)': 'Merged {p0} items (older copies are in the trash)',
+  'Chỉ cảnh báo: hãy đổi mật khẩu để mỗi tài khoản một mật khẩu riêng.':
+      'Warning only: change passwords so each account has its own.',
+  'Đã gộp {p0} mục (các bản cũ nằm trong thùng rác)':
+      'Merged {p0} items (older copies are in the trash)',
 
   // ---- Nhập / QR / xem nhanh ----
   'Cách nhập': 'How to import',
+  'Khóa 2FA này đã có': 'This 2FA key already exists',
+  'Khóa này đã được lưu trong mục «{p0}». Có thể bạn không cần lưu thêm một bản nữa.': 'This key is already saved in the item «{p0}». You may not need another copy.',
+  'Dùng mục có sẵn': 'Use the existing item',
+  'Vẫn lưu': 'Save anyway',
+  'Đã có sẵn trong mục «{p0}»': 'Already saved in the item «{p0}»',
   'Không tìm thấy camera trên máy này.': 'No camera found on this computer.',
   'Không mở được camera ({p0}). Hãy kiểm tra camera không bị app khác dùng, hoặc chọn ảnh QR bên dưới.': 'Could not open the camera ({p0}). Check that no other app is using it, or choose a QR image below.',
   '1. Chọn file xuất từ app khác: Google Authenticator (xuất link), Aegis, 2FAS, Bitwarden, 1Password, Chrome, KeePass.': '1. Choose an export file from another app: Google Authenticator (export link), Aegis, 2FAS, Bitwarden, 1Password, Chrome, KeePass.',
-  '2. Hoặc dán vào ô bên dưới một trong hai dạng sau:': '2. Or paste one of these two formats into the box below:',
-  'Danh sách link otpauth:// (mỗi dòng một tài khoản 2FA)': 'List of otpauth:// links (one 2FA account per line)',
-  'CSV có dòng tiêu đề ở đầu (các cột có thể bỏ bớt):': 'CSV with a header row first (columns can be omitted):',
+  '2. Hoặc dán vào ô bên dưới một trong hai dạng sau:':
+      '2. Or paste one of these two formats into the box below:',
+  'Danh sách link otpauth:// (mỗi dòng một tài khoản 2FA)':
+      'List of otpauth:// links (one 2FA account per line)',
+  'CSV có dòng tiêu đề ở đầu (các cột có thể bỏ bớt):':
+      'CSV with a header row first (columns can be omitted):',
   'Nội dung cần nhập': 'Content to import',
-  'Dán danh sách link otpauth:// hoặc CSV vào đây': 'Paste an otpauth:// link list or CSV here',
+  'Dán danh sách link otpauth:// hoặc CSV vào đây':
+      'Paste an otpauth:// link list or CSV here',
   'Hoặc dán nội dung/link vào đây': 'Or paste the content/link here',
   'Không đọc được file này (cần file văn bản: JSON, CSV hoặc danh sách link).': 'Could not read this file (it must be text: JSON, CSV or a list of links).',
   'Không tìm thấy mục nào để nhập.': 'No items found to import.',
   'File này được mã hóa bởi app nguồn. Hãy xuất lại bản không mã hóa từ app đó.': 'This file is encrypted by the source app. Export an unencrypted copy from that app.',
   'Không đọc được: {p0}': 'Could not read: {p0}',
-  'Tìm thấy {p0} mục. Mục trùng đã bỏ chọn sẵn.': 'Found {p0} items. Duplicates are unchecked.',
+  'Tìm thấy {p0} mục. Mục trùng đã bỏ chọn sẵn.':
+      'Found {p0} items. Duplicates are unchecked.',
   '{p0} mục bị bỏ qua hoặc đọc chưa hết (Steam, HOTP, dòng lỗi...).': '{p0} items were skipped or only partly read (Steam, HOTP, bad lines...).',
   'có 2FA': 'has 2FA',
   'trùng với mục đã có': 'duplicate of an existing item',
@@ -290,18 +322,23 @@ const Map<String, String> enStrings = {
   'Đang kiểm tra…': 'Checking…',
   'Kiểm tra rò rỉ trên mạng?': 'Check for leaks online?',
   'App chỉ gửi 5 ký tự đầu của mã băm SHA-1 của mỗi mật khẩu tới dịch vụ Have I Been Pwned. Mật khẩu và phần còn lại của mã băm không bao giờ rời khỏi máy, nên dịch vụ không biết mật khẩu của bạn.': 'The app sends only the first 5 characters of each password SHA-1 hash to Have I Been Pwned. The password and the rest of the hash never leave your device, so the service cannot learn your passwords.',
-  'Không kết nối được dịch vụ kiểm tra. Hãy thử lại khi có mạng.': 'Could not reach the checking service. Try again when you are online.',
-  'Không mật khẩu nào có trong dữ liệu rò rỉ đã biết.': 'None of your passwords appear in known leaks.',
+  'Không kết nối được dịch vụ kiểm tra. Hãy thử lại khi có mạng.':
+      'Could not reach the checking service. Try again when you are online.',
+  'Không mật khẩu nào có trong dữ liệu rò rỉ đã biết.':
+      'None of your passwords appear in known leaks.',
   'Mật khẩu đã bị lộ, hãy đổi ngay': 'Leaked passwords, change them now',
   'Mật khẩu yếu': 'Weak passwords',
   'Chưa bật 2FA': '2FA not enabled',
-  'Điểm là công thức tự đặt của VanKey, chỉ mang tính tham khảo.': 'The score is VanKey own formula and is only a guide.',
+  'Điểm là công thức tự đặt của VanKey, chỉ mang tính tham khảo.':
+      'The score is VanKey own formula and is only a guide.',
 
   // ---- Nhắc nhở ----
   'Nhắc nhở': 'Reminders',
-  'Nhắc đổi mật khẩu và hạn thẻ, khóa': 'Password change and card/key expiry reminders',
+  'Nhắc đổi mật khẩu và hạn thẻ, khóa':
+      'Password change and card/key expiry reminders',
   'Thông báo đang tắt': 'Notifications are off',
-  'Bật để nhận nhắc nhở khi app đóng': 'Turn on to get reminders when the app is closed',
+  'Bật để nhận nhắc nhở khi app đóng':
+      'Turn on to get reminders when the app is closed',
   'Đã bật thông báo nhắc nhở': 'Reminder notifications enabled',
   'Chưa được cấp quyền thông báo. Hãy bật trong cài đặt điện thoại.': 'Notification permission was not granted. Turn it on in your phone settings.',
   'Chưa có nhắc nhở nào.\nĐặt hạn đổi mật khẩu khi thêm hoặc sửa mục.': 'No reminders yet.\nSet a password change interval when adding or editing an item.',
@@ -331,11 +368,14 @@ const Map<String, String> enStrings = {
   '{p0}\nLần cuối: {p1}': '{p0}\nLast: {p1}',
   'Chọn thư mục đồng bộ': 'Choose the sync folder',
   'Đồng bộ giữa các thiết bị bằng bản đã mã hóa. Nơi lưu chỉ thấy dữ liệu không đọc được.': 'Sync between devices using an encrypted copy. The storage only sees unreadable data.',
-  'Đồng bộ qua thư mục (OneDrive, Dropbox...)': 'Sync through a folder (OneDrive, Dropbox...)',
+  'Đồng bộ qua thư mục (OneDrive, Dropbox...)':
+      'Sync through a folder (OneDrive, Dropbox...)',
   'Đồng bộ qua thư mục chỉ dùng được trên máy tính. Google Drive và Cloudflare sắp có.': 'Folder sync works on computers only. Google Drive and Cloudflare are coming.',
-  'Tắt đồng bộ (giữ nguyên dữ liệu trên máy)': 'Turn off sync (keep data on this device)',
+  'Tắt đồng bộ (giữ nguyên dữ liệu trên máy)':
+      'Turn off sync (keep data on this device)',
   '{p0} mục sửa ở cả hai máy': '{p0} items edited on both devices',
-  'Đã tự chọn bản mới hơn. Bấm để xem và đổi.': 'The newer copy was kept. Tap to review and change.',
+  'Đã tự chọn bản mới hơn. Bấm để xem và đổi.':
+      'The newer copy was kept. Tap to review and change.',
   'Mục xung đột': 'Conflicts',
   'Không còn xung đột': 'No conflicts left',
   'Giữ bản này': 'Keep this one',
@@ -359,7 +399,8 @@ const Map<String, String> enStrings = {
 
   // ---- Cloudflare ----
   'Cần đăng nhập lại vào máy chủ.': 'Sign in to the server again.',
-  'Địa chỉ máy chủ phải bắt đầu bằng https://': 'The server address must start with https://',
+  'Địa chỉ máy chủ phải bắt đầu bằng https://':
+      'The server address must start with https://',
   '{p0} (chờ {p1} giây)': '{p0} (wait {p1} seconds)',
   'Không kết nối được máy chủ ({p0}).': 'Could not reach the server ({p0}).',
   'Tài khoản này chưa có kho trên máy chủ. Hãy tạo kho ở máy đầu tiên rồi bật đồng bộ.': 'This account has no vault on the server yet. Create the vault on your first device and turn on sync.',
@@ -370,7 +411,8 @@ const Map<String, String> enStrings = {
   'Tạo tài khoản máy chủ': 'Create a server account',
   'Đăng nhập máy chủ': 'Sign in to the server',
   'Địa chỉ máy chủ': 'Server address',
-  'Ví dụ: https://vankey.ten-ban.workers.dev': 'Example: https://vankey.your-name.workers.dev',
+  'Ví dụ: https://vankey.ten-ban.workers.dev':
+      'Example: https://vankey.your-name.workers.dev',
   'Email': 'Email',
   'Mã khôi phục của kho': 'Vault recovery key',
   'Mật khẩu của kho': 'Vault password',
@@ -389,13 +431,17 @@ const Map<String, String> enStrings = {
   '{p0} (máy này)': '{p0} (this device)',
   'Hoạt động lần cuối: {p0}': 'Last active: {p0}',
   'Gỡ thiết bị': 'Remove device',
-  'Đồng bộ qua thư mục chỉ dùng được trên máy tính.': 'Folder sync works on computers only.',
-  'Đồng bộ qua máy chủ Cloudflare của bạn': 'Sync through your own Cloudflare server',
-  'Đăng xuất khỏi máy chủ (giữ nguyên dữ liệu trên máy)': 'Sign out of the server (keep data on this device)',
+  'Đồng bộ qua thư mục chỉ dùng được trên máy tính.':
+      'Folder sync works on computers only.',
+  'Đồng bộ qua máy chủ Cloudflare của bạn':
+      'Sync through your own Cloudflare server',
+  'Đăng xuất khỏi máy chủ (giữ nguyên dữ liệu trên máy)':
+      'Sign out of the server (keep data on this device)',
 
   'Máy tính không quét bằng camera. Hãy chụp màn hình mã QR (hoặc lưu ảnh) rồi chọn ảnh đó.': 'Computers do not scan with a camera. Take a screenshot of the QR code (or save the image) and choose it.',
 
-  'Quét mã này bằng app 2FA khác để thêm tài khoản.': 'Scan this code with another 2FA app to add the account.',
+  'Quét mã này bằng app 2FA khác để thêm tài khoản.':
+      'Scan this code with another 2FA app to add the account.',
   'Chuyển sang Google Authenticator': 'Move to Google Authenticator',
   'Trong Google Authenticator chọn Nhập tài khoản → Quét mã QR, rồi quét lần lượt từng mã.': 'In Google Authenticator choose Import accounts → Scan QR code, then scan each code in turn.',
   'Chưa có mục 2FA nào để xuất.': 'No 2FA items to export yet.',
@@ -405,10 +451,12 @@ const Map<String, String> enStrings = {
   'Mã {p0} / {p1}': 'Code {p0} / {p1}',
   'Hiện mã QR': 'Show QR code',
   'Mã QR cho Google Authenticator': 'QR codes for Google Authenticator',
-  'Hiện lần lượt các mã QR để nhập sang app khác.': 'Shows QR codes one after another to import into another app.',
+  'Hiện lần lượt các mã QR để nhập sang app khác.':
+      'Shows QR codes one after another to import into another app.',
 
   'Dọn sạch thùng rác?': 'Empty the trash?',
-  '{p0} mục sẽ bị xóa vĩnh viễn, không thể hoàn tác.': '{p0} items will be deleted permanently and cannot be restored.',
+  '{p0} mục sẽ bị xóa vĩnh viễn, không thể hoàn tác.':
+      '{p0} items will be deleted permanently and cannot be restored.',
   'Dọn sạch': 'Empty',
   'Sắp xếp theo tên': 'Sort by name',
   'Mới sửa trước': 'Recently edited first',
@@ -422,9 +470,11 @@ const Map<String, String> enStrings = {
 
   'hoặc': 'or',
 
-  'Mục đã xóa nằm ở đây 30 ngày rồi tự xóa hẳn.': 'Deleted items stay here for 30 days, then are removed for good.',
+  'Mục đã xóa nằm ở đây 30 ngày rồi tự xóa hẳn.':
+      'Deleted items stay here for 30 days, then are removed for good.',
 
-  'Điện thoại và máy tính dùng chung một kho': 'Phone and computer share one vault',
+  'Điện thoại và máy tính dùng chung một kho':
+      'Phone and computer share one vault',
   'Chọn một thư mục được đồng bộ sẵn': 'Choose a folder that is already synced',
 
   'Chuyển "{p0}" vào thùng rác?': 'Move "{p0}" to the trash?',
@@ -446,14 +496,16 @@ const Map<String, String> enStrings = {
   'Tất cả': 'All',
   'Tiện ích': 'Tools',
   'Nạp dữ liệu mẫu': 'Load sample data',
-  'Thêm các mục giả để xem giao diện': 'Add fake items to preview the interface',
+  'Thêm các mục giả để xem giao diện':
+      'Add fake items to preview the interface',
   'Nạp dữ liệu mẫu?': 'Load sample data?',
   'Thêm khoảng 30 mục giả (đủ loại, logo, 2FA, nhắc nhở, thẻ) vào kho này để xem giao diện. Đừng nạp vào kho thật bạn đang dùng.': 'Adds about 30 fake items (all types, logos, 2FA, reminders, cards) to this vault to preview the interface. Do not load it into the real vault you use.',
   'Nạp': 'Load',
   'Đã thêm {p0} mục mẫu': 'Added {p0} sample items',
   'Xóa dữ liệu mẫu': 'Remove sample data',
   'Xóa dữ liệu mẫu?': 'Remove sample data?',
-  'Chỉ xóa các mục giả đã nạp, không đụng mục của bạn': 'Only removes the loaded sample items, never your own',
+  'Chỉ xóa các mục giả đã nạp, không đụng mục của bạn':
+      'Only removes the loaded sample items, never your own',
   'Không còn mục mẫu nào': 'No sample items left',
   'Xóa hẳn {p0} mục mẫu (kể cả trên máy khác khi đồng bộ). Mục mẫu bạn đã sửa và mục của bạn được giữ nguyên.': 'Permanently remove {p0} sample items (also on other devices when syncing). Sample items you edited and your own items are kept.',
   'Đã xóa {p0} mục mẫu': 'Removed {p0} sample items',
@@ -465,22 +517,26 @@ const Map<String, String> enStrings = {
   'Thẻ mới…': 'New tag…',
   'Quản lý thẻ': 'Manage tags',
   'Quản lý thẻ (đổi tên, xóa)': 'Manage tags (rename, delete)',
-  'Chưa có thẻ nào. Thẻ được tạo khi bạn gắn cho một mục.': 'No tags yet. A tag is created when you assign it to an item.',
+  'Chưa có thẻ nào. Thẻ được tạo khi bạn gắn cho một mục.':
+      'No tags yet. A tag is created when you assign it to an item.',
   '{p0} mục': '{p0} items',
   'Đổi tên': 'Rename',
   'Đổi tên thẻ': 'Rename tag',
   'Xóa thẻ': 'Delete tag',
   'Xóa thẻ "{p0}"?': 'Delete tag "{p0}"?',
-  'Các mục có thẻ này không bị xóa, chỉ chuyển sang "Không có thẻ".': 'Items in the tag are not deleted, they just become "No tag".',
+  'Các mục có thẻ này không bị xóa, chỉ chuyển sang "Không có thẻ".':
+      'Items in the tag are not deleted, they just become "No tag".',
   'Xong': 'Done',
-  'Thông tin thêm cho mục này (tùy chọn)': 'Extra information for this item (optional)',
+  'Thông tin thêm cho mục này (tùy chọn)':
+      'Extra information for this item (optional)',
 
   'Mã 2FA đang ẩn. Bấm để chép': '2FA code hidden. Tap to copy',
   'Hiện mã 2FA': 'Show 2FA code',
   'Ẩn mã 2FA': 'Hide 2FA code',
 
   'Hiện logo dịch vụ': 'Show service logos',
-  'Facebook, Google, GitHub... hiện logo thay cho chữ cái đầu': 'Facebook, Google, GitHub... show their logo instead of the first letter',
+  'Facebook, Google, GitHub... hiện logo thay cho chữ cái đầu':
+      'Facebook, Google, GitHub... show their logo instead of the first letter',
 
   'Hiện để sửa': 'Show to edit',
 
@@ -520,7 +576,8 @@ const Map<String, String> enStrings = {
   // ---- Hỗ trợ, Giới thiệu ----
   'Quên mật khẩu kho thì sao?': 'What if I forget the vault password?',
   'Dùng mã khôi phục ở màn mở khóa. Nếu mất cả mật khẩu lẫn mã khôi phục thì không ai mở lại được kho, kể cả nhà phát triển, vì dữ liệu mã hóa ngay trên máy.': 'Use the recovery key on the unlock screen. If you lose both the password and the recovery key, nobody can reopen the vault, not even the developer, because the data is encrypted on your device.',
-  'Chuyển từ Google Authenticator thế nào?': 'How do I move from Google Authenticator?',
+  'Chuyển từ Google Authenticator thế nào?':
+      'How do I move from Google Authenticator?',
   'Trong Google Authenticator chọn Xuất tài khoản, rồi trong VanKey bấm + → Quét QR. Có thể chụp màn hình mã QR và chọn ảnh. Sau khi xong hãy so vài mã với app cũ trước khi xóa app cũ.': 'In Google Authenticator choose Export accounts, then in VanKey tap + → Scan QR. You can also screenshot the QR code and choose the image. Compare a few codes with the old app before deleting it.',
   'Dữ liệu của tôi nằm ở đâu?': 'Where is my data stored?',
   'Chỉ trên máy này, đã mã hóa. Chưa có máy chủ nào giữ dữ liệu. Khi bật đồng bộ, nơi lưu chỉ thấy bản mã hóa không đọc được.': 'Only on this device, encrypted. No server holds your data. When sync is on, the storage only sees an unreadable encrypted copy.',
@@ -528,7 +585,8 @@ const Map<String, String> enStrings = {
   'Kho vẫn mã hóa bằng khóa riêng giữ trong Keystore của điện thoại, nhưng ai mở được khóa màn hình của bạn thì mở được app. Hãy đặt mật khẩu nếu cần chắc chắn hơn.': 'The vault is still encrypted with a key kept in the phone Keystore, but anyone who can unlock your screen can open the app. Set a password if you need more certainty.',
   'Sao lưu thế nào?': 'How do I back up?',
   'Cài đặt → Dữ liệu → Xuất và sao lưu → Sao lưu mã hóa. File chỉ mở lại được bằng mật khẩu hoặc mã khôi phục.': 'Settings → Data → Export and backup → Encrypted backup. The file can only be reopened with the password or recovery key.',
-  'Vì sao mật khẩu cũ vẫn còn trong lịch sử?': 'Why are old passwords kept in history?',
+  'Vì sao mật khẩu cũ vẫn còn trong lịch sử?':
+      'Why are old passwords kept in history?',
   'Để bạn dùng lại nếu đổi nhầm. Mỗi mục giữ tối đa 10 mật khẩu gần nhất và chỉ xem được khi kho đã mở.': 'So you can reuse one if you changed it by mistake. Each item keeps the last 10 and they are only visible while the vault is open.',
   'Mã 2FA báo sai?': '2FA code rejected?',
   'Kiểm tra đồng hồ điện thoại có đặt tự động không: mã TOTP phụ thuộc giờ chính xác. Một số dịch vụ dùng 8 số hoặc chu kỳ khác, VanKey giữ đúng thông số trong link gốc.': 'Check that your phone clock is set automatically: TOTP codes depend on accurate time. Some services use 8 digits or other periods; VanKey keeps the exact parameters from the original link.',
@@ -537,35 +595,43 @@ const Map<String, String> enStrings = {
   'Mã hóa XChaCha20-Poly1305, khóa dẫn xuất bằng Argon2id từ mật khẩu của bạn. Chưa có người ngoài rà soát độc lập, nên hãy giữ thêm bản sao lưu mã hóa và mã khôi phục.': 'XChaCha20-Poly1305 encryption with a key derived from your password using Argon2id. It has not been independently audited yet, so keep an encrypted backup and your recovery key.',
   'Mật khẩu, khóa và mã 2FA của bạn, mã hóa trên máy. Máy chủ chỉ giữ bản đã mã hóa, không đọc được.': 'Your passwords, keys and 2FA codes, encrypted on your device. The server only holds the encrypted copy and cannot read it.',
   'Dùng máy chủ VanKey': 'Use the VanKey server',
-  'Đăng nhập hoặc tạo tài khoản. Đồng bộ giữa các thiết bị.': 'Sign in or create an account. Syncs across your devices.',
+  'Đăng nhập hoặc tạo tài khoản. Đồng bộ giữa các thiết bị.':
+      'Sign in or create an account. Syncs across your devices.',
   'Tự dựng máy chủ (self-host)': 'Host it yourself (self-host)',
-  'Dùng máy chủ Cloudflare của riêng bạn. Bạn nhập địa chỉ máy chủ.': 'Use your own Cloudflare server. You enter the server address.',
+  'Dùng máy chủ Cloudflare của riêng bạn. Bạn nhập địa chỉ máy chủ.':
+      'Use your own Cloudflare server. You enter the server address.',
   'Chỉ dùng trên máy này, không đồng bộ': 'Only on this device, no sync',
   'Quay lại': 'Back',
   'Cần ít nhất {p0} ký tự': 'At least {p0} characters required',
   'Máy chủ của bạn': 'Your server',
   'Máy chủ VanKey': 'VanKey server',
   'Một mật khẩu dùng cho cả tài khoản và kho. Nếu quên, chỉ mã khôi phục mở lại được kho.': 'One password protects both the account and the vault. If you forget it, only the recovery key can reopen the vault.',
-  'Đăng nhập để tải kho của bạn về máy này.': 'Sign in to download your vault to this device.',
+  'Đăng nhập để tải kho của bạn về máy này.':
+      'Sign in to download your vault to this device.',
   '3 đến 32 ký tự: chữ thường, số, dấu chấm, gạch dưới hoặc gạch ngang': '3 to 32 characters: lowercase letters, digits, dot, underscore or hyphen',
   'Mã mời (nếu máy chủ yêu cầu)': 'Invite code (if the server requires one)',
-  'Chủ máy chủ đặt mã này. Bỏ trống nếu không có.': 'Set by the server owner. Leave empty if you have none.',
-  'Mở kho bằng mật khẩu kho hoặc mã khôi phục': 'Open the vault with the vault password or recovery key',
+  'Chủ máy chủ đặt mã này. Bỏ trống nếu không có.':
+      'Set by the server owner. Leave empty if you have none.',
+  'Mở kho bằng mật khẩu kho hoặc mã khôi phục':
+      'Open the vault with the vault password or recovery key',
   'Chỉ trên máy này': 'Only on this device',
   'Đặt mật khẩu cho kho của bạn. Dữ liệu được mã hóa trên máy, chúng tôi không thể lấy lại mật khẩu này. Có thể bật đồng bộ sau trong Cài đặt.': 'Set a password for your vault. Data is encrypted on this device and we cannot recover this password. You can turn on sync later in Settings.',
   'Tên đăng nhập gồm 3 đến 32 ký tự: chữ thường, số, dấu chấm, gạch dưới hoặc gạch ngang.': 'A username has 3 to 32 characters: lowercase letters, digits, dot, underscore or hyphen.',
-  'Mật khẩu cần ít nhất {p0} ký tự': 'The password needs at least {p0} characters',
+  'Mật khẩu cần ít nhất {p0} ký tự':
+      'The password needs at least {p0} characters',
   'Tên đăng nhập hoặc mật khẩu không đúng': 'Wrong username or password',
   'Đăng nhập được, nhưng mật khẩu này không mở được kho. Kho có thể đang dùng mật khẩu khác.': 'Signed in, but this password does not open the vault. The vault may use a different password.',
   'Mật khẩu tài khoản (từ {p0} ký tự)': 'Account password ({p0}+ characters)',
   'Mật khẩu tài khoản': 'Account password',
-  'Bật nếu bạn chưa có tài khoản trên máy chủ này': 'Turn on if you do not have an account on this server yet',
+  'Bật nếu bạn chưa có tài khoản trên máy chủ này':
+      'Turn on if you do not have an account on this server yet',
   'Máy chủ chỉ giữ bản đã mã hóa của kho. Nên dùng cùng mật khẩu với mật khẩu kho để máy khác đăng nhập là mở được kho.': 'The server only holds the encrypted vault. Use the same password as the vault so other devices open it as soon as they sign in.',
   'Đăng nhập bằng mật khẩu tài khoản, rồi nhập mật khẩu hoặc mã khôi phục của kho để mở kho đã đồng bộ.': 'Sign in with the account password, then enter the vault password or recovery key to open the synced vault.',
   'Mật khẩu (từ {p0} ký tự)': 'Password ({p0}+ characters)',
   'Mật khẩu mới (từ {p0} ký tự)': 'New password ({p0}+ characters)',
   'Dùng Google Drive của bạn': 'Use your own Google Drive',
-  'Không cần máy chủ. Dùng tài khoản Google để đồng bộ giữa các thiết bị.': 'No server needed. Use your Google account to sync between devices.',
+  'Không cần máy chủ. Dùng tài khoản Google để đồng bộ giữa các thiết bị.':
+      'No server needed. Use your Google account to sync between devices.',
   'Google Drive': 'Google Drive',
   'Kho được lưu dạng đã mã hóa trong thư mục ẩn của app trên Google Drive của bạn. Google không đọc được nội dung.': 'The vault is stored encrypted in the app\'s hidden folder on your Google Drive. Google cannot read its contents.',
   'Google Drive này đã có kho. Nhập mật khẩu của kho để mở.': 'This Google Drive already has a vault. Enter the vault password to open it.',
@@ -573,7 +639,8 @@ const Map<String, String> enStrings = {
   'Đăng nhập Google': 'Sign in with Google',
   'Mở kho': 'Open vault',
   'Đồng bộ qua Google Drive': 'Sync via Google Drive',
-  'Dùng tài khoản Google của bạn, không cần máy chủ': 'Use your Google account, no server needed',
+  'Dùng tài khoản Google của bạn, không cần máy chủ':
+      'Use your Google account, no server needed',
   'Đã bật đồng bộ Google Drive': 'Google Drive sync turned on',
   'Bản này chưa được cấu hình đăng nhập Google (thiếu GOOGLE_SERVER_CLIENT_ID khi build). Xem docs/google-drive-setup.md.': 'This build has no Google sign-in configured (GOOGLE_SERVER_CLIENT_ID missing at build time). See docs/google-drive-setup.md.',
   'Đã hủy đăng nhập Google, hoặc cấu hình đăng nhập chưa đúng (kiểm tra SHA-1 và tên gói trong Google Cloud).': 'Google sign-in was cancelled, or the setup is wrong (check the SHA-1 and package name in Google Cloud).',
@@ -585,7 +652,8 @@ const Map<String, String> enStrings = {
   'Cần đăng nhập lại Google: {p0}': 'Sign in to Google again: {p0}',
   'Hãy đăng nhập Google trước.': 'Sign in to Google first.',
   'Hãy mở khóa kho trước.': 'Unlock the vault first.',
-  'Không kết nối được Google Drive ({p0}).': 'Could not reach Google Drive ({p0}).',
+  'Không kết nối được Google Drive ({p0}).':
+      'Could not reach Google Drive ({p0}).',
   'Lỗi Google Drive: {p0}': 'Google Drive error: {p0}',
   'Không thấy kho trên Google Drive.': 'No vault found on Google Drive.',
   'Sai mật khẩu kho.': 'Wrong vault password.',

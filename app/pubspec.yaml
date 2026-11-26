@@ -92,8 +92,6 @@ flutter:
           weight: 600
         - asset: assets/fonts/Inter-700.ttf
           weight: 700
-        - asset: assets/fonts/Inter-800.ttf
-          weight: 800
     - family: SpaceGrotesk
       fonts:
         - asset: assets/fonts/SpaceGrotesk-500.ttf

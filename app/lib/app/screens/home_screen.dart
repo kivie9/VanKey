@@ -36,66 +36,88 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _dialOpen = false; // menu dấu cộng đang mở: làm mờ phần còn lại
 
   Widget _scrim() => Positioned.fill(
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => setState(() => _dialOpen = false),
-          child: ColoredBox(color: Colors.black.withValues(alpha: 0.55)),
-        ),
-      );
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => setState(() => _dialOpen = false),
+      child: ColoredBox(color: Colors.black.withValues(alpha: 0.55)),
+    ),
+  );
 
-  void _push(Widget page, {bool full = false}) =>
-      Navigator.of(context).push(MaterialPageRoute<void>(fullscreenDialog: full, builder: (_) => page));
+  void _push(Widget page, {bool full = false}) => Navigator.of(
+    context,
+  ).push(MaterialPageRoute<void>(fullscreenDialog: full, builder: (_) => page));
 
   @override
   Widget build(BuildContext context) {
     final c = widget.controller;
-    return LayoutBuilder(builder: (context, box) {
-      // Cửa sổ rộng (Windows, máy tính bảng ngang): bố cục máy tính theo prototype.
-      if (box.maxWidth >= DesktopHome.minWidth) return DesktopHome(controller: c);
-      final body = ListenableBuilder(
-        listenable: c,
-        builder: (context, _) => IndexedStack(index: _tab, children: [
-          _ItemsTab(controller: c, onlyTotp: false),
-          _ItemsTab(controller: c, onlyTotp: true),
-          ToolsTab(controller: c),
-        ]),
-      );
-      final dests = [
-        (Icons.lock_outline, Icons.lock, tr('Kho')),
-        (Icons.shield_outlined, Icons.shield, '2FA'),
-        (Icons.apps_outlined, Icons.apps, tr('Tiện ích')),
-      ];
-      return Scaffold(
-        floatingActionButton: _tab == 2
-            ? null
-            : SpeedDial(
-                open: _dialOpen,
-                onOpenChanged: (v) => setState(() => _dialOpen = v),
-                // Tab 2FA mở sẵn loại "Mã 2FA"; tab Kho không mở sẵn loại 2FA dù lần trước vừa tạo mã.
-                onManual: () => _push(
-                  ItemEditorScreen(
-                    controller: c,
-                    startType: _tab == 1 ? ItemType.totp : (c.lastType == ItemType.totp ? ItemType.login : null),
-                  ),
-                  full: true,
-                ),
-                onScan: () => _push(QrScanScreen(controller: c)),
-                onImport: () => _push(ImportScreen(controller: c)),
-              ),
-        bottomNavigationBar: Stack(children: [
-          NavigationBar(
-            selectedIndex: _tab,
-            onDestinationSelected: (i) => setState(() => _tab = i),
-            destinations: [for (final d in dests) NavigationDestination(icon: Icon(d.$1), selectedIcon: Icon(d.$2), label: d.$3)],
+    return LayoutBuilder(
+      builder: (context, box) {
+        // Cửa sổ rộng (Windows, máy tính bảng ngang): bố cục máy tính theo prototype.
+        if (box.maxWidth >= DesktopHome.minWidth)
+          return DesktopHome(controller: c);
+        final body = ListenableBuilder(
+          listenable: c,
+          builder: (context, _) => IndexedStack(
+            index: _tab,
+            children: [
+              _ItemsTab(controller: c, onlyTotp: false),
+              _ItemsTab(controller: c, onlyTotp: true),
+              ToolsTab(controller: c),
+            ],
           ),
-          if (_dialOpen && _tab != 2) _scrim(),
-        ]),
-        body: Stack(children: [
-          SafeArea(child: body),
-          if (_dialOpen && _tab != 2) _scrim(),
-        ]),
-      );
-    });
+        );
+        final dests = [
+          (Icons.lock_outline, Icons.lock, tr('Kho')),
+          (Icons.shield_outlined, Icons.shield, '2FA'),
+          (Icons.apps_outlined, Icons.apps, tr('Tiện ích')),
+        ];
+        return Scaffold(
+          floatingActionButton: _tab == 2
+              ? null
+              : SpeedDial(
+                  open: _dialOpen,
+                  onOpenChanged: (v) => setState(() => _dialOpen = v),
+                  // Tab 2FA mở sẵn loại "Mã 2FA"; tab Kho không mở sẵn loại 2FA dù lần trước vừa tạo mã.
+                  onManual: () => _push(
+                    ItemEditorScreen(
+                      controller: c,
+                      startType: _tab == 1
+                          ? ItemType.totp
+                          : (c.lastType == ItemType.totp
+                                ? ItemType.login
+                                : null),
+                    ),
+                    full: true,
+                  ),
+                  onScan: () => _push(QrScanScreen(controller: c)),
+                  onImport: () => _push(ImportScreen(controller: c)),
+                ),
+          bottomNavigationBar: Stack(
+            children: [
+              NavigationBar(
+                selectedIndex: _tab,
+                onDestinationSelected: (i) => setState(() => _tab = i),
+                destinations: [
+                  for (final d in dests)
+                    NavigationDestination(
+                      icon: Icon(d.$1),
+                      selectedIcon: Icon(d.$2),
+                      label: d.$3,
+                    ),
+                ],
+              ),
+              if (_dialOpen && _tab != 2) _scrim(),
+            ],
+          ),
+          body: Stack(
+            children: [
+              SafeArea(child: body),
+              if (_dialOpen && _tab != 2) _scrim(),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -124,64 +146,116 @@ class _ItemsTabState extends State<_ItemsTab> {
   /// Bảng "Sắp xếp và lọc": mọi lựa chọn là chip bấm một lần, đổi là áp dụng ngay.
   Future<void> _openFilter() async {
     final c = widget.controller;
-    final groups = c.data.items.where((i) => !i.inTrash && i.group.isNotEmpty).map((i) => i.group).toSet().toList()..sort();
+    final groups =
+        c.data.items
+            .where((i) => !i.inTrash && i.group.isNotEmpty)
+            .map((i) => i.group)
+            .toSet()
+            .toList()
+          ..sort();
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheet) {
           Widget label(String t) => Padding(
-                padding: const EdgeInsets.only(top: Gap.lg, bottom: Gap.sm),
-                child: Text(t, style: Theme.of(ctx).textTheme.titleSmall),
-              );
-          Widget chips<T>(List<(T, String)> options, T current, void Function(T) onPick) => Wrap(spacing: Gap.sm, runSpacing: Gap.sm, children: [
-                for (final o in options)
-                  ChoiceChip(
-                    label: Text(o.$2),
-                    selected: o.$1 == current,
-                    onSelected: (_) {
-                      onPick(o.$1);
-                      setSheet(() {});
-                    },
-                  ),
-              ]);
-          return SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(Gap.xl, 0, Gap.xl, Gap.lg),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(children: [
-                  Expanded(child: Text(tr('Sắp xếp và lọc'), style: Theme.of(ctx).textTheme.titleLarge)),
-                  TextButton(
-                    onPressed: () {
-                      c.setGroupBy(GroupBy.group);
-                      c.setSortBy(SortBy.name);
-                      setState(() => _groupFilter = '');
-                      setSheet(() {});
-                    },
-                    child: Text(tr('Đặt lại')),
-                  ),
-                ]),
-                label(tr('Gom theo')),
-                chips<GroupBy>([(GroupBy.group, tr('Thẻ')), (GroupBy.type, tr('Loại')), (GroupBy.none, tr('Không gom'))], c.groupBy, c.setGroupBy),
-                label(tr('Sắp xếp')),
-                chips<SortBy>([(SortBy.name, tr('Tên A–Z')), (SortBy.updated, tr('Mới sửa')), (SortBy.created, tr('Mới tạo'))], c.sortBy, c.setSortBy),
-                if (groups.isNotEmpty) ...[
-                  label(tr('Lọc theo thẻ')),
-                  chips<String>([('', tr('Tất cả')), for (final g in groups) (g, g)], _groupFilter, (v) => setState(() => _groupFilter = v)),
-                ],
-                const SizedBox(height: Gap.md),
-                TextButton.icon(
-                  icon: const Icon(Icons.folder_open_outlined, size: 18),
-                  label: Text(tr('Quản lý thẻ (đổi tên, xóa)')),
-                  onPressed: () async {
-                    await manageGroups(ctx, c);
-                    if (_groupFilter.isNotEmpty && !c.groups.contains(_groupFilter)) setState(() => _groupFilter = '');
+            padding: const EdgeInsets.only(top: Gap.lg, bottom: Gap.sm),
+            child: Text(t, style: Theme.of(ctx).textTheme.titleSmall),
+          );
+          Widget chips<T>(
+            List<(T, String)> options,
+            T current,
+            void Function(T) onPick,
+          ) => Wrap(
+            spacing: Gap.sm,
+            runSpacing: Gap.sm,
+            children: [
+              for (final o in options)
+                ChoiceChip(
+                  label: Text(o.$2),
+                  selected: o.$1 == current,
+                  onSelected: (_) {
+                    onPick(o.$1);
                     setSheet(() {});
                   },
                 ),
-                const SizedBox(height: Gap.xl),
-                SizedBox(width: double.infinity, child: FilledButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Xong')))),
-              ]),
+            ],
+          );
+          return SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(Gap.xl, 0, Gap.xl, Gap.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          tr('Sắp xếp và lọc'),
+                          style: Theme.of(ctx).textTheme.titleLarge,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          c.setGroupBy(GroupBy.group);
+                          c.setSortBy(SortBy.name);
+                          setState(() => _groupFilter = '');
+                          setSheet(() {});
+                        },
+                        child: Text(tr('Đặt lại')),
+                      ),
+                    ],
+                  ),
+                  label(tr('Gom theo')),
+                  chips<GroupBy>(
+                    [
+                      (GroupBy.group, tr('Thẻ')),
+                      (GroupBy.type, tr('Loại')),
+                      (GroupBy.none, tr('Không gom')),
+                    ],
+                    c.groupBy,
+                    c.setGroupBy,
+                  ),
+                  label(tr('Sắp xếp')),
+                  chips<SortBy>(
+                    [
+                      (SortBy.name, tr('Tên A–Z')),
+                      (SortBy.updated, tr('Mới sửa')),
+                      (SortBy.created, tr('Mới tạo')),
+                    ],
+                    c.sortBy,
+                    c.setSortBy,
+                  ),
+                  if (groups.isNotEmpty) ...[
+                    label(tr('Lọc theo thẻ')),
+                    chips<String>(
+                      [('', tr('Tất cả')), for (final g in groups) (g, g)],
+                      _groupFilter,
+                      (v) => setState(() => _groupFilter = v),
+                    ),
+                  ],
+                  const SizedBox(height: Gap.md),
+                  TextButton.icon(
+                    icon: const Icon(Icons.folder_open_outlined, size: 18),
+                    label: Text(tr('Quản lý thẻ (đổi tên, xóa)')),
+                    onPressed: () async {
+                      await manageGroups(ctx, c);
+                      if (_groupFilter.isNotEmpty &&
+                          !c.groups.contains(_groupFilter))
+                        setState(() => _groupFilter = '');
+                      setSheet(() {});
+                    },
+                  ),
+                  const SizedBox(height: Gap.xl),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: Text(tr('Xong')),
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -190,8 +264,11 @@ class _ItemsTabState extends State<_ItemsTab> {
   }
 
   void _open(Item i) => Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => ItemDetailScreen(controller: widget.controller, itemId: i.id)),
-      );
+    MaterialPageRoute<void>(
+      builder: (_) =>
+          ItemDetailScreen(controller: widget.controller, itemId: i.id),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -209,124 +286,216 @@ class _ItemsTabState extends State<_ItemsTab> {
 
     final title = widget.onlyTotp ? tr('Mã 2FA') : tr('Kho');
     return Clock(
-      builder: (context, now) => Column(children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
-          child: SizedBox(
-            height: 56,
-            child: Row(children: [
-              SettingsButton(controller: c),
-              Expanded(
-                child: _searching
-                    ? TextField(
-                        controller: _q,
-                        autofocus: true,
-                        decoration: InputDecoration(hintText: tr('Tìm theo tên, tài khoản, thẻ…'), border: InputBorder.none),
-                        onChanged: (_) => setState(() {}),
-                      )
-                    : Text(title, style: Theme.of(context).textTheme.titleLarge),
+      builder: (context, now) => Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
+            child: SizedBox(
+              height: 56,
+              child: Row(
+                children: [
+                  SettingsButton(controller: c),
+                  Expanded(
+                    child: _searching
+                        ? TextField(
+                            controller: _q,
+                            autofocus: true,
+                            decoration: InputDecoration(
+                              hintText: tr('Tìm theo tên, tài khoản, thẻ…'),
+                              border: InputBorder.none,
+                            ),
+                            onChanged: (_) => setState(() {}),
+                          )
+                        : Text(
+                            title,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                  ),
+                  if (!_searching)
+                    Builder(
+                      builder: (context) {
+                        final n = pendingAlerts(
+                          c.data.items,
+                          now,
+                          snoozedUntil: c.snoozed,
+                        ).length;
+                        return IconButton(
+                          tooltip: tr('Nhắc nhở'),
+                          icon: Badge(
+                            isLabelVisible: n > 0,
+                            label: Text('$n'),
+                            child: const Icon(Icons.notifications_none),
+                          ),
+                          onPressed: () =>
+                              pushPage(context, RemindersScreen(controller: c)),
+                        );
+                      },
+                    ),
+                  if (!_searching && c.syncStatus != SyncStatus.off)
+                    IconButton(
+                      tooltip: tr('Đồng bộ'),
+                      icon: switch (c.syncStatus) {
+                        SyncStatus.syncing => const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2.5),
+                        ),
+                        SyncStatus.error => const Icon(
+                          Icons.cloud_off,
+                          color: Colors.orange,
+                        ),
+                        _ => Icon(
+                          c.conflicts.isEmpty
+                              ? Icons.cloud_done_outlined
+                              : Icons.merge_type,
+                        ),
+                      },
+                      onPressed: () =>
+                          pushPage(context, SyncScreen(controller: c)),
+                    ),
+                  if (!_searching)
+                    IconButton(
+                      tooltip: tr('Sắp xếp và lọc'),
+                      icon: Badge(
+                        isLabelVisible:
+                            _groupFilter.isNotEmpty ||
+                            c.groupBy != GroupBy.group ||
+                            c.sortBy != SortBy.name,
+                        smallSize: 8,
+                        child: const Icon(Icons.filter_list),
+                      ),
+                      onPressed: _openFilter,
+                    ),
+                  IconButton(
+                    tooltip: _searching ? tr('Đóng tìm kiếm') : tr('Tìm kiếm'),
+                    icon: Icon(_searching ? Icons.close : Icons.search),
+                    onPressed: () => setState(() {
+                      _searching = !_searching;
+                      if (!_searching) _q.clear();
+                    }),
+                  ),
+                ],
               ),
-              if (!_searching) Builder(builder: (context) {
-                final n = pendingAlerts(c.data.items, now, snoozedUntil: c.snoozed).length;
-                return IconButton(
-                  tooltip: tr('Nhắc nhở'),
-                  icon: Badge(isLabelVisible: n > 0, label: Text('$n'), child: const Icon(Icons.notifications_none)),
-                  onPressed: () => pushPage(context, RemindersScreen(controller: c)),
-                );
-              }),
-              if (!_searching && c.syncStatus != SyncStatus.off)
-                IconButton(
-                  tooltip: tr('Đồng bộ'),
-                  icon: switch (c.syncStatus) {
-                    SyncStatus.syncing => const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5)),
-                    SyncStatus.error => const Icon(Icons.cloud_off, color: Colors.orange),
-                    _ => Icon(c.conflicts.isEmpty ? Icons.cloud_done_outlined : Icons.merge_type),
-                  },
-                  onPressed: () => pushPage(context, SyncScreen(controller: c)),
-                ),
-              if (!_searching) IconButton(
-                tooltip: tr('Sắp xếp và lọc'),
-                icon: Badge(
-                  isLabelVisible: _groupFilter.isNotEmpty || c.groupBy != GroupBy.group || c.sortBy != SortBy.name,
-                  smallSize: 8,
-                  child: const Icon(Icons.filter_list),
-                ),
-                onPressed: _openFilter,
-              ),
-              IconButton(
-                tooltip: _searching ? tr('Đóng tìm kiếm') : tr('Tìm kiếm'),
-                icon: Icon(_searching ? Icons.close : Icons.search),
-                onPressed: () => setState(() {
-                  _searching = !_searching;
-                  if (!_searching) _q.clear();
-                }),
-              ),
-            ]),
+            ),
           ),
-        ),
-        Expanded(
-          child: items.isEmpty
-              ? _Empty(searching: _q.text.isNotEmpty || _groupFilter.isNotEmpty, onlyTotp: widget.onlyTotp)
-              : LayoutBuilder(builder: (context, box) {
-                  // Màn rộng: nhiều cột (tối đa ~440 px mỗi cột); điện thoại: một cột.
-                  final wide = box.maxWidth >= 640;
-                  Widget tile(List<Item> list, int i, {(String, String)? labels}) => ItemTile(
+          Expanded(
+            child: items.isEmpty
+                ? _Empty(
+                    searching: _q.text.isNotEmpty || _groupFilter.isNotEmpty,
+                    onlyTotp: widget.onlyTotp,
+                  )
+                : LayoutBuilder(
+                    builder: (context, box) {
+                      // Màn rộng: nhiều cột (tối đa ~440 px mỗi cột); điện thoại: một cột.
+                      final wide = box.maxWidth >= 640;
+                      Widget tile(
+                        List<Item> list,
+                        int i, {
+                        (String, String)? labels,
+                      }) => ItemTile(
                         item: list[i],
                         labels: labels,
                         now: now,
                         showCode: widget.onlyTotp,
                         // Tab 2FA: chạm là chép mã (ItemTile tự làm), nhấn giữ có thêm "Xem chi tiết".
                         onTap: () => _open(list[i]),
-                        onLongPress: () => showItemActions(this.context, widget.controller, list[i], onOpen: widget.onlyTotp ? () => _open(list[i]) : null),
-                        onNext: list[i].totp?.isHotp == true ? () => widget.controller.hotpNext(list[i]) : null,
-                      );
-                  Widget tiles(List<Item> list) => wide
-                      ? SliverPadding(
-                          padding: const EdgeInsets.symmetric(horizontal: Gap.lg),
-                          sliver: SliverGrid(
-                            // Ô cao hơn để tên dài xuống dòng; tab 2FA còn có mã nằm dưới tên.
-                            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 440, mainAxisExtent: widget.onlyTotp ? 104 : 92, mainAxisSpacing: Gap.sm, crossAxisSpacing: Gap.sm),
-                            delegate: SliverChildBuilderDelegate(
-                              (c, i) => Card(child: Center(child: tile(list, i))),
-                              childCount: list.length,
-                            ),
-                          ),
-                        )
-                      : SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (c, i) => Padding(padding: const EdgeInsets.fromLTRB(Gap.lg, 0, Gap.lg, Gap.sm), child: Card(child: tile(list, i))),
-                            childCount: list.length,
-                          ),
-                        );
-                  return CustomScrollView(slivers: [
-                    if (favs.isNotEmpty && _q.text.isEmpty) ...[
-                      SliverToBoxAdapter(child: _Header(tr('Yêu thích'))),
-                      tiles(favs),
-                    ],
-                    for (final (n, list) in groups) ...[
-                      if (n.isNotEmpty)
-                        SliverToBoxAdapter(
-                          child: _Header(
-                            n,
-                            count: list.length,
-                            badge: c.groupBy == GroupBy.group ? TagBadge(name: n, color: c.tagColor(n), size: 22) : null,
-                            collapsed: _collapsed.contains(n),
-                            onTap: () => setState(() => _collapsed.contains(n) ? _collapsed.remove(n) : _collapsed.add(n)),
-                          ),
+                        onLongPress: () => showItemActions(
+                          this.context,
+                          widget.controller,
+                          list[i],
+                          onOpen: widget.onlyTotp ? () => _open(list[i]) : null,
                         ),
-                      if (n.isEmpty || !_collapsed.contains(n)) tiles(list),
-                    ],
-                    const SliverToBoxAdapter(child: SizedBox(height: 96)),
-                  ]);
-                }),
-        ),
-      ]),
+                        onNext: list[i].totp?.isHotp == true
+                            ? () => widget.controller.hotpNext(list[i])
+                            : null,
+                      );
+                      Widget tiles(List<Item> list) => wide
+                          ? SliverPadding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: Gap.lg,
+                              ),
+                              sliver: SliverGrid(
+                                // Ô cao hơn để tên dài xuống dòng; tab 2FA còn có mã nằm dưới tên.
+                                gridDelegate:
+                                    SliverGridDelegateWithMaxCrossAxisExtent(
+                                      maxCrossAxisExtent: 440,
+                                      mainAxisExtent: widget.onlyTotp
+                                          ? 104
+                                          : 92,
+                                      mainAxisSpacing: Gap.sm,
+                                      crossAxisSpacing: Gap.sm,
+                                    ),
+                                delegate: SliverChildBuilderDelegate(
+                                  (c, i) =>
+                                      Card(child: Center(child: tile(list, i))),
+                                  childCount: list.length,
+                                ),
+                              ),
+                            )
+                          : SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (c, i) => Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    Gap.lg,
+                                    0,
+                                    Gap.lg,
+                                    Gap.sm,
+                                  ),
+                                  child: Card(child: tile(list, i)),
+                                ),
+                                childCount: list.length,
+                              ),
+                            );
+                      return CustomScrollView(
+                        slivers: [
+                          if (favs.isNotEmpty && _q.text.isEmpty) ...[
+                            SliverToBoxAdapter(child: _Header(tr('Yêu thích'))),
+                            tiles(favs),
+                          ],
+                          for (final (n, list) in groups) ...[
+                            if (n.isNotEmpty)
+                              SliverToBoxAdapter(
+                                child: _Header(
+                                  n,
+                                  count: list.length,
+                                  badge: c.groupBy == GroupBy.group
+                                      ? TagBadge(
+                                          name: n,
+                                          color: c.tagColor(n),
+                                          size: 22,
+                                        )
+                                      : null,
+                                  collapsed: _collapsed.contains(n),
+                                  onTap: () => setState(
+                                    () => _collapsed.contains(n)
+                                        ? _collapsed.remove(n)
+                                        : _collapsed.add(n),
+                                  ),
+                                ),
+                              ),
+                            if (n.isEmpty || !_collapsed.contains(n))
+                              tiles(list),
+                          ],
+                          const SliverToBoxAdapter(child: SizedBox(height: 96)),
+                        ],
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _Header extends StatelessWidget {
-  const _Header(this.text, {this.count, this.collapsed = false, this.onTap, this.badge});
+  const _Header(
+    this.text, {
+    this.count,
+    this.collapsed = false,
+    this.onTap,
+    this.badge,
+  });
   final String text;
   final int? count;
   final bool collapsed;
@@ -337,12 +506,13 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final header = SectionHeader(text, count: count, collapsed: onTap == null ? null : collapsed, onTap: onTap);
-    if (badge == null) return header;
-    return Row(children: [
-      Padding(padding: const EdgeInsets.only(left: Gap.lg), child: badge),
-      Expanded(child: header),
-    ]);
+    return SectionHeader(
+      text,
+      count: count,
+      collapsed: onTap == null ? null : collapsed,
+      onTap: onTap,
+      leading: badge,
+    );
   }
 }
 
@@ -353,8 +523,12 @@ class _Empty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => EmptyState(
-        icon: searching ? Icons.search_off_rounded : (onlyTotp ? Icons.shield_outlined : Icons.lock_outline_rounded),
-        title: searching ? tr('Không tìm thấy') : (onlyTotp ? tr('Chưa có mã 2FA nào') : tr('Kho đang trống')),
-        message: searching ? null : tr('Bấm dấu + để thêm mục đầu tiên'),
-      );
+    icon: searching
+        ? Icons.search_off_rounded
+        : (onlyTotp ? Icons.shield_outlined : Icons.lock_outline_rounded),
+    title: searching
+        ? tr('Không tìm thấy')
+        : (onlyTotp ? tr('Chưa có mã 2FA nào') : tr('Kho đang trống')),
+    message: searching ? null : tr('Bấm dấu + để thêm mục đầu tiên'),
+  );
 }

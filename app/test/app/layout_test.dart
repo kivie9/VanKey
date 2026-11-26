@@ -61,6 +61,8 @@ void main() {
 
     await tester.tap(find.text('Cài đặt'));
     await tester.pump();
+    // Trang Tài khoản chờ hỏi sinh trắc học (timeout 400 ms): chờ nó xong để không còn timer treo.
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('Bảo mật'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

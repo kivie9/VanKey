@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import '../constants.dart';
+
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -15,21 +16,30 @@ import '../theme.dart';
 
 /// Chép vào clipboard rồi tự xóa sau 30 giây (chỉ khi clipboard vẫn còn đúng nội dung đó).
 Future<void> copyText(BuildContext context, String text, {String? what}) async {
-  if (!await PlatformBridge.copySensitive(text)) await Clipboard.setData(ClipboardData(text: text));
+  if (!await PlatformBridge.copySensitive(text))
+    await Clipboard.setData(ClipboardData(text: text));
   if (context.mounted) {
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
-      ..showSnackBar(SnackBar(content: Text(what ?? tr('Đã chép')), duration: Timing.copiedSnack));
+      ..showSnackBar(
+        SnackBar(
+          content: Text(what ?? tr('Đã chép')),
+          duration: Timing.copiedSnack,
+        ),
+      );
   }
   Timer(Timing.clipboardClear, () async {
     final cur = await Clipboard.getData(Clipboard.kTextPlain);
-    if (cur?.text == text) await Clipboard.setData(const ClipboardData(text: ''));
+    if (cur?.text == text)
+      await Clipboard.setData(const ClipboardData(text: ''));
   });
 }
 
 /// Mở một trang mới (đẩy lên ngăn xếp điều hướng). Dùng chung cho mọi nơi cần chuyển trang.
 Future<void> pushPage(BuildContext context, Widget page, {bool full = false}) =>
-    Navigator.of(context).push(MaterialPageRoute<void>(fullscreenDialog: full, builder: (_) => page));
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(fullscreenDialog: full, builder: (_) => page),
+    );
 
 /// Dòng báo lỗi dưới form (màu lỗi của giao diện, không ghi cứng màu).
 class ErrorText extends StatelessWidget {
@@ -38,18 +48,33 @@ class ErrorText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(top: Gap.md),
-        child: Text(message, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-      );
+    padding: const EdgeInsets.only(top: Gap.md),
+    child: Text(
+      message,
+      style: TextStyle(color: Theme.of(context).colorScheme.error),
+    ),
+  );
 }
 
 /// Biểu tượng của mục: logo thương hiệu nếu nhận ra (Facebook, Google...), không thì chữ cái đầu trên nền màu trầm.
 class Avatar extends StatelessWidget {
-  const Avatar(this.title, {super.key, this.size = 40, this.url = '', this.plain = false});
+  const Avatar(
+    this.title, {
+    super.key,
+    this.size = 40,
+    this.url = '',
+    this.plain = false,
+  });
 
   /// Dùng cho một mục: nhận diện thương hiệu theo cả tên lẫn địa chỉ web của mục.
   Avatar.forItem(Item item, {Key? key, double size = 40, bool plain = false})
-      : this(item.title, key: key, size: size, url: item.valueOf('url') ?? '', plain: plain);
+    : this(
+        item.title,
+        key: key,
+        size: size,
+        url: item.valueOf('url') ?? '',
+        plain: plain,
+      );
 
   final String title;
   final double size;
@@ -71,10 +96,19 @@ class Avatar extends StatelessWidget {
         width: size,
         height: size,
         alignment: Alignment.center,
-        decoration: BoxDecoration(color: dark ? const Color(0xFFF1F3F4) : Colors.white, borderRadius: BorderRadius.circular(Radii.md), border: Border.all(color: AppColors.of(context).line)),
+        decoration: BoxDecoration(
+          color: dark ? const Color(0xFFF1F3F4) : Colors.white,
+          borderRadius: BorderRadius.circular(Radii.md),
+          border: Border.all(color: AppColors.of(context).line),
+        ),
         child: ShaderMask(
           blendMode: BlendMode.srcIn,
-          shaderCallback: (r) => SweepGradient(startAngle: -0.7, endAngle: -0.7 + 6.2832, colors: brand.sweep!, stops: brand.stops).createShader(r),
+          shaderCallback: (r) => SweepGradient(
+            startAngle: -0.7,
+            endAngle: -0.7 + 6.2832,
+            colors: brand.sweep!,
+            stops: brand.stops,
+          ).createShader(r),
           child: Icon(brand.icon, size: size * 0.58, color: Colors.white),
         ),
       );
@@ -84,26 +118,45 @@ class Avatar extends StatelessWidget {
       // Giao diện tối: hạ nhẹ độ chói; màu gần đen (GitHub, Apple, X) đổi sang xám đậm để còn nhìn thấy.
       if (dark) bg = Color.lerp(bg, Colors.black, 0.15)!;
       if (dark && bg.computeLuminance() < 0.03) bg = const Color(0xFF2E2E35);
-      final fg = bg.computeLuminance() > 0.6 ? const Color(0xFF111111) : Colors.white;
+      final fg = bg.computeLuminance() > 0.6
+          ? const Color(0xFF111111)
+          : Colors.white;
       return Container(
         width: size,
         height: size,
         alignment: Alignment.center,
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(Radii.md)),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(Radii.md),
+        ),
         child: Icon(brand.icon, size: size * 0.54, color: fg),
       );
     }
-    final h = _hues[title.codeUnits.fold<int>(0, (a, b) => a + b) % _hues.length];
+    final h =
+        _hues[title.codeUnits.fold<int>(0, (a, b) => a + b) % _hues.length];
     final bg = HSLColor.fromAHSL(1, h, 0.28, dark ? 0.22 : 0.88).toColor();
-    final fg = HSLColor.fromAHSL(1, h, dark ? 0.38 : 0.45, dark ? 0.68 : 0.30).toColor();
+    final fg = HSLColor.fromAHSL(
+      1,
+      h,
+      dark ? 0.38 : 0.45,
+      dark ? 0.68 : 0.30,
+    ).toColor();
     return Container(
       width: size,
       height: size,
       alignment: Alignment.center,
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(Radii.md)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(Radii.md),
+      ),
       child: Text(
         title.isEmpty ? '?' : title.characters.first.toUpperCase(),
-        style: TextStyle(fontFamily: Fonts.head, color: fg, fontWeight: FontWeight.w600, fontSize: size * 0.42),
+        style: TextStyle(
+          fontFamily: Fonts.head,
+          color: fg,
+          fontWeight: FontWeight.w600,
+          fontSize: size * 0.42,
+        ),
       ),
     );
   }
@@ -114,20 +167,38 @@ class Avatar extends StatelessWidget {
     if (brand != null && brand.multicolor) {
       mark = ShaderMask(
         blendMode: BlendMode.srcIn,
-        shaderCallback: (r) => SweepGradient(startAngle: -0.7, endAngle: -0.7 + 6.2832, colors: brand.sweep!, stops: brand.stops).createShader(r),
+        shaderCallback: (r) => SweepGradient(
+          startAngle: -0.7,
+          endAngle: -0.7 + 6.2832,
+          colors: brand.sweep!,
+          stops: brand.stops,
+        ).createShader(r),
         child: Icon(brand.icon, size: size * 0.8, color: Colors.white),
       );
     } else if (brand != null) {
       // Màu thương hiệu quá gần màu nền thẻ (đen trên nền tối, trắng trên nền sáng) thì dùng màu chữ.
-      final contrast = (brand.color.computeLuminance() - c.card.computeLuminance()).abs();
-      mark = Icon(brand.icon, size: size * 0.8, color: contrast < 0.15 ? c.fg : brand.color);
+      final contrast =
+          (brand.color.computeLuminance() - c.card.computeLuminance()).abs();
+      mark = Icon(
+        brand.icon,
+        size: size * 0.8,
+        color: contrast < 0.15 ? c.fg : brand.color,
+      );
     } else {
       mark = Text(
         title.isEmpty ? '?' : title.characters.first.toUpperCase(),
-        style: TextStyle(color: c.fg, fontWeight: FontWeight.w800, fontSize: size * 0.7, height: 1),
+        style: TextStyle(
+          color: c.fg,
+          fontWeight: FontWeight.w700,
+          fontSize: size * 0.7,
+          height: 1,
+        ),
       );
     }
-    return SizedBox.square(dimension: size, child: Center(child: mark));
+    return SizedBox.square(
+      dimension: size,
+      child: Center(child: mark),
+    );
   }
 }
 
@@ -165,13 +236,22 @@ class _ClockState extends State<Clock> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      ValueListenableBuilder<DateTime>(valueListenable: _now, builder: (c, t, _) => widget.builder(c, t));
+  Widget build(BuildContext context) => ValueListenableBuilder<DateTime>(
+    valueListenable: _now,
+    builder: (c, t, _) => widget.builder(c, t),
+  );
 }
 
 /// Mã 2FA có vòng đếm ngược; bấm để chép. Chạm được rộng (≥ 44 px) để dễ bấm.
 class TotpChip extends StatelessWidget {
-  const TotpChip({super.key, required this.params, required this.now, this.onNext, this.big = false, this.masked = false});
+  const TotpChip({
+    super.key,
+    required this.params,
+    required this.now,
+    this.onNext,
+    this.big = false,
+    this.masked = false,
+  });
   final TotpParams params;
   final DateTime now;
 
@@ -198,20 +278,42 @@ class TotpChip extends StatelessWidget {
     try {
       code = Otp.code(params, now);
     } on Object {
-      return Padding(padding: const EdgeInsets.all(Gap.sm), child: Text(tr('Khóa 2FA lỗi'), style: TextStyle(color: c.danger)));
+      return Padding(
+        padding: const EdgeInsets.all(Gap.sm),
+        child: Text(tr('Khóa 2FA lỗi'), style: TextStyle(color: c.danger)),
+      );
     }
     final size = big ? 30.0 : 17.0;
 
     Widget codeText(Color color) => Text(
-          masked ? _mask(code) : Otp.grouped(code),
-          style: TextStyle(fontFamily: Fonts.mono, fontSize: size, fontWeight: FontWeight.w600, letterSpacing: big ? 2 : 0.5, color: color, fontFeatures: const [FontFeature.tabularFigures()]),
-        );
+      masked ? _mask(code) : Otp.grouped(code),
+      style: TextStyle(
+        fontFamily: Fonts.mono,
+        fontSize: size,
+        fontWeight: FontWeight.w600,
+        letterSpacing: big ? 2 : 0.5,
+        color: color,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+    );
 
     if (params.isHotp) {
-      return Row(mainAxisSize: MainAxisSize.min, children: [
-        _pill(context, onTap: () => copyText(context, code, what: tr('Đã chép mã 2FA')), child: codeText(c.fg)),
-        if (onNext != null) IconButton(tooltip: tr('Mã kế tiếp'), icon: const Icon(Icons.skip_next), onPressed: onNext),
-      ]);
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _pill(
+            context,
+            onTap: () => copyText(context, code, what: tr('Đã chép mã 2FA')),
+            child: codeText(c.fg),
+          ),
+          if (onNext != null)
+            IconButton(
+              tooltip: tr('Mã kế tiếp'),
+              icon: const Icon(Icons.skip_next),
+              onPressed: onNext,
+            ),
+        ],
+      );
     }
 
     final left = Otp.secondsRemaining(now, period: params.period);
@@ -220,36 +322,63 @@ class TotpChip extends StatelessWidget {
     final color = urgent ? c.danger : c.accent;
     return Semantics(
       button: true,
-      label: masked ? tr('Mã 2FA đang ẩn. Bấm để chép') : tr('Mã 2FA {p0}, còn {p1} giây. Bấm để chép', {'p0': Otp.grouped(code), 'p1': left}),
+      label: masked
+          ? tr('Mã 2FA đang ẩn. Bấm để chép')
+          : tr('Mã 2FA {p0}, còn {p1} giây. Bấm để chép', {
+              'p0': Otp.grouped(code),
+              'p1': left,
+            }),
       child: _pill(
         context,
         onTap: () => copyText(context, code, what: tr('Đã chép mã 2FA')),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          // Chữ số dùng màu chữ chính (tương phản cao trên nền nhạt); màu nhấn chỉ dành cho vòng đếm.
-          codeText(urgent ? c.danger : c.fg),
-          SizedBox(width: big ? Gap.md : 10),
-          // Cùng hướng và cùng kiểu quét với vòng ở danh sách (_PiePainter).
-          SizedBox.square(
-            dimension: big ? 26 : 20,
-            child: CustomPaint(painter: _PiePainter(frac, color, c.line, stroke: big ? 3 : 2.5)),
-          ),
-        ]),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Chữ số dùng màu chữ chính (tương phản cao trên nền nhạt); màu nhấn chỉ dành cho vòng đếm.
+            codeText(urgent ? c.danger : c.fg),
+            SizedBox(width: big ? Gap.md : 10),
+            // Cùng hướng và cùng kiểu quét với vòng ở danh sách (_PiePainter).
+            SizedBox.square(
+              dimension: big ? 26 : 20,
+              child: CustomPaint(
+                painter: _PiePainter(
+                  frac,
+                  color,
+                  c.line,
+                  stroke: big ? 3 : 2.5,
+                ),
+              ),
+            ),
+          ],
+        ),
         tint: urgent ? c.danger.withValues(alpha: 0.10) : c.accentSoft,
       ),
     );
   }
 
-  Widget _pill(BuildContext context, {required VoidCallback onTap, required Widget child, Color? tint}) {
+  Widget _pill(
+    BuildContext context, {
+    required VoidCallback onTap,
+    required Widget child,
+    Color? tint,
+  }) {
     final c = AppColors.of(context);
     return Material(
       color: tint ?? c.accentSoft,
       borderRadius: BorderRadius.circular(Radii.md),
       child: InkWell(
+        mouseCursor: SystemMouseCursors.click,
         borderRadius: BorderRadius.circular(Radii.md),
         onTap: onTap,
         child: ConstrainedBox(
           constraints: BoxConstraints(minHeight: big ? 56 : 44, minWidth: 44),
-          child: Padding(padding: EdgeInsets.symmetric(horizontal: big ? Gap.xl : Gap.md, vertical: Gap.sm), child: Center(widthFactor: 1, child: child)),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: big ? Gap.xl : Gap.md,
+              vertical: Gap.sm,
+            ),
+            child: Center(widthFactor: 1, child: child),
+          ),
         ),
       ),
     );
@@ -258,7 +387,16 @@ class TotpChip extends StatelessWidget {
 
 /// Dòng mục dùng chung cho tab Kho và tab 2FA.
 class ItemTile extends StatelessWidget {
-  const ItemTile({super.key, required this.item, required this.now, required this.onTap, this.showCode = true, this.onNext, this.onLongPress, this.labels});
+  const ItemTile({
+    super.key,
+    required this.item,
+    required this.now,
+    required this.onTap,
+    this.showCode = true,
+    this.onNext,
+    this.onLongPress,
+    this.labels,
+  });
   final Item item;
 
   /// Thay (dòng chính, dòng phụ), dùng trong nhóm xếp chồng theo dịch vụ.
@@ -286,34 +424,80 @@ class ItemTile extends StatelessWidget {
     }
     final current = code;
     final (title, subtitle) = labels ?? (item.title, item.subtitle);
-    Widget name(TextStyle? style) => Row(children: [
-          Flexible(child: Text(title, style: style)), // tên hiện đầy đủ, dài thì xuống dòng
-          if (item.favorite) Padding(padding: const EdgeInsets.only(left: 6), child: Icon(Icons.star_rounded, size: 16, color: c.warn)),
-        ]);
+    Widget name(TextStyle? style) => Row(
+      children: [
+        Flexible(
+          child: Text(title, style: style),
+        ), // tên hiện đầy đủ, dài thì xuống dòng
+        if (item.favorite)
+          Padding(
+            padding: const EdgeInsets.only(left: 6),
+            child: Icon(Icons.star_rounded, size: 16, color: c.warn),
+          ),
+      ],
+    );
 
     if (hasCode) {
       // Tab 2FA: trái là tên thương hiệu và tài khoản; phải là logo nhỏ ở trên, mã ở dưới. Chạm cả dòng là chép mã.
       final text = Theme.of(context).textTheme;
       return InkWell(
-        onTap: current != null ? () => copyText(context, current, what: tr('Đã chép mã 2FA')) : onTap,
+        mouseCursor: SystemMouseCursors.click,
+        onTap: current != null
+            ? () => copyText(context, current, what: tr('Đã chép mã 2FA'))
+            : onTap,
         onLongPress: onLongPress,
         borderRadius: BorderRadius.circular(Radii.md),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Gap.lg, vertical: Gap.md),
-          child: Row(children: [
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                name(text.titleMedium),
-                if (subtitle.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 2), child: Text(subtitle, style: text.bodyMedium?.copyWith(color: c.muted))),
-              ]),
-            ),
-            const SizedBox(width: Gap.md),
-            Column(crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
-              Avatar.forItem(item, size: 22, plain: true), // logo không nền, không viền
-              const SizedBox(height: 6),
-              TotpCode(params: t, now: now, onNext: onNext),
-            ]),
-          ]),
+          padding: const EdgeInsets.symmetric(
+            horizontal: Gap.lg,
+            vertical: Gap.md,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Avatar.forItem(
+                          item,
+                          size: 20,
+                          plain: true,
+                        ), // logo đứng trước tên dịch vụ
+                        const SizedBox(width: 6),
+                        Flexible(child: name(text.titleMedium)),
+                      ],
+                    ),
+                    if (subtitle.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          subtitle,
+                          style: text.bodyMedium?.copyWith(color: c.muted),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: Gap.md),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Vòng đếm ở góc trên bên phải, mã nằm bên dưới.
+                  TotpRing(params: t, now: now),
+                  const SizedBox(height: 6),
+                  TotpCode(
+                    params: t,
+                    now: now,
+                    onNext: onNext,
+                    showRing: false,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -326,31 +510,82 @@ class ItemTile extends StatelessWidget {
       leading: SizedBox(
         width: 40,
         height: 40,
-        child: Stack(clipBehavior: Clip.none, children: [
-          Avatar.forItem(item, plain: true), // logo không nền, không viền (giống tab 2FA)
-          Positioned(
-            right: -4,
-            bottom: -4,
-            child: Container(
-              width: 18,
-              height: 18,
-              decoration: BoxDecoration(color: c.card, shape: BoxShape.circle),
-              alignment: Alignment.center,
-              child: Icon(L.typeIcons[item.type], size: 12, color: c.accent, semanticLabel: L.type(item.type)),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Avatar.forItem(
+              item,
+              plain: true,
+            ), // logo không nền, không viền (giống tab 2FA)
+            Positioned(
+              right: -4,
+              bottom: -4,
+              child: Container(
+                width: 18,
+                height: 18,
+                decoration: BoxDecoration(
+                  color: c.card,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  L.typeIcons[item.type],
+                  size: 12,
+                  color: c.accent,
+                  semanticLabel: L.type(item.type),
+                ),
+              ),
             ),
-          ),
-        ]),
+          ],
+        ),
       ),
       title: name(null),
-      subtitle: subtitle.isEmpty ? null : Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: subtitle.isEmpty
+          ? null
+          : Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
     );
   }
 }
 
 /// Mã 2FA trong danh sách: chữ số lớn không khung, hình tròn đếm ngược bên cạnh. Chạm vào dòng để chép (do dòng xử lý).
+/// Vòng đếm ngược của mã 2FA (đặt riêng, ví dụ ở góc trên thẻ).
+class TotpRing extends StatelessWidget {
+  const TotpRing({
+    super.key,
+    required this.params,
+    required this.now,
+    this.size = 18,
+  });
+  final TotpParams params;
+  final DateTime now;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final left = Otp.secondsRemaining(now, period: params.period);
+    final frac = Otp.fractionRemaining(now, period: params.period);
+    final color = left <= 5 ? c.danger : c.accent;
+    return SizedBox.square(
+      dimension: size,
+      child: CustomPaint(painter: _PiePainter(frac, color, c.line)),
+    );
+  }
+}
+
 class TotpCode extends StatelessWidget {
-  const TotpCode({super.key, required this.params, required this.now, this.onNext, this.compact = false});
+  const TotpCode({
+    super.key,
+    required this.params,
+    required this.now,
+    this.onNext,
+    this.compact = false,
+    this.showRing = true,
+  });
   final bool compact;
+
+  /// Vòng đếm nằm cạnh mã. Tắt khi vòng đã đặt chỗ khác (góc trên của thẻ 2FA).
+  final bool showRing;
   final TotpParams params;
   final DateTime now;
   final VoidCallback? onNext;
@@ -364,27 +599,53 @@ class TotpCode extends StatelessWidget {
     } on Object {
       return Text(tr('Khóa 2FA lỗi'), style: TextStyle(color: c.danger));
     }
-    final style = TextStyle(fontFamily: Fonts.mono, fontSize: compact ? 16 : 22, fontWeight: FontWeight.w600, letterSpacing: 0.5, height: 1.1, fontFeatures: const [FontFeature.tabularFigures()]);
+    final style = TextStyle(
+      fontFamily: Fonts.mono,
+      fontSize: compact ? 16 : 22,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.5,
+      height: 1.1,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
 
     if (params.isHotp) {
-      return Row(mainAxisSize: MainAxisSize.min, children: [
-        Text(Otp.grouped(code), style: style.copyWith(color: c.accent)),
-        if (onNext != null) IconButton(tooltip: tr('Mã kế tiếp'), icon: const Icon(Icons.skip_next), onPressed: onNext),
-      ]);
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(Otp.grouped(code), style: style.copyWith(color: c.accent)),
+          if (onNext != null)
+            IconButton(
+              tooltip: tr('Mã kế tiếp'),
+              icon: const Icon(Icons.skip_next),
+              onPressed: onNext,
+            ),
+        ],
+      );
     }
 
     final left = Otp.secondsRemaining(now, period: params.period);
     final frac = Otp.fractionRemaining(now, period: params.period);
     final color = left <= 5 ? c.danger : c.accent;
     return Semantics(
-      label: tr('Mã 2FA {p0}, còn {p1} giây. Bấm để chép', {'p0': Otp.grouped(code), 'p1': left}),
+      label: tr('Mã 2FA {p0}, còn {p1} giây. Bấm để chép', {
+        'p0': Otp.grouped(code),
+        'p1': left,
+      }),
       excludeSemantics: true,
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Text(Otp.grouped(code), style: style.copyWith(color: color)),
-        const SizedBox(width: 10),
-        // Hình tròn đặc thu nhỏ dần theo thời gian còn lại của mã.
-        SizedBox.square(dimension: compact ? 15 : 18, child: CustomPaint(painter: _PiePainter(frac, color, c.line))),
-      ]),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(Otp.grouped(code), style: style.copyWith(color: color)),
+          if (showRing) ...[
+            const SizedBox(width: 10),
+            // Hình tròn đặc thu nhỏ dần theo thời gian còn lại của mã.
+            SizedBox.square(
+              dimension: compact ? 15 : 18,
+              child: CustomPaint(painter: _PiePainter(frac, color, c.line)),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -417,5 +678,9 @@ class _PiePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _PiePainter old) => old.frac != frac || old.color != color || old.track != track || old.stroke != stroke;
+  bool shouldRepaint(covariant _PiePainter old) =>
+      old.frac != frac ||
+      old.color != color ||
+      old.track != track ||
+      old.stroke != stroke;
 }

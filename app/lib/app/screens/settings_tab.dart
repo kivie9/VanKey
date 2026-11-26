@@ -114,6 +114,184 @@ class SettingsScreen extends StatelessWidget {
   );
 }
 
+/// Một trang cài đặt: tiêu đề và danh sách mục bên trong.
+class _Section {
+  const _Section(this.title, this.children);
+  final String title;
+  final List<Widget> Function(BuildContext) children;
+}
+
+/// Một dòng menu. Mục có [section] mở danh sách cài đặt; mục có [page] mở một màn riêng.
+class _Entry {
+  const _Entry(this.icon, this.title, this.subtitle, {this.section, this.page});
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Future<_Section?> Function()? section;
+  final Widget Function()? page;
+}
+
+/// Mở một trang cài đặt như trước (điện thoại): màn mới có nút quay lại.
+void _openSection(
+  BuildContext context,
+  VaultController controller,
+  _Section s,
+) {
+  Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => ListenableBuilder(
+        listenable: controller,
+        builder: (ctx, _) => Scaffold(
+          appBar: AppBar(title: Text(s.title)),
+          body: ListView(
+            padding: formPadding(MediaQuery.sizeOf(context).width),
+            children: [CardList(children: s.children(ctx))],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/// Bố cục menu cài đặt. Màn rộng (Windows): menu bên trái, nội dung mục đang chọn bên phải.
+/// Màn hẹp: danh sách menu, mỗi mục mở một trang riêng.
+class _SettingsBody extends StatefulWidget {
+  const _SettingsBody({required this.controller, required this.entries});
+  final VaultController controller;
+  final List<_Entry> entries;
+
+  @override
+  State<_SettingsBody> createState() => _SettingsBodyState();
+}
+
+class _SettingsBodyState extends State<_SettingsBody> {
+  static const _wideBreakpoint = 760.0;
+  static const _navWidth = 280.0;
+
+  int _sel = 0;
+  Future<_Section?>? _future;
+
+  void _select(int i) {
+    setState(() {
+      _sel = i;
+      _future = widget.entries[i].section?.call();
+    });
+  }
+
+  Future<void> _tap(BuildContext context, int i, bool wide) async {
+    final e = widget.entries[i];
+    if (e.page != null) {
+      unawaited(pushPage(context, e.page!()));
+      return;
+    }
+    if (wide) {
+      _select(i);
+      return;
+    }
+    final s = await e.section!();
+    if (!context.mounted || s == null) return;
+    _openSection(context, widget.controller, s);
+  }
+
+  Widget _pane(BuildContext context) {
+    if (widget.entries[_sel].section == null) return const SizedBox.shrink();
+    _future ??= widget.entries[_sel].section!();
+    final c = AppColors.of(context);
+    return FutureBuilder<_Section?>(
+      future: _future,
+      builder: (ctx, snap) {
+        final s = snap.data;
+        if (s == null) return const Center(child: CircularProgressIndicator());
+        return ListenableBuilder(
+          listenable: widget.controller,
+          builder: (ctx, _) => ListView(
+            padding: const EdgeInsets.fromLTRB(Gap.xl, Gap.xl, Gap.xl, Gap.xxl),
+            children: [
+              Text(
+                s.title,
+                style: Theme.of(ctx).textTheme.headlineSmall
+                    ?.copyWith(color: c.fg, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: Gap.lg),
+              CardList(children: s.children(ctx)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final wide = MediaQuery.sizeOf(context).width >= _wideBreakpoint;
+    final c = AppColors.of(context);
+    if (!wide) {
+      return ListView(
+        padding: formPadding(MediaQuery.sizeOf(context).width),
+        children: [
+          CardList(
+            children: [
+              for (var i = 0; i < widget.entries.length; i++)
+                ListTile(
+                  leading: IconBadge(widget.entries[i].icon),
+                  title: Text(widget.entries[i].title),
+                  subtitle: Text(widget.entries[i].subtitle),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  minVerticalPadding: Gap.md,
+                  onTap: () => _tap(context, i, false),
+                ),
+            ],
+          ),
+        ],
+      );
+    }
+    // Material trong suốt: ListTile cần Material gần nhất để vẽ nền và hiệu ứng nhấn, kể cả khi nằm trong khung có màu.
+    return Material(
+      type: MaterialType.transparency,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: _navWidth,
+            child: ListView(
+              padding: const EdgeInsets.all(Gap.md),
+              children: [
+                for (var i = 0; i < widget.entries.length; i++)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(Radii.md),
+                      ),
+                      selected: i == _sel,
+                      selectedTileColor: c.accentSoft,
+                      leading: Icon(
+                        widget.entries[i].icon,
+                        color: i == _sel ? c.accent : c.muted,
+                      ),
+                      title: Text(
+                        widget.entries[i].title,
+                        style: TextStyle(
+                          fontWeight: i == _sel ? FontWeight.w600 : null,
+                        ),
+                      ),
+                      trailing: widget.entries[i].page != null
+                          ? const Icon(Icons.open_in_new_rounded, size: 18)
+                          : null,
+                      onTap: () => _tap(context, i, true),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          VerticalDivider(width: 1, color: c.line),
+          Expanded(child: _pane(context)),
+        ],
+      ),
+    );
+  }
+}
+
 /// Cài đặt gom thành 7 menu: Tài khoản, Dữ liệu, Bảo mật, Chủ đề, Chung, Hỗ trợ, Giới thiệu.
 class SettingsTab extends StatelessWidget {
   const SettingsTab({super.key, required this.controller});
@@ -131,28 +309,6 @@ class SettingsTab extends StatelessWidget {
   static List<(int, String)> get _lockChoices => [
     for (final s in LockPolicy.autoLockChoices) (s, _lockLabel(s)),
   ];
-
-  /// Trang con: dựng lại mỗi khi trạng thái đổi.
-  void _sub(
-    BuildContext context,
-    String title,
-    List<Widget> Function(BuildContext) children,
-  ) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => ListenableBuilder(
-          listenable: controller,
-          builder: (ctx, _) => Scaffold(
-            appBar: AppBar(title: Text(title)),
-            body: ListView(
-              padding: formPadding(MediaQuery.sizeOf(context).width),
-              children: [CardList(children: children(ctx))],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   // ---------- Hộp thoại ----------
 
@@ -543,7 +699,7 @@ class SettingsTab extends StatelessWidget {
 
   // ---------- Các trang con ----------
 
-  Future<void> _account(BuildContext context) async {
+  Future<_Section?> _account(BuildContext context) async {
     // Không để màn chờ mãi nếu hệ thống không trả lời về vân tay.
     final bio =
         !controller.noPassword &&
@@ -551,9 +707,8 @@ class SettingsTab extends StatelessWidget {
           Timing.biometricProbe,
           onTimeout: () => false,
         );
-    if (!context.mounted) return;
-    _sub(
-      context,
+    if (!context.mounted) return null;
+    return _Section(
       tr('Tài khoản'),
       (ctx) => [
         ListTile(
@@ -612,7 +767,7 @@ class SettingsTab extends StatelessWidget {
 
   Future<void> _demo(BuildContext context) => loadDemoData(context, controller);
 
-  void _data(BuildContext context) => _sub(context, tr('Dữ liệu'), (ctx) {
+  _Section _data(BuildContext context) => _Section(tr('Dữ liệu'), (ctx) {
     final trashed = controller.data.items.where((i) => i.inTrash).length;
     return [
       ListTile(
@@ -660,7 +815,7 @@ class SettingsTab extends StatelessWidget {
     ];
   });
 
-  void _security(BuildContext context) => _sub(context, tr('Bảo mật'), (ctx) {
+  _Section _security(BuildContext context) => _Section(tr('Bảo mật'), (ctx) {
     final lockLabel = _lockChoices
         .firstWhere(
           (c) => c.$1 == controller.lockAfterSeconds,
@@ -680,23 +835,29 @@ class SettingsTab extends StatelessWidget {
             controller.lock();
           },
         ),
-        ListTile(
-          leading: const Icon(Icons.timer_outlined),
-          title: Text(tr('Tự khóa')),
-          subtitle: Text(lockLabel),
-          onTap: () => _pickLock(ctx),
-        ),
-        if (controller.lockAfterSeconds == LockPolicy.never)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(Gap.lg, 0, Gap.lg, Gap.md),
-            child: Notice(
-              tr(
-                'Đang không tự khóa: ai cầm điện thoại đang mở là vào được kho. Nên chọn một mức tự khóa, nhất là khi đã bật mở bằng vân tay.',
-              ),
-              tone: NoticeTone.warn,
-              icon: Icons.warning_amber_rounded,
+        // Dòng Tự khóa và cảnh báo (nếu đang tắt tự khóa) nằm chung một thẻ.
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.timer_outlined),
+              title: Text(tr('Tự khóa')),
+              subtitle: Text(lockLabel),
+              onTap: () => _pickLock(ctx),
             ),
-          ),
+            if (controller.lockAfterSeconds == LockPolicy.never)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(Gap.lg, 0, Gap.lg, Gap.md),
+                child: Notice(
+                  tr(
+                    'Đang không tự khóa: ai cầm điện thoại đang mở là vào được kho. Nên chọn một mức tự khóa, nhất là khi đã bật mở bằng vân tay.',
+                  ),
+                  tone: NoticeTone.warn,
+                  icon: Icons.warning_amber_rounded,
+                ),
+              ),
+          ],
+        ),
       ],
       if (Platform.isAndroid)
         SwitchListTile(
@@ -721,8 +882,7 @@ class SettingsTab extends StatelessWidget {
     ];
   });
 
-  void _general(BuildContext context) => _sub(
-    context,
+  _Section _general(BuildContext context) => _Section(
     tr('Chung'),
     (ctx) => [
       ListTile(
@@ -754,68 +914,51 @@ class SettingsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final menu = <(IconData, String, String, VoidCallback)>[
-      (
+    final entries = <_Entry>[
+      _Entry(
         Icons.person_outline,
         tr('Tài khoản'),
         controller.noPassword ? tr('Không mật khẩu') : tr('Có mật khẩu'),
-        () => _account(context),
+        section: () => _account(context),
       ),
-      (
+      _Entry(
         Icons.storage_outlined,
         tr('Dữ liệu'),
         tr('Đồng bộ, nhập, xuất, thùng rác'),
-        () => _data(context),
+        section: () async => _data(context),
       ),
-      (
+      _Entry(
         Icons.shield_outlined,
         tr('Bảo mật'),
         tr('Tự khóa, kiểm tra, nhắc nhở'),
-        () => _security(context),
+        section: () async => _security(context),
       ),
-      (
+      _Entry(
         Icons.palette_outlined,
         tr('Chủ đề'),
         tr('Sáng, tối, màu nhấn'),
-        () => pushPage(context, ThemeScreen(controller: controller)),
+        page: () => ThemeScreen(controller: controller),
       ),
-      (
+      _Entry(
         Icons.tune,
         tr('Chung'),
         tr('Ngôn ngữ, logo, tạo mật khẩu'),
-        () => _general(context),
+        section: () async => _general(context),
       ),
-      (
+      _Entry(
         Icons.help_outline,
         tr('Hỗ trợ'),
         tr('Câu hỏi thường gặp'),
-        () => pushPage(context, const HelpScreen()),
+        page: () => const HelpScreen(),
       ),
-      (
+      _Entry(
         Icons.info_outline,
         tr('Giới thiệu'),
         tr('Phiên bản {p0}', {'p0': appVersion}),
-        () => pushPage(context, const AboutScreen()),
+        page: () => const AboutScreen(),
       ),
     ];
-    return ListView(
-      padding: formPadding(MediaQuery.sizeOf(context).width),
-      children: [
-        CardList(
-          children: [
-            for (final m in menu)
-              ListTile(
-                leading: IconBadge(m.$1),
-                title: Text(m.$2),
-                subtitle: Text(m.$3),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                minVerticalPadding: Gap.md,
-                onTap: m.$4,
-              ),
-          ],
-        ),
-      ],
-    );
+    return _SettingsBody(controller: controller, entries: entries);
   }
 }
 

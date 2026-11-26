@@ -1,5 +1,6 @@
 import 'demo_data.dart';
 import 'constants.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -41,7 +42,6 @@ enum SortBy { name, updated, created }
 
 enum SyncStatus { off, idle, syncing, error }
 
-
 /// Giữ kho trong bộ nhớ, mở/khóa, và tự lưu sau mỗi thay đổi (gộp trong ~500 ms).
 ///
 /// Argon2id (~1 giây) luôn chạy trong isolate riêng để giao diện không đứng.
@@ -65,9 +65,14 @@ class VaultController extends ChangeNotifier {
   SortBy sortBy = SortBy.name;
   bool blockScreenshots = true;
   bool showLogos = true;
+
   /// Màu gán cho từng thẻ (tên thẻ -> ARGB). Thẻ chưa gán màu thì dùng màu mặc định theo tên.
   Map<String, int> tagColors = {};
-  ItemType lastType = ItemType.login; // loại mục vừa tạo gần nhất: lần sau chọn sẵn
+
+  /// Thẻ tạo sẵn chưa gắn mục nào (lưu trong cài đặt).
+  List<String> extraTags = [];
+  ItemType lastType =
+      ItemType.login; // loại mục vừa tạo gần nhất: lần sau chọn sẵn
   Map<String, DateTime> snoozed = {};
 
   /// Gợi ý dịch vụ người dùng đã trả lời "Không" (`id mục:id dịch vụ`). Chỉ lưu trên máy này.
@@ -81,7 +86,8 @@ class VaultController extends ChangeNotifier {
 
   /// Vân tay vừa bị tắt vì bản cũ cất mật khẩu không an toàn: nhắc người dùng bật lại (Cài đặt > Tài khoản).
   bool bioNeedsReenable = false;
-  static const _bioKey = 'vault.bio.passphrase'; // bản cũ / Windows: mật khẩu kho
+  static const _bioKey =
+      'vault.bio.passphrase'; // bản cũ / Windows: mật khẩu kho
   static const _bioBlobKey = 'vault.bio.key.v1'; // Android: vault key đã mã hóa bằng khóa Keystore cần vân tay
   final _localAuth = LocalAuthentication();
   DateTime? _pausedAt;
@@ -140,40 +146,73 @@ class VaultController extends ChangeNotifier {
       id = uuidV4().replaceAll('-', '');
       await idFile.writeAsString(id, flush: true);
     }
-    _settingsFile = File('${dir.path}${Platform.pathSeparator}${Storage.settingsFile}');
+    _settingsFile = File(
+      '${dir.path}${Platform.pathSeparator}${Storage.settingsFile}',
+    );
     try {
       if (await _settingsFile.exists()) {
-        final j = jsonDecode(await _settingsFile.readAsString()) as Map<String, dynamic>;
+        final j = jsonDecode(
+          await _settingsFile.readAsString(),
+        ) as Map<String, dynamic>;
         final v = j[SettingsKey.lockAfter];
-        if (v is int && v >= LockPolicy.never && v <= LockPolicy.maxAutoLockSeconds) lockAfterSeconds = v;
+        if (v is int &&
+            v >= LockPolicy.never &&
+            v <= LockPolicy.maxAutoLockSeconds)
+          lockAfterSeconds = v;
         final lg = j[SettingsKey.language];
-        if (lg == LangCode.vi || lg == LangCode.en || lg == LangCode.system) language = lg as String;
+        if (lg == LangCode.vi || lg == LangCode.en || lg == LangCode.system)
+          language = lg as String;
         final t = j[SettingsKey.theme];
-        if (t == 'light' || t == 'dark' || t == 'system') themeMode = t as String;
+        if (t == 'light' || t == 'dark' || t == 'system')
+          themeMode = t as String;
         final a = j[SettingsKey.accent];
         if (a is int && a >= 0 && a < accentColors.length) accent = a;
         final sc = j[SettingsKey.sync];
         if (sc is Map<String, dynamic>) _syncConfig = sc;
         final sn = j[SettingsKey.snooze];
         if (sn is Map<String, dynamic>) {
-          snoozed = {for (final e in sn.entries) if (e.value is String && DateTime.tryParse(e.value as String) != null) e.key: DateTime.parse(e.value as String)};
+          snoozed = {
+            for (final e in sn.entries)
+              if (e.value is String &&
+                  DateTime.tryParse(e.value as String) != null)
+                e.key: DateTime.parse(e.value as String),
+          };
         }
         final so = j[SettingsKey.sortBy];
-        if (so is String) sortBy = SortBy.values.firstWhere((e) => e.name == so, orElse: () => SortBy.name);
+        if (so is String)
+          sortBy = SortBy.values.firstWhere(
+            (e) => e.name == so,
+            orElse: () => SortBy.name,
+          );
         final lt = j[SettingsKey.lastType];
         if (lt is String) lastType = ItemType.fromName(lt);
-        if (j[SettingsKey.showLogos] is bool) showLogos = j[SettingsKey.showLogos] as bool;
+        if (j[SettingsKey.showLogos] is bool)
+          showLogos = j[SettingsKey.showLogos] as bool;
         BrandConfig.enabled = showLogos;
-        if (j[SettingsKey.blockScreenshots] is bool) blockScreenshots = j[SettingsKey.blockScreenshots] as bool;
+        if (j[SettingsKey.blockScreenshots] is bool)
+          blockScreenshots = j[SettingsKey.blockScreenshots] as bool;
+        final et = j[SettingsKey.extraTags];
+        if (et is List) extraTags = et.whereType<String>().toList();
         final tc = j[SettingsKey.tagColors];
-        if (tc is Map) tagColors = {for (final e in tc.entries) if (e.key is String && e.value is int) e.key as String: e.value as int};
+        if (tc is Map)
+          tagColors = {
+            for (final e in tc.entries)
+              if (e.key is String && e.value is int)
+                e.key as String: e.value as int,
+          };
         final g = j[SettingsKey.groupBy];
-        if (g is String) groupBy = GroupBy.values.firstWhere((e) => e.name == g, orElse: () => GroupBy.group);
+        if (g is String)
+          groupBy = GroupBy.values.firstWhere(
+            (e) => e.name == g,
+            orElse: () => GroupBy.group,
+          );
       }
     } on Object {
       // Cài đặt hỏng thì dùng mặc định.
     }
-    _syncStateFile = File('${dir.path}${Platform.pathSeparator}sync_state.json');
+    _syncStateFile = File(
+      '${dir.path}${Platform.pathSeparator}sync_state.json',
+    );
     _applySyncConfig();
     await _restoreCloudflare();
     await _loadSyncState();
@@ -189,7 +228,10 @@ class VaultController extends ChangeNotifier {
     }
     final secret = await _readSecret();
     if (secret != null) {
-      final ok = await _unlock((b) => isoOpenPassphrase(b, secret), trackFailures: false);
+      final ok = await _unlock(
+        (b) => isoOpenPassphrase(b, secret),
+        trackFailures: false,
+      );
       if (ok) {
         noPassword = true;
         notifyListeners();
@@ -229,7 +271,9 @@ class VaultController extends ChangeNotifier {
       final until = j['until'];
       final t = until is String ? DateTime.tryParse(until) : null;
       // Không tin thời điểm quá xa trong tương lai (đồng hồ máy bị chỉnh lùi rồi chỉnh lại): giới hạn ở mức chờ tối đa.
-      final cap = DateTime.now().add(const Duration(seconds: LockPolicy.maxWaitSeconds));
+      final cap = DateTime.now().add(
+        const Duration(seconds: LockPolicy.maxWaitSeconds),
+      );
       if (t != null) _blockedUntil = t.isAfter(cap) ? cap : t;
     } on Object {
       // Dữ liệu hỏng thì bỏ qua.
@@ -241,7 +285,13 @@ class VaultController extends ChangeNotifier {
       if (_failures == 0 && _blockedUntil == null) {
         await _secure.delete(key: _failuresKey);
       } else {
-        await _secure.write(key: _failuresKey, value: jsonEncode({'n': _failures, 'until': _blockedUntil?.toUtc().toIso8601String()}));
+        await _secure.write(
+          key: _failuresKey,
+          value: jsonEncode({
+            'n': _failures,
+            'until': _blockedUntil?.toUtc().toIso8601String(),
+          }),
+        );
       }
     } on Object {
       // Không ghi được thì vẫn chặn trong phiên này.
@@ -267,7 +317,8 @@ class VaultController extends ChangeNotifier {
         key = null;
       }
       final k = key;
-      if (k != null && await _unlock((b) => isoOpenKey(b, k), trackFailures: false)) {
+      if (k != null &&
+          await _unlock((b) => isoOpenKey(b, k), trackFailures: false)) {
         k.fillRange(0, k.length, 0);
         return true;
       }
@@ -277,7 +328,10 @@ class VaultController extends ChangeNotifier {
     // Bản trước cất mật khẩu: mở bằng mật khẩu đó một lần (chậm), rồi đổi sang cất khóa.
     final legacy = await _readStored(_legacyRememberKey);
     if (legacy == null) return false;
-    final ok = await _unlock((b) => isoOpenPassphrase(b, legacy), trackFailures: false);
+    final ok = await _unlock(
+      (b) => isoOpenPassphrase(b, legacy),
+      trackFailures: false,
+    );
     await _forget();
     if (ok) await _remember();
     return ok;
@@ -308,7 +362,8 @@ class VaultController extends ChangeNotifier {
   }
 
   /// Lời báo (đã dịch) nếu [password] chưa đủ để làm mật khẩu mới, hoặc `null` nếu đạt. Xem [AccountPolicy.checkNewPassword].
-  static String? newPasswordError(String password) => AccountPolicy.newPasswordError(password);
+  static String? newPasswordError(String password) =>
+      AccountPolicy.newPasswordError(password);
 
   /// Chuyển sang chế độ có mật khẩu. Trả lời báo nếu mật khẩu chưa đủ mạnh (khi đó không đổi gì).
   Future<String?> setPassword(String passphrase) async {
@@ -346,7 +401,8 @@ class VaultController extends ChangeNotifier {
   Future<String?> changeVaultPassword(String current, String next) async {
     final weak = newPasswordError(next);
     if (weak != null) return weak;
-    if (!await verifyPassphrase(current)) return tr('Mật khẩu hiện tại không đúng');
+    if (!await verifyPassphrase(current))
+      return tr('Mật khẩu hiện tại không đúng');
     final p = provider;
     final user = _serverUsername;
     if (p is CloudflareSync && user != null) {
@@ -355,11 +411,15 @@ class VaultController extends ChangeNotifier {
         await _withLegacyKey(user, current, (k) => p.changeAuthKey(k, fresh));
       } on CloudflareApiException catch (e) {
         // wrong_password: tài khoản cũ có mật khẩu tài khoản khác mật khẩu kho; khi đó chỉ đổi mật khẩu kho như trước.
-        if (e.code != 'wrong_password') return tr('Máy chủ chưa đổi được mật khẩu: {p0}', {'p0': e.message});
+        if (e.code != 'wrong_password')
+          return tr('Máy chủ chưa đổi được mật khẩu: {p0}', {'p0': e.message});
       } on SyncAuthException catch (e) {
         return tr('Máy chủ chưa đổi được mật khẩu: {p0}', {'p0': e.message});
       } on SyncNetworkException catch (e) {
-        return tr('Không kết nối được máy chủ ({p0}). Mật khẩu chưa được đổi.', {'p0': e.message});
+        return tr(
+          'Không kết nối được máy chủ ({p0}). Mật khẩu chưa được đổi.',
+          {'p0': e.message},
+        );
       }
     }
     return setPassword(next);
@@ -378,7 +438,8 @@ class VaultController extends ChangeNotifier {
   Future<String?> deleteServerAccount(String password) async {
     final p = provider;
     final user = _serverUsername;
-    if (p is! CloudflareSync || user == null) return tr('Chưa đăng nhập tài khoản máy chủ.');
+    if (p is! CloudflareSync || user == null)
+      return tr('Chưa đăng nhập tài khoản máy chủ.');
     try {
       await _withLegacyKey(user, password, p.deleteAccount);
     } on CloudflareApiException catch (e) {
@@ -386,7 +447,9 @@ class VaultController extends ChangeNotifier {
     } on SyncAuthException catch (e) {
       return e.message;
     } on SyncNetworkException catch (e) {
-      return tr('Không kết nối được máy chủ ({p0}). Tài khoản chưa bị xóa.', {'p0': e.message});
+      return tr('Không kết nối được máy chủ ({p0}). Tài khoản chưa bị xóa.', {
+        'p0': e.message,
+      });
     }
     try {
       await _secure.delete(key: _cfKey);
@@ -411,7 +474,11 @@ class VaultController extends ChangeNotifier {
     _saveTimer?.cancel();
     _session?.close();
     _session = null;
-    for (final f in [_file, File('${_file.path}.bak'), File('${_file.path}.tmp')]) {
+    for (final f in [
+      _file,
+      File('${_file.path}.bak'),
+      File('${_file.path}.tmp'),
+    ]) {
       if (await f.exists()) await f.delete();
     }
     await _deleteSecret();
@@ -455,7 +522,8 @@ class VaultController extends ChangeNotifier {
     data = VaultData.fromJson(_session!.payload);
     phase = Phase.unlocked;
     notifyListeners();
-    if (provider != null) unawaited(syncNow()); // tài khoản máy chủ vừa tạo: đẩy kho lên ngay
+    if (provider != null)
+      unawaited(syncNow()); // tài khoản máy chủ vừa tạo: đẩy kho lên ngay
   }
 
   Future<bool> unlockWithPassphrase(String passphrase) async {
@@ -476,10 +544,15 @@ class VaultController extends ChangeNotifier {
     return _unlock((bytes) => isoOpenRecovery(bytes, key));
   }
 
-  Future<bool> _unlock(Future<VaultSession> Function(Uint8List) open, {bool trackFailures = true}) async {
+  Future<bool> _unlock(
+    Future<VaultSession> Function(Uint8List) open, {
+    bool trackFailures = true,
+  }) async {
     final wait = _blockedUntil?.difference(DateTime.now());
     if (trackFailures && wait != null && !wait.isNegative) {
-      error = tr('Nhập sai nhiều lần. Thử lại sau {p0} giây.', {'p0': wait.inSeconds + 1});
+      error = tr('Nhập sai nhiều lần. Thử lại sau {p0} giây.', {
+        'p0': wait.inSeconds + 1,
+      });
       notifyListeners();
       return false;
     }
@@ -494,7 +567,8 @@ class VaultController extends ChangeNotifier {
       }
       final session = await open(bytes);
       _session = session;
-      data = VaultData.fromJson(session.payload).purgeExpiredTrash(now: DateTime.now(), clock: clock);
+      data = VaultData.fromJson(session.payload)
+          .purgeExpiredTrash(now: DateTime.now(), clock: clock);
       phase = Phase.unlocked;
       unawaited(Future<void>.delayed(Duration.zero, syncNow));
       _scheduleNotifications();
@@ -509,7 +583,9 @@ class VaultController extends ChangeNotifier {
       if (trackFailures && ++_failures >= LockPolicy.freeAttempts) {
         final secs = LockPolicy.waitSecondsAfter(_failures);
         _blockedUntil = DateTime.now().add(Duration(seconds: secs));
-        error = tr('Sai mật khẩu. Chờ {p0} giây trước khi thử lại.', {'p0': secs});
+        error = tr('Sai mật khẩu. Chờ {p0} giây trước khi thử lại.', {
+          'p0': secs,
+        });
       }
       if (trackFailures) await _saveFailures();
       return false;
@@ -538,8 +614,9 @@ class VaultController extends ChangeNotifier {
 
   // ---- Nhắc nhở ----
 
-  Future<void> snooze(String key, int days) =>
-      _updateSettings(() => snoozed = {...snoozed, key: DateTime.now().add(Duration(days: days))});
+  Future<void> snooze(String key, int days) => _updateSettings(
+    () => snoozed = {...snoozed, key: DateTime.now().add(Duration(days: days))},
+  );
 
   Timer? _notifyTimer;
 
@@ -547,7 +624,9 @@ class VaultController extends ChangeNotifier {
     _notifyTimer?.cancel();
     _notifyTimer = Timer(Timing.notifyDebounce, () async {
       try {
-        await NotificationService.instance.reschedule(data.items.where((i) => !i.inTrash));
+        await NotificationService.instance.reschedule(
+          data.items.where((i) => !i.inTrash),
+        );
       } on Object {
         // Không đặt được lịch thì thôi, không ảnh hưởng dữ liệu.
       }
@@ -579,7 +658,8 @@ class VaultController extends ChangeNotifier {
   Future<bool> biometricAvailable() async {
     if (_bioBound) return PlatformBridge.bioAvailable();
     try {
-      return await _localAuth.canCheckBiometrics && await _localAuth.isDeviceSupported();
+      return await _localAuth.canCheckBiometrics &&
+          await _localAuth.isDeviceSupported();
     } on Object {
       return false;
     }
@@ -599,18 +679,31 @@ class VaultController extends ChangeNotifier {
       if (_bioBound) {
         final key = probe.exportKey();
         try {
-          final blob = await external(() => PlatformBridge.bioEncrypt(key, title: tr('Xác nhận để bật mở khóa bằng vân tay'), cancel: tr('Hủy')));
+          final blob = await external(
+            () => PlatformBridge.bioEncrypt(
+              key,
+              title: tr('Xác nhận để bật mở khóa bằng vân tay'),
+              cancel: tr('Hủy'),
+            ),
+          );
           await _secure.write(key: _bioBlobKey, value: base64Encode(blob));
         } finally {
           key.fillRange(0, key.length, 0);
         }
       } else {
-        final ok = await external(() => _localAuth.authenticate(localizedReason: tr('Xác nhận để bật mở khóa bằng vân tay'), biometricOnly: true));
+        final ok = await external(
+          () => _localAuth.authenticate(
+            localizedReason: tr('Xác nhận để bật mở khóa bằng vân tay'),
+            biometricOnly: true,
+          ),
+        );
         if (!ok) return tr('Chưa xác thực được vân tay');
         await _secure.write(key: _bioKey, value: passphrase);
       }
     } on BioException catch (e) {
-      return e.code == 'canceled' ? tr('Chưa xác thực được vân tay') : tr('Không bật được: {p0}', {'p0': e.message ?? e.code});
+      return e.code == 'canceled'
+          ? tr('Chưa xác thực được vân tay')
+          : tr('Không bật được: {p0}', {'p0': e.message ?? e.code});
     } on Object catch (e) {
       return tr('Không bật được: {p0}', {'p0': e});
     } finally {
@@ -640,12 +733,20 @@ class VaultController extends ChangeNotifier {
     if (stored == null) return false;
     if (!_bioBound) {
       try {
-        final ok = await external(() => _localAuth.authenticate(localizedReason: tr('Mở khóa VanKey'), biometricOnly: true));
+        final ok = await external(
+          () => _localAuth.authenticate(
+            localizedReason: tr('Mở khóa VanKey'),
+            biometricOnly: true,
+          ),
+        );
         if (!ok) return false;
       } on Object {
         return false;
       }
-      final opened = await _unlock((b) => isoOpenPassphrase(b, stored), trackFailures: false);
+      final opened = await _unlock(
+        (b) => isoOpenPassphrase(b, stored),
+        trackFailures: false,
+      );
       if (!opened) await disableBiometric(); // mật khẩu đã đổi: bỏ vân tay cũ
       if (opened) await _remember();
       return opened;
@@ -653,11 +754,19 @@ class VaultController extends ChangeNotifier {
     final Uint8List key;
     try {
       final blob = base64Decode(stored);
-      key = await external(() => PlatformBridge.bioDecrypt(blob, title: tr('Mở khóa VanKey'), cancel: tr('Dùng mật khẩu')));
+      key = await external(
+        () => PlatformBridge.bioDecrypt(
+          blob,
+          title: tr('Mở khóa VanKey'),
+          cancel: tr('Dùng mật khẩu'),
+        ),
+      );
     } on BioException catch (e) {
       if (e.code == 'invalidated' || e.code == 'corrupt') {
         await disableBiometric();
-        error = tr('Vân tay trên máy đã thay đổi. Hãy nhập mật khẩu rồi bật lại mở khóa bằng vân tay.');
+        error = tr(
+          'Vân tay trên máy đã thay đổi. Hãy nhập mật khẩu rồi bật lại mở khóa bằng vân tay.',
+        );
         notifyListeners();
       }
       return false;
@@ -665,9 +774,13 @@ class VaultController extends ChangeNotifier {
       await disableBiometric();
       return false;
     }
-    final opened = await _unlock((b) => isoOpenKey(b, key), trackFailures: false);
+    final opened = await _unlock(
+      (b) => isoOpenKey(b, key),
+      trackFailures: false,
+    );
     key.fillRange(0, key.length, 0);
-    if (!opened) await disableBiometric(); // kho đã xoay khóa ở máy khác: bỏ vân tay cũ
+    if (!opened)
+      await disableBiometric(); // kho đã xoay khóa ở máy khác: bỏ vân tay cũ
     if (opened) await _remember();
     return opened;
   }
@@ -695,14 +808,17 @@ class VaultController extends ChangeNotifier {
 
   // ---- Cloudflare ----
 
-  static String get _deviceName => Platform.isAndroid ? 'Android' : (Platform.isWindows ? 'Windows' : Platform.operatingSystem);
+  static String get _deviceName => Platform.isAndroid
+      ? 'Android'
+      : (Platform.isWindows ? 'Windows' : Platform.operatingSystem);
 
   /// Chỉ cho phép HTTPS, trừ máy cục bộ (để thử). Chặn gửi đăng nhập qua mạng không mã hóa.
   static bool isAllowedServerUrl(String url) {
     final u = Uri.tryParse(url.trim());
     if (u == null || !u.hasAuthority || u.host.isEmpty) return false;
     if (u.scheme == ServerPolicy.secureScheme) return true;
-    return u.scheme == ServerPolicy.devScheme && ServerPolicy.devHosts.contains(u.host);
+    return u.scheme == ServerPolicy.devScheme &&
+        ServerPolicy.devHosts.contains(u.host);
   }
 
   Future<void> _restoreCloudflare() async {
@@ -714,7 +830,9 @@ class VaultController extends ChangeNotifier {
         syncError = tr('Cần đăng nhập lại vào máy chủ.');
         return;
       }
-      cfSession = CloudflareSession.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+      cfSession = CloudflareSession.fromJson(
+        jsonDecode(raw) as Map<String, dynamic>,
+      );
       provider = CloudflareSync(_cfApi, cfSession!, onSession: _saveCfSession);
     } on Object {
       syncStatus = SyncStatus.error;
@@ -724,13 +842,24 @@ class VaultController extends ChangeNotifier {
 
   void _saveCfSession(CloudflareSession s) {
     cfSession = s;
-    unawaited(_secure.write(key: _cfKey, value: jsonEncode(s.toJson())).catchError((Object _) {}));
+    unawaited(
+      _secure
+          .write(key: _cfKey, value: jsonEncode(s.toJson()))
+          .catchError((Object _) {}),
+    );
   }
 
   /// Đăng nhập (hoặc đăng ký) tài khoản máy chủ và bật đồng bộ. Trả về thông báo lỗi, hoặc null nếu thành công.
-  Future<String?> signInCloudflare({required String url, required String username, required String password, required bool register, String registerCode = ''}) async {
+  Future<String?> signInCloudflare({
+    required String url,
+    required String username,
+    required String password,
+    required bool register,
+    String registerCode = '',
+  }) async {
     final base = url.trim();
-    if (!isAllowedServerUrl(base)) return tr('Địa chỉ máy chủ phải bắt đầu bằng https://');
+    if (!isAllowedServerUrl(base))
+      return tr('Địa chỉ máy chủ phải bắt đầu bằng https://');
     final name = AccountPolicy.normalizeUsername(username);
     if (name == null) return _badUsername;
     if (register) {
@@ -739,10 +868,22 @@ class VaultController extends ChangeNotifier {
     }
     try {
       final s = register
-          ? await _cfApi.register(base, name, await isoAuthKey(name, password), _deviceName, registerCode: registerCode.trim())
+          ? await _cfApi.register(
+              base,
+              name,
+              await isoAuthKey(name, password),
+              _deviceName,
+              registerCode: registerCode.trim(),
+            )
           : await _cfLogin(base, name, password);
       _saveCfSession(s);
-      await _updateSettings(() => _syncConfig = {'type': 'cloudflare', 'url': base, 'username': s.username.isEmpty ? name : s.username});
+      await _updateSettings(
+        () => _syncConfig = {
+          'type': 'cloudflare',
+          'url': base,
+          'username': s.username.isEmpty ? name : s.username,
+        },
+      );
       provider = CloudflareSync(_cfApi, s, onSession: _saveCfSession);
       syncStatus = SyncStatus.idle;
       _syncState = const SyncState();
@@ -756,16 +897,24 @@ class VaultController extends ChangeNotifier {
     }
   }
 
-  String get _badUsername => tr('Tên đăng nhập gồm 3 đến 32 ký tự: chữ thường, số, dấu chấm, gạch dưới hoặc gạch ngang.');
+  String get _badUsername => tr(
+    'Tên đăng nhập gồm 3 đến 32 ký tự: chữ thường, số, dấu chấm, gạch dưới hoặc gạch ngang.',
+  );
 
   /// Đăng nhập máy chủ. Tài khoản tạo trước khi mật khẩu được chuẩn hóa NFKC có thể đang dùng khóa cũ: thử khóa cũ,
   /// đúng thì đổi khóa trên máy chủ sang khóa mới để từ đó mọi thiết bị (mọi kiểu bàn phím) đều đăng nhập được.
-  Future<CloudflareSession> _cfLogin(String base, String name, String password) async {
+  Future<CloudflareSession> _cfLogin(
+    String base,
+    String name,
+    String password,
+  ) async {
     final key = await isoAuthKey(name, password);
     try {
       return await _cfApi.login(base, name, key, _deviceName);
     } on CloudflareApiException catch (e) {
-      if (e.code != 'invalid_credentials' || !CloudflareApi.hasLegacyAuthKey(password)) rethrow;
+      if (e.code != 'invalid_credentials' ||
+          !CloudflareApi.hasLegacyAuthKey(password))
+        rethrow;
       final legacy = await isoLegacyAuthKey(name, password);
       final CloudflareSession s;
       try {
@@ -784,11 +933,17 @@ class VaultController extends ChangeNotifier {
   }
 
   /// Gọi thao tác cần nhập lại mật khẩu; máy chủ báo sai mà mật khẩu có dạng cũ khác thì thử lại bằng khóa cũ.
-  Future<void> _withLegacyKey(String user, String password, Future<void> Function(String authKey) call) async {
+  Future<void> _withLegacyKey(
+    String user,
+    String password,
+    Future<void> Function(String authKey) call,
+  ) async {
     try {
       await call(await isoAuthKey(user, password));
     } on CloudflareApiException catch (e) {
-      if (e.code != 'wrong_password' || !CloudflareApi.hasLegacyAuthKey(password)) rethrow;
+      if (e.code != 'wrong_password' ||
+          !CloudflareApi.hasLegacyAuthKey(password))
+        rethrow;
       try {
         await call(await isoLegacyAuthKey(user, password));
       } on CloudflareApiException {
@@ -797,14 +952,21 @@ class VaultController extends ChangeNotifier {
     }
   }
 
-  String _apiText(CloudflareApiException e) =>
-      e.retryAfter != null ? tr('{p0} (chờ {p1} giây)', {'p0': e.message, 'p1': e.retryAfter!}) : e.message;
+  String _apiText(CloudflareApiException e) => e.retryAfter != null
+      ? tr('{p0} (chờ {p1} giây)', {'p0': e.message, 'p1': e.retryAfter!})
+      : e.message;
 
   /// Tạo tài khoản máy chủ VÀ kho mới bằng MỘT mật khẩu: đăng ký → tạo kho → (sau khi lưu mã khôi phục) đẩy kho lên.
   /// Trả về lỗi hiển thị, hoặc null nếu thành công (khi đó [pendingRecovery] có mã khôi phục cần người dùng lưu).
-  Future<String?> signUpWithServer({required String url, required String username, required String password, String registerCode = ''}) async {
+  Future<String?> signUpWithServer({
+    required String url,
+    required String username,
+    required String password,
+    String registerCode = '',
+  }) async {
     final base = url.trim();
-    if (!isAllowedServerUrl(base)) return tr('Địa chỉ máy chủ phải bắt đầu bằng https://');
+    if (!isAllowedServerUrl(base))
+      return tr('Địa chỉ máy chủ phải bắt đầu bằng https://');
     final name = AccountPolicy.normalizeUsername(username);
     if (name == null) return _badUsername;
     final weak = newPasswordError(password);
@@ -814,7 +976,13 @@ class VaultController extends ChangeNotifier {
     notifyListeners();
     try {
       final authKey = await isoAuthKey(name, password);
-      final s = await _cfApi.register(base, name, authKey, _deviceName, registerCode: registerCode.trim());
+      final s = await _cfApi.register(
+        base,
+        name,
+        authKey,
+        _deviceName,
+        registerCode: registerCode.trim(),
+      );
       return await _createVaultForAccount(base, name, password, s);
     } on CloudflareApiException catch (e) {
       return _apiText(e);
@@ -827,14 +995,25 @@ class VaultController extends ChangeNotifier {
   }
 
   /// Tạo kho mới cho tài khoản vừa đăng ký (hoặc tài khoản chưa có kho trên máy chủ), mở bằng chính [password].
-  Future<String?> _createVaultForAccount(String base, String username, String password, CloudflareSession s) async {
+  Future<String?> _createVaultForAccount(
+    String base,
+    String username,
+    String password,
+    CloudflareSession s,
+  ) async {
     try {
       final (session, recovery) = await isoCreateCalibrated(password);
       session.payload = const VaultData().toJson();
       _session = session;
       await _writeNow();
       _saveCfSession(s);
-      await _updateSettings(() => _syncConfig = {'type': 'cloudflare', 'url': base, 'username': s.username.isEmpty ? username : s.username});
+      await _updateSettings(
+        () => _syncConfig = {
+          'type': 'cloudflare',
+          'url': base,
+          'username': s.username.isEmpty ? username : s.username,
+        },
+      );
       provider = CloudflareSync(_cfApi, s, onSession: _saveCfSession);
       syncStatus = SyncStatus.idle;
       _syncState = const SyncState();
@@ -848,11 +1027,23 @@ class VaultController extends ChangeNotifier {
 
   /// Đăng nhập bằng tên đăng nhập và mật khẩu. Kho trên máy chủ được mở bằng chính mật khẩu đó.
   /// [vaultMismatch] = true khi đăng nhập được nhưng mật khẩu không mở được kho (kho đặt mật khẩu khác từ trước).
-  Future<({String? error, bool vaultMismatch})> signInWithServer({required String url, required String username, required String password}) async {
+  Future<({String? error, bool vaultMismatch})> signInWithServer({
+    required String url,
+    required String username,
+    required String password,
+  }) async {
     final base = url.trim();
-    if (!isAllowedServerUrl(base)) return (error: tr('Địa chỉ máy chủ phải bắt đầu bằng https://'), vaultMismatch: false);
+    if (!isAllowedServerUrl(base))
+      return (
+        error: tr('Địa chỉ máy chủ phải bắt đầu bằng https://'),
+        vaultMismatch: false,
+      );
     final name = AccountPolicy.normalizeUsername(username);
-    if (name == null) return (error: tr('Tên đăng nhập hoặc mật khẩu không đúng'), vaultMismatch: false);
+    if (name == null)
+      return (
+        error: tr('Tên đăng nhập hoặc mật khẩu không đúng'),
+        vaultMismatch: false,
+      );
     busy = true;
     error = null;
     notifyListeners();
@@ -861,17 +1052,28 @@ class VaultController extends ChangeNotifier {
       final blob = await CloudflareSync(_cfApi, s).fetch();
       if (blob == null) {
         // Tài khoản có nhưng chưa có kho (lần tạo trước dở dang): tạo kho mới bằng mật khẩu này.
-        return (error: await _createVaultForAccount(base, name, password, s), vaultMismatch: false);
+        return (
+          error: await _createVaultForAccount(base, name, password, s),
+          vaultMismatch: false,
+        );
       }
       final VaultSession session;
       try {
         session = await isoOpenPassphrase(blob.bytes, password);
       } on AuthenticationFailedException {
         await _cfApi.logout(s);
-        return (error: tr('Đăng nhập được, nhưng mật khẩu này không mở được kho. Kho có thể đang dùng mật khẩu khác.'), vaultMismatch: true);
+        return (
+          error: tr(
+            'Đăng nhập được, nhưng mật khẩu này không mở được kho. Kho có thể đang dùng mật khẩu khác.',
+          ),
+          vaultMismatch: true,
+        );
       } on VaultException catch (e) {
         await _cfApi.logout(s);
-        return (error: tr('Không mở được kho: {p0}', {'p0': e.message}), vaultMismatch: false);
+        return (
+          error: tr('Không mở được kho: {p0}', {'p0': e.message}),
+          vaultMismatch: false,
+        );
       }
       await _adoptDownloadedVault(base, name, s, blob, session);
       await _remember();
@@ -879,7 +1081,10 @@ class VaultController extends ChangeNotifier {
     } on CloudflareApiException catch (e) {
       return (error: _apiText(e), vaultMismatch: false);
     } on SyncNetworkException catch (e) {
-      return (error: tr('Không kết nối được máy chủ ({p0}).', {'p0': e.message}), vaultMismatch: false);
+      return (
+        error: tr('Không kết nối được máy chủ ({p0}).', {'p0': e.message}),
+        vaultMismatch: false,
+      );
     } finally {
       busy = false;
       notifyListeners();
@@ -887,11 +1092,23 @@ class VaultController extends ChangeNotifier {
   }
 
   /// Dùng kho vừa tải từ máy chủ làm kho trên máy này và vào app.
-  Future<void> _adoptDownloadedVault(String base, String username, CloudflareSession s, RemoteBlob blob, VaultSession session) async {
+  Future<void> _adoptDownloadedVault(
+    String base,
+    String username,
+    CloudflareSession s,
+    RemoteBlob blob,
+    VaultSession session,
+  ) async {
     _session = session;
     await VaultStorage.writeAtomic(_file, blob.bytes);
     _saveCfSession(s);
-    await _updateSettings(() => _syncConfig = {'type': 'cloudflare', 'url': base, 'username': s.username.isEmpty ? username : s.username});
+    await _updateSettings(
+      () => _syncConfig = {
+        'type': 'cloudflare',
+        'url': base,
+        'username': s.username.isEmpty ? username : s.username,
+      },
+    );
     provider = CloudflareSync(_cfApi, s, onSession: _saveCfSession);
     syncStatus = SyncStatus.idle;
     _syncState = SyncState(baseBytes: blob.bytes, remoteVersion: blob.version);
@@ -902,9 +1119,11 @@ class VaultController extends ChangeNotifier {
     _scheduleNotifications();
   }
 
-  Future<List<CloudflareDevice>> cloudflareDevices() => _cfApi.devices(cfSession!);
+  Future<List<CloudflareDevice>> cloudflareDevices() =>
+      _cfApi.devices(cfSession!);
 
-  Future<void> revokeCloudflareDevice(String id) => _cfApi.revokeDevice(cfSession!, id);
+  Future<void> revokeCloudflareDevice(String id) =>
+      _cfApi.revokeDevice(cfSession!, id);
 
   Future<void> signOutCloudflare() async {
     final s = cfSession;
@@ -933,7 +1152,8 @@ class VaultController extends ChangeNotifier {
     String? recoveryKey,
   }) async {
     final base = url.trim();
-    if (!isAllowedServerUrl(base)) return tr('Địa chỉ máy chủ phải bắt đầu bằng https://');
+    if (!isAllowedServerUrl(base))
+      return tr('Địa chỉ máy chủ phải bắt đầu bằng https://');
     busy = true;
     notifyListeners();
     try {
@@ -943,7 +1163,9 @@ class VaultController extends ChangeNotifier {
       final blob = await CloudflareSync(_cfApi, s).fetch();
       if (blob == null) {
         await _cfApi.logout(s);
-        return tr('Tài khoản này chưa có kho trên máy chủ. Hãy tạo kho ở máy đầu tiên rồi bật đồng bộ.');
+        return tr(
+          'Tài khoản này chưa có kho trên máy chủ. Hãy tạo kho ở máy đầu tiên rồi bật đồng bộ.',
+        );
       }
       final bytes = blob.bytes;
       final VaultSession session;
@@ -956,7 +1178,9 @@ class VaultController extends ChangeNotifier {
         }
       } on AuthenticationFailedException {
         await _cfApi.logout(s);
-        return tr('Sai mật khẩu kho hoặc mã khôi phục (đây là mật khẩu của KHO, khác mật khẩu tài khoản).');
+        return tr(
+          'Sai mật khẩu kho hoặc mã khôi phục (đây là mật khẩu của KHO, khác mật khẩu tài khoản).',
+        );
       } on VaultException catch (e) {
         await _cfApi.logout(s);
         return tr('Không mở được kho: {p0}', {'p0': e.message});
@@ -979,10 +1203,12 @@ class VaultController extends ChangeNotifier {
   // ---- Google Drive ----
 
   String _driveError(Object e) => switch (e) {
-        SyncAuthException() => e.message,
-        SyncNetworkException() => tr('Không kết nối được Google Drive ({p0}).', {'p0': e.message}),
-        _ => tr('Lỗi Google Drive: {p0}', {'p0': e}),
-      };
+    SyncAuthException() => e.message,
+    SyncNetworkException() => tr('Không kết nối được Google Drive ({p0}).', {
+      'p0': e.message,
+    }),
+    _ => tr('Lỗi Google Drive: {p0}', {'p0': e}),
+  };
 
   /// Màn đầu: đăng nhập Google rồi xem Drive đã có kho chưa. `hasVault` = true thì phải MỞ kho (cần mật khẩu của kho),
   /// ngược lại thì TẠO kho mới.
@@ -1008,7 +1234,9 @@ class VaultController extends ChangeNotifier {
   Future<void> _useDrive(DriveAccountAuth auth) async {
     _driveAuth = auth;
     _pendingDriveAuth = null;
-    await _updateSettings(() => _syncConfig = {'type': 'drive', 'account': auth.email ?? ''});
+    await _updateSettings(
+      () => _syncConfig = {'type': 'drive', 'account': auth.email ?? ''},
+    );
     provider = DriveSync(auth, base: driveBase);
     syncStatus = SyncStatus.idle;
   }
@@ -1026,7 +1254,9 @@ class VaultController extends ChangeNotifier {
       // Kiểm tra lại: nếu máy khác vừa tạo kho trên Drive này thì không tạo đè, phải mở kho đó.
       if (await DriveSync(auth, base: driveBase).fetch() != null) {
         _pendingDriveAuth = null;
-        return tr('Google Drive này vừa có kho (tạo ở máy khác). Hãy quay lại và đăng nhập Google lại để mở kho đó.');
+        return tr(
+          'Google Drive này vừa có kho (tạo ở máy khác). Hãy quay lại và đăng nhập Google lại để mở kho đó.',
+        );
       }
       final (session, recovery) = await isoCreateCalibrated(password);
       session.payload = const VaultData().toJson();
@@ -1066,7 +1296,10 @@ class VaultController extends ChangeNotifier {
       _session = session;
       await VaultStorage.writeAtomic(_file, blob.bytes);
       await _useDrive(auth);
-      _syncState = SyncState(baseBytes: blob.bytes, remoteVersion: blob.version);
+      _syncState = SyncState(
+        baseBytes: blob.bytes,
+        remoteVersion: blob.version,
+      );
       await _saveSyncState();
       data = VaultData.fromJson(session.payload);
       noPassword = false;
@@ -1098,7 +1331,9 @@ class VaultController extends ChangeNotifier {
           await s.decryptRemote(blob.bytes);
         } on AuthenticationFailedException {
           await auth.signOut();
-          return tr('Google Drive này đã có một kho khác (khóa khác). Để dùng kho đó, hãy cài lại app và chọn đăng nhập Google ở màn đầu.');
+          return tr(
+            'Google Drive này đã có một kho khác (khóa khác). Để dùng kho đó, hãy cài lại app và chọn đăng nhập Google ở màn đầu.',
+          );
         }
       }
       await _useDrive(auth);
@@ -1115,18 +1350,24 @@ class VaultController extends ChangeNotifier {
   }
 
   String get syncLabel => switch (_syncConfig?['type']) {
-        'folder' => 'Thư mục: ${_syncConfig!['path']}',
-        'cloudflare' => 'Cloudflare: ${_syncConfig!['username'] ?? _syncConfig!['email']}',
-        'drive' => 'Google Drive: ${_syncConfig!['account'] ?? ''}',
-        _ => tr('Chưa bật'),
-      };
+    'folder' => 'Thư mục: ${_syncConfig!['path']}',
+    'cloudflare' =>
+      'Cloudflare: ${_syncConfig!['username'] ?? _syncConfig!['email']}',
+    'drive' => 'Google Drive: ${_syncConfig!['account'] ?? ''}',
+    _ => tr('Chưa bật'),
+  };
 
   Future<void> _loadSyncState() async {
     try {
       if (!await _syncStateFile.exists()) return;
-      final j = jsonDecode(await _syncStateFile.readAsString()) as Map<String, dynamic>;
+      final j = jsonDecode(
+        await _syncStateFile.readAsString(),
+      ) as Map<String, dynamic>;
       final b = j['base'];
-      _syncState = SyncState(baseBytes: b is String ? base64Decode(b) : null, remoteVersion: j['version'] as String?);
+      _syncState = SyncState(
+        baseBytes: b is String ? base64Decode(b) : null,
+        remoteVersion: j['version'] as String?,
+      );
       final t = j['lastSync'];
       if (t is String) lastSync = DateTime.tryParse(t);
     } on Object {
@@ -1138,7 +1379,8 @@ class VaultController extends ChangeNotifier {
     try {
       await _syncStateFile.writeAsString(
         jsonEncode({
-          if (_syncState.baseBytes != null) 'base': base64Encode(_syncState.baseBytes!),
+          if (_syncState.baseBytes != null)
+            'base': base64Encode(_syncState.baseBytes!),
           'version': _syncState.remoteVersion,
           if (lastSync != null) 'lastSync': lastSync!.toUtc().toIso8601String(),
         }),
@@ -1187,19 +1429,28 @@ class VaultController extends ChangeNotifier {
   Future<void> syncNow() async {
     final p = provider;
     final s = _session;
-    if (p == null || s == null || phase != Phase.unlocked || syncStatus == SyncStatus.syncing) return;
+    if (p == null ||
+        s == null ||
+        phase != Phase.unlocked ||
+        syncStatus == SyncStatus.syncing)
+      return;
     syncStatus = SyncStatus.syncing;
     syncError = null;
     notifyListeners();
     final snapshot = data;
     var editedDuringSync = false;
     try {
-      final out = await SyncService(p).sync(session: s, local: snapshot, state: _syncState);
+      final out = await SyncService(p)
+          .sync(session: s, local: snapshot, state: _syncState);
       var merged = out.data;
       if (!identical(data, snapshot)) {
         // Người dùng sửa trong lúc đang đồng bộ: gộp ba chiều (gốc = bản lúc bắt đầu) để không ghi đè mất phần vừa sửa.
         editedDuringSync = true;
-        merged = mergeVaults(local: data, remote: out.data, base: snapshot).merged;
+        merged = mergeVaults(
+          local: data,
+          remote: out.data,
+          base: snapshot,
+        ).merged;
       }
       data = merged;
       s.payload = data.toJson();
@@ -1211,26 +1462,35 @@ class VaultController extends ChangeNotifier {
       syncStatus = SyncStatus.idle;
     } on SyncNetworkException catch (e) {
       syncStatus = SyncStatus.error;
-      syncError = tr('Không kết nối được nơi đồng bộ ({p0}). Dữ liệu trên máy vẫn an toàn, sẽ thử lại sau.', {'p0': e.message});
+      syncError = tr(
+        'Không kết nối được nơi đồng bộ ({p0}). Dữ liệu trên máy vẫn an toàn, sẽ thử lại sau.',
+        {'p0': e.message},
+      );
     } on SyncAuthException catch (e) {
       syncStatus = SyncStatus.error;
       syncError = tr('Cần đăng nhập lại: {p0}', {'p0': e.message});
     } on AuthenticationFailedException {
       syncStatus = SyncStatus.error;
-      syncError = tr('Bản trên nơi đồng bộ dùng khóa khác (đã đổi mật khẩu hoặc xoay khóa ở máy khác). Hãy khóa rồi mở lại bằng mật khẩu mới.');
+      syncError = tr(
+        'Bản trên nơi đồng bộ dùng khóa khác (đã đổi mật khẩu hoặc xoay khóa ở máy khác). Hãy khóa rồi mở lại bằng mật khẩu mới.',
+      );
     } on VaultException catch (e) {
       syncStatus = SyncStatus.error;
       syncError = tr('Không đồng bộ được: {p0}', {'p0': e.message});
     } finally {
       notifyListeners();
-      if (editedDuringSync) _scheduleSync(); // bản vừa sửa chưa lên nơi đồng bộ: hẹn đồng bộ lại
+      if (editedDuringSync)
+        _scheduleSync(); // bản vừa sửa chưa lên nơi đồng bộ: hẹn đồng bộ lại
     }
   }
 
   /// Chọn bản cho một mục xung đột.
   void resolveConflictChoice(ItemConflict c, ConflictChoice choice) {
     upsert(resolveConflict(c, choice, clock: clock));
-    conflicts = [for (final x in conflicts) if (x.id != c.id) x];
+    conflicts = [
+      for (final x in conflicts)
+        if (x.id != c.id) x,
+    ];
     notifyListeners();
   }
 
@@ -1241,8 +1501,10 @@ class VaultController extends ChangeNotifier {
     if (seconds != LockPolicy.never) await _forget();
     await _updateSettings(() => lockAfterSeconds = seconds);
   }
+
   Future<void> setTheme(String mode) => _updateSettings(() => themeMode = mode);
-  Future<void> setLanguage(String lang) => _updateSettings(() => language = lang);
+  Future<void> setLanguage(String lang) =>
+      _updateSettings(() => language = lang);
   Future<void> setAccent(int i) => _updateSettings(() => accent = i);
   Future<void> setGroupBy(GroupBy g) => _updateSettings(() => groupBy = g);
 
@@ -1254,15 +1516,16 @@ class VaultController extends ChangeNotifier {
 
   /// Gán màu cho thẻ ([color] null = bỏ gán, về màu mặc định).
   Future<void> setTagColor(String name, Color? color) => _updateSettings(() {
-        final m = {...tagColors};
-        if (color == null) {
-          m.remove(name);
-        } else {
-          m[name] = color.toARGB32();
-        }
-        tagColors = m;
-      });
+    final m = {...tagColors};
+    if (color == null) {
+      m.remove(name);
+    } else {
+      m[name] = color.toARGB32();
+    }
+    tagColors = m;
+  });
   Future<void> setSortBy(SortBy s) => _updateSettings(() => sortBy = s);
+
   /// Ghi nhớ loại mục vừa tạo (không báo giao diện dựng lại).
   void rememberType(ItemType t) {
     if (t == lastType) return;
@@ -1295,8 +1558,12 @@ class VaultController extends ChangeNotifier {
           SettingsKey.blockScreenshots: blockScreenshots,
           SettingsKey.showLogos: showLogos,
           SettingsKey.tagColors: tagColors,
+          SettingsKey.extraTags: extraTags,
           SettingsKey.lastType: lastType.name,
-          SettingsKey.snooze: {for (final e in snoozed.entries) e.key: e.value.toUtc().toIso8601String()},
+          SettingsKey.snooze: {
+            for (final e in snoozed.entries)
+              e.key: e.value.toUtc().toIso8601String(),
+          },
           if (_syncConfig != null) SettingsKey.sync: _syncConfig,
         }),
         flush: true,
@@ -1318,7 +1585,11 @@ class VaultController extends ChangeNotifier {
   }
 
   void onBackground() {
-    if (phase != Phase.unlocked || _external || noPassword || lockAfterSeconds == LockPolicy.never) return;
+    if (phase != Phase.unlocked ||
+        _external ||
+        noPassword ||
+        lockAfterSeconds == LockPolicy.never)
+      return;
     if (lockAfterSeconds == 0) {
       unawaited(lock());
     } else {
@@ -1330,7 +1601,9 @@ class VaultController extends ChangeNotifier {
     unawaited(syncNow());
     final p = _pausedAt;
     _pausedAt = null;
-    if (p != null && phase == Phase.unlocked && DateTime.now().difference(p).inSeconds >= lockAfterSeconds) {
+    if (p != null &&
+        phase == Phase.unlocked &&
+        DateTime.now().difference(p).inSeconds >= lockAfterSeconds) {
       unawaited(lock());
     }
   }
@@ -1361,12 +1634,13 @@ class VaultController extends ChangeNotifier {
 
   /// Xóa vĩnh viễn mọi mục trong thùng rác.
   void emptyTrash() => mutate((d) {
-        var out = d;
-        for (final i in d.items.where((i) => i.inTrash)) {
-          out = out.purge(i.id, clock: clock);
-        }
-        return out;
-      });
+    var out = d;
+    for (final i in d.items.where((i) => i.inTrash)) {
+      out = out.purge(i.id, clock: clock);
+    }
+    return out;
+  });
+
   /// Thêm bộ dữ liệu mẫu (giả) để xem giao diện. Trả về số mục đã thêm.
   int addDemoData() {
     final items = buildDemoItems(clock);
@@ -1405,13 +1679,36 @@ class VaultController extends ChangeNotifier {
   }
 
   /// Các nhóm đang có (từ mục chưa vào thùng rác), sắp theo tên.
-  List<String> get groups => data.items.where((i) => !i.inTrash && i.group.isNotEmpty).map((i) => i.group).toSet().toList()..sort();
-  int countInGroup(String g) => data.items.where((i) => !i.inTrash && i.group == g).length;
+  List<String> get groups => ({
+    ...data.items
+        .where((i) => !i.inTrash && i.group.isNotEmpty)
+        .map((i) => i.group),
+    ...extraTags,
+  }).toList()..sort();
+
+  /// Tạo thẻ mới (chưa gắn mục nào). Tên đã có thì không làm gì.
+  Future<void> addTag(String name) {
+    final n = name.trim();
+    if (n.isEmpty || groups.contains(n)) return Future.value();
+    return _updateSettings(() => extraTags = [...extraTags, n]);
+  }
+
+  int countInGroup(String g) =>
+      data.items.where((i) => !i.inTrash && i.group == g).length;
 
   /// Đổi tên nhóm (kể cả mục trong thùng rác, để khôi phục không mất nhóm). Trùng tên nhóm khác thì gộp vào.
   void renameGroup(String from, String to) {
     final name = to.trim();
     if (name.isEmpty || name == from) return;
+    if (extraTags.contains(from)) {
+      unawaited(
+        _updateSettings(
+          () =>
+              extraTags = {for (final t in extraTags) t == from ? name : t}
+                  .toList(),
+        ),
+      );
+    }
     mutate((d) {
       var out = d;
       for (final i in d.items.where((i) => i.group == from)) {
@@ -1423,6 +1720,12 @@ class VaultController extends ChangeNotifier {
 
   /// Xóa nhóm: các mục KHÔNG bị xóa, chỉ thành "không nhóm".
   void deleteGroup(String g) {
+    if (extraTags.contains(g))
+      unawaited(
+        _updateSettings(
+          () => extraTags = extraTags.where((t) => t != g).toList(),
+        ),
+      );
     mutate((d) {
       var out = d;
       for (final i in d.items.where((i) => i.group == g)) {
@@ -1432,15 +1735,23 @@ class VaultController extends ChangeNotifier {
     });
   }
 
-  void toggleFavorite(Item i) => upsert(i.edit(clock: clock, favorite: !i.favorite));
+  void toggleFavorite(Item i) =>
+      upsert(i.edit(clock: clock, favorite: !i.favorite));
+
   /// HOTP: tăng bộ đếm để lấy mã kế tiếp.
   void hotpNext(Item i) {
     final t = i.totp;
     if (t == null || !t.isHotp) return;
-    upsert(i.edit(clock: clock, totp: t.copyWith(counter: t.counter + 1)));
+    upsert(
+      i.edit(
+        clock: clock,
+        totp: t.copyWith(counter: t.counter + 1),
+      ),
+    );
   }
 
-  void changePassword(Item i, String newPassword) => upsert(i.changePassword(newPassword, clock: clock));
+  void changePassword(Item i, String newPassword) =>
+      upsert(i.changePassword(newPassword, clock: clock));
 
   /// Chỉ dùng trong test: vào thẳng trạng thái đã mở, không cần đĩa hay mật mã.
   @visibleForTesting
