@@ -246,8 +246,12 @@ final class CloudflareSync implements SyncProvider {
   final CloudflareApi api;
   CloudflareSession _session;
 
-  /// Gọi mỗi khi token đổi (để lưu lại refresh token mới).
-  final void Function(CloudflareSession)? onSession;
+  /// Gọi mỗi khi token đổi (để lưu lại refresh token mới). Được chờ xong trước khi dùng token mới, để app bị tắt
+  /// ngay sau đó cũng không còn giữ refresh token đã bị thay.
+  final FutureOr<void> Function(CloudflareSession)? onSession;
+
+  /// Lần làm mới đang chạy, nếu có. Mọi lời gọi cùng lúc dùng chung một lần: không gửi cùng một refresh token hai lần.
+  Future<void>? _refreshing;
 
   CloudflareSession get session => _session;
 
@@ -255,13 +259,18 @@ final class CloudflareSync implements SyncProvider {
   String get name => 'cloudflare';
 
   Future<void> _ensureFresh() async {
+    final running = _refreshing;
+    if (running != null) return running;
     if (_session.expiresAt.difference(DateTime.now()) > CloudflareApi.refreshMargin) return;
     await _refresh();
   }
 
-  Future<void> _refresh() async {
-    _session = await api.refresh(_session);
-    onSession?.call(_session);
+  Future<void> _refresh() => _refreshing ??= _doRefresh().whenComplete(() => _refreshing = null);
+
+  Future<void> _doRefresh() async {
+    final next = await api.refresh(_session);
+    _session = next;
+    await onSession?.call(next);
   }
 
   Future<(int, Uint8List, HttpHeaders)> _authed(Future<(int, Uint8List, HttpHeaders)> Function(String token) call) async {
@@ -286,6 +295,34 @@ final class CloudflareSync implements SyncProvider {
     if (r.$1 == 204) return;
     if (r.$1 == 401) throw const SyncAuthException('Phiên đăng nhập không còn hiệu lực. Hãy đăng nhập lại.');
     throw api._apiError(r.$1, r.$2);
+  }
+
+  /// Danh sách thiết bị của tài khoản (tự làm mới phiên nếu access token đã hết hạn).
+  Future<List<CloudflareDevice>> devices() async {
+    await _ensureFresh();
+    try {
+      return await api.devices(_session);
+    } on SyncAuthException {
+      await _refresh(); // token bị từ chối dù chưa hết hạn theo đồng hồ máy: thử làm mới một lần
+      return api.devices(_session);
+    }
+  }
+
+  /// Gỡ một thiết bị của tài khoản (tự làm mới phiên nếu cần).
+  Future<void> revokeDevice(String id) async {
+    await _ensureFresh();
+    try {
+      await api.revokeDevice(_session, id);
+    } on SyncAuthException {
+      await _refresh();
+      await api.revokeDevice(_session, id);
+    }
+  }
+
+  /// Đăng xuất thiết bị này trên máy chủ (gỡ thiết bị). Tự làm mới phiên trước, để access token hết hạn
+  /// không làm lần đăng xuất âm thầm thất bại mà thiết bị vẫn còn quyền trên máy chủ.
+  Future<void> logout() async {
+    await _authed((t) => api.send('POST', _session.baseUrl, '/auth/logout', token: t));
   }
 
   /// Đổi khóa đăng nhập trên máy chủ (sau khi đổi mật khẩu). Máy chủ gỡ các thiết bị khác của tài khoản.

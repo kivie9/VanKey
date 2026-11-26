@@ -74,6 +74,38 @@ Future<void> main() async {
     );
   });
 
+  test('làm mới token: nhiều lời gọi cùng lúc chỉ làm mới một lần, chờ lưu token xong, thiết bị không bị gỡ', skip: skip, () async {
+    final srv = await NodeServer.start();
+    addTearDown(srv.stop);
+    final s0 = await api.register(srv.url, 'refresh.user', await authKey('mk-refresh'), 'Máy A');
+    // Access token coi như đã hết hạn: lời gọi kế tiếp nào cũng phải làm mới trước.
+    final expired = s0.withTokens(s0.accessToken, s0.refreshToken, DateTime.now().subtract(const Duration(minutes: 1)));
+    final saved = <CloudflareSession>[];
+    final sync = CloudflareSync(api, expired, onSession: (n) async {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      saved.add(n);
+    });
+    // Màn Thiết bị và đồng bộ chạy cùng lúc (trước đây: gửi cùng một refresh token hai lần → máy chủ gỡ thiết bị).
+    final results = await Future.wait([sync.devices(), sync.fetch(), sync.devices()]);
+    expect(saved, hasLength(1), reason: 'chỉ một lần làm mới');
+    expect(sync.session.refreshToken, saved.single.refreshToken, reason: 'token mới đã được lưu trước khi dùng');
+    expect((results[0] as List<CloudflareDevice>).single.current, isTrue);
+    // Thiết bị vẫn còn hiệu lực: làm mới tiếp được.
+    expect(await api.refresh(sync.session), isA<CloudflareSession>());
+  });
+
+  test('màn Thiết bị và đăng xuất dùng được khi access token đã hết hạn', skip: skip, () async {
+    final srv = await NodeServer.start();
+    addTearDown(srv.stop);
+    final s0 = await api.register(srv.url, 'logout.user', await authKey('mk-logout'), 'Máy A');
+    final expired = s0.withTokens(s0.accessToken, s0.refreshToken, DateTime.now().subtract(const Duration(minutes: 1)));
+    final sync = CloudflareSync(api, expired);
+    expect(await sync.devices(), hasLength(1));
+    await sync.logout();
+    // Đăng xuất đã gỡ thiết bị trên máy chủ: refresh token không còn dùng được.
+    await expectLater(api.refresh(sync.session), throwsA(isA<SyncAuthException>()));
+  });
+
   test('hai thiết bị đồng bộ kho thật qua HTTP: thêm, gộp, mã hóa đầu cuối', skip: skip, () async {
     final srv = await NodeServer.start();
     addTearDown(srv.stop);

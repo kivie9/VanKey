@@ -46,6 +46,26 @@ jobs:
 
       - run: flutter pub get
 
+      # Khóa ký bản phát hành (tạo bằng tao-khoa-ky-android.cmd). Thiếu secret thì dừng hẳn: bản ký bằng khóa debug
+      # của CI đổi mỗi lần chạy, không cài đè được bản cũ (người dùng phải gỡ app và mất kho trên máy).
+      - name: Khóa ký Android
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ] || [ -z "$KEYSTORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ]; then
+            echo "::error::Chưa đặt secret ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS (xem tao-khoa-ky-android.ps1)."
+            exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          {
+            echo "storeFile=$RUNNER_TEMP/release.jks"
+            echo "storePassword=$KEYSTORE_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=$KEYSTORE_PASSWORD"
+          } > android/key.properties
+
       - run: flutter build apk --release
 
       - uses: actions/upload-artifact@v4

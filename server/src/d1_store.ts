@@ -47,6 +47,7 @@ function toDevice(r: Row): Device {
     expiresAt: r.expires_at as number,
     revoked: (r.revoked as number) === 1,
     prevRefreshHash: (r.prev_refresh_hash as string | null) ?? null,
+    rotatedAt: Number(r.rotated_at ?? 0),
   };
 }
 
@@ -114,11 +115,12 @@ export class D1Store implements Store {
     return r ? toDevice(r) : null;
   }
 
-  async updateDevice(id: string, patch: Partial<Pick<Device, 'refreshHash' | 'prevRefreshHash' | 'lastSeen' | 'expiresAt' | 'revoked'>>): Promise<void> {
+  async updateDevice(id: string, patch: Partial<Pick<Device, 'refreshHash' | 'prevRefreshHash' | 'rotatedAt' | 'lastSeen' | 'expiresAt' | 'revoked'>>): Promise<void> {
     const sets: string[] = [];
     const vals: unknown[] = [];
     if (patch.refreshHash !== undefined) { sets.push('refresh_hash = ?'); vals.push(patch.refreshHash); }
     if (patch.prevRefreshHash !== undefined) { sets.push('prev_refresh_hash = ?'); vals.push(patch.prevRefreshHash); }
+    if (patch.rotatedAt !== undefined) { sets.push('rotated_at = ?'); vals.push(patch.rotatedAt); }
     if (patch.lastSeen !== undefined) { sets.push('last_seen = ?'); vals.push(patch.lastSeen); }
     if (patch.expiresAt !== undefined) { sets.push('expires_at = ?'); vals.push(patch.expiresAt); }
     if (patch.revoked !== undefined) { sets.push('revoked = ?'); vals.push(patch.revoked ? 1 : 0); }

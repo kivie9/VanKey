@@ -23,6 +23,8 @@ export interface Device {
   revoked: boolean;
   /** Hash của refresh token ngay trước token hiện hành; dùng để phát hiện tái sử dụng. null nếu chưa xoay vòng. */
   prevRefreshHash?: string | null;
+  /** Giây UNIX lúc xoay vòng refresh token gần nhất (0 nếu chưa xoay). */
+  rotatedAt?: number;
 }
 
 export interface VaultRow {
@@ -56,7 +58,7 @@ export interface Store {
   deviceByRefreshHash(hash: string): Promise<Device | null>;
   /** Thiết bị mà token ngay trước đó có hash này (token đã bị thay). */
   deviceByPrevRefreshHash(hash: string): Promise<Device | null>;
-  updateDevice(id: string, patch: Partial<Pick<Device, 'refreshHash' | 'prevRefreshHash' | 'lastSeen' | 'expiresAt' | 'revoked'>>): Promise<void>;
+  updateDevice(id: string, patch: Partial<Pick<Device, 'refreshHash' | 'prevRefreshHash' | 'rotatedAt' | 'lastSeen' | 'expiresAt' | 'revoked'>>): Promise<void>;
   devicesOf(userId: string): Promise<Device[]>;
   /** Gỡ mọi thiết bị của tài khoản trừ `keepId`. */
   revokeDevicesExcept(userId: string, keepId: string): Promise<void>;

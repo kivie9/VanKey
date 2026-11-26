@@ -25,6 +25,8 @@ echo === Cai len dien thoai ===
 "%ADB%" install -r build\app\outputs\flutter-apk\app-arm64-v8a-release.apk
 if errorlevel 1 (
   echo Cai khong thanh cong. Neu bao "offline": rut cap cam lai, hoac tat/bat lai Go loi USB.
+  echo Neu bao INSTALL_FAILED_UPDATE_INCOMPATIBLE: ban tren may ky bang khoa khac ^(khoa debug cu^).
+  echo   Dong bo hoac xuat sao luu truoc, go app tren dien thoai MOT lan, roi chay lai. KHONG go khi chua sao luu.
   goto :end
 )
 echo.

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { createHandler, ACCESS_TTL, MAX_VAULT_BYTES } from '../src/handler.ts';
+import { createHandler, ACCESS_TTL, MAX_VAULT_BYTES, REFRESH_REUSE_GRACE } from '../src/handler.ts';
 import type { Config } from '../src/handler.ts';
 import { MemoryStore } from '../src/memory_store.ts';
 import { toBase64, randomBytes } from '../src/util.ts';
@@ -101,6 +101,7 @@ test('refresh xoay vòng: token cũ không dùng lại được', async () => {
   assert.notEqual(n.refreshToken, body.refreshToken);
   assert.equal(n.deviceId, body.deviceId);
 
+  s.clock.advance(REFRESH_REUSE_GRACE + 1);
   const reuse = await s.call('POST', '/auth/refresh', { body: { refreshToken: body.refreshToken } });
   assert.equal(reuse.status, 401);
   // Dùng lại token cũ bị coi là lộ token: thiết bị bị gỡ, token mới cũng mất hiệu lực.
@@ -113,11 +114,49 @@ test('dùng lại refresh token cũ gỡ thiết bị, kể cả khi kẻ tấn 
   const { body } = await register(s);
   // Máy thật xoay vòng trước.
   const real = (await (await s.call('POST', '/auth/refresh', { body: { refreshToken: body.refreshToken } })).json()) as any;
-  // Kẻ tấn công có token cũ, dùng lại.
+  // Kẻ tấn công có token cũ, dùng lại (sau khoảng ân hạn).
+  s.clock.advance(REFRESH_REUSE_GRACE + 1);
   assert.equal((await s.call('POST', '/auth/refresh', { body: { refreshToken: body.refreshToken } })).status, 401);
   // Máy thật bị đăng xuất để đăng nhập lại: đây là cái giá có chủ đích.
   assert.equal((await s.call('POST', '/auth/refresh', { body: { refreshToken: real.refreshToken } })).status, 401);
   assert.equal(s.store.devices.get(body.deviceId)!.revoked, true);
+});
+
+test('gửi lại token vừa bị thay (mất phản hồi) trong khoảng ân hạn: không bị đăng xuất', async () => {
+  const s = setup();
+  const { body } = await register(s);
+  // Máy chủ đã xoay vòng nhưng phản hồi bị mất: máy chỉ còn token cũ và gửi lại.
+  assert.equal((await s.call('POST', '/auth/refresh', { body: { refreshToken: body.refreshToken } })).status, 200);
+  s.clock.advance(REFRESH_REUSE_GRACE - 5);
+  const retry = await s.call('POST', '/auth/refresh', { body: { refreshToken: body.refreshToken } });
+  assert.equal(retry.status, 200);
+  const n = (await retry.json()) as any;
+  assert.equal(s.store.devices.get(body.deviceId)!.revoked, false);
+  assert.equal((await s.call('GET', '/devices', { token: n.accessToken })).status, 200);
+  // Token cũ chỉ được ân hạn một lần: lần xoay vừa rồi đẩy nó khỏi prevRefreshHash.
+  assert.equal((await s.call('POST', '/auth/refresh', { body: { refreshToken: body.refreshToken } })).status, 401);
+  assert.equal(s.store.devices.get(body.deviceId)!.revoked, false);
+  // Token mới nhất vẫn dùng tiếp được.
+  assert.equal((await s.call('POST', '/auth/refresh', { body: { refreshToken: n.refreshToken } })).status, 200);
+});
+
+test('hai yêu cầu làm mới song song cùng một token: cả hai dùng tiếp được, thiết bị không bị gỡ', async () => {
+  const s = setup();
+  const { body } = await register(s);
+  const [a, b] = await Promise.all([
+    s.call('POST', '/auth/refresh', { body: { refreshToken: body.refreshToken } }),
+    s.call('POST', '/auth/refresh', { body: { refreshToken: body.refreshToken } }),
+  ]);
+  assert.equal(a.status, 200);
+  assert.equal(b.status, 200);
+  // Máy giữ token của phản hồi nào về sau cũng được.
+  const ta = ((await a.json()) as any).refreshToken;
+  const tb = ((await b.json()) as any).refreshToken;
+  s.clock.advance(10);
+  const ok = [];
+  for (const t of [ta, tb]) ok.push((await s.call('POST', '/auth/refresh', { body: { refreshToken: t } })).status);
+  assert.ok(ok.includes(200));
+  assert.equal(s.store.devices.get(body.deviceId)!.revoked, false);
 });
 
 test('refresh không gia hạn mãi: sau 90 ngày kể từ lúc đăng nhập thì bắt buộc đăng nhập lại', async () => {

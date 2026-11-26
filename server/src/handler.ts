@@ -23,6 +23,12 @@ export interface Deps {
 
 export const ACCESS_TTL = 15 * 60;
 export const REFRESH_TTL = 90 * 24 * 3600;
+/**
+ * Token ngay trước token hiện hành còn được chấp nhận trong chừng này giây sau khi bị thay: máy gửi lại vì mất phản hồi
+ * (mạng di động chập chờn) hoặc hai yêu cầu làm mới song song không bị đăng xuất. Quá khoảng này mà còn dùng lại thì
+ * coi là lộ token và gỡ thiết bị.
+ */
+export const REFRESH_REUSE_GRACE = 60;
 export const MAX_VAULT_BYTES = 1_500_000; // dưới giới hạn ~2 MB mỗi dòng của D1
 export const DEFAULT_MAX_USERS = 200;
 export const MIN_REGISTER_CODE = 12;
@@ -149,7 +155,7 @@ export function createHandler(deps: Deps): (req: Request) => Promise<Response> {
     if (existing) {
       deviceId = existing.id;
       // Giữ hash của token vừa bị thay để phát hiện khi có người dùng lại nó (xem refresh()).
-      await store.updateDevice(existing.id, { refreshHash, lastSeen: t, expiresAt: t + REFRESH_TTL, prevRefreshHash: existing.refreshHash });
+      await store.updateDevice(existing.id, { refreshHash, lastSeen: t, expiresAt: t + REFRESH_TTL, prevRefreshHash: existing.refreshHash, rotatedAt: t });
     } else {
       // Giới hạn số thiết bị: gỡ thiết bị lâu không dùng nhất để không phình bảng.
       const active = await store.devicesOf(user.id);
@@ -292,13 +298,19 @@ export function createHandler(deps: Deps): (req: Request) => Promise<Response> {
     const token = str(body?.refreshToken, 200);
     if (!token) return err(400, 'bad_request', 'Thiếu refreshToken');
     const hash = toHex(await sha256(utf8(token)));
-    const device = await store.deviceByRefreshHash(hash);
+    let device = await store.deviceByRefreshHash(hash);
     if (!device) {
-      // Token này đã được thay bằng token mới trước đó. Có người dùng lại token cũ
-      // (bị đánh cắp, hoặc máy bị lỗi và gửi lại): gỡ thiết bị để buộc đăng nhập lại.
+      // Token này đã được thay bằng token mới trước đó.
       const stale = await store.deviceByPrevRefreshHash(hash);
-      if (stale && !stale.revoked) await store.updateDevice(stale.id, { revoked: true });
-      return err(401, 'invalid_refresh', 'Refresh token không hợp lệ hoặc đã hết hạn');
+      if (!stale || stale.revoked) return err(401, 'invalid_refresh', 'Refresh token không hợp lệ hoặc đã hết hạn');
+      if (now() - (stale.rotatedAt ?? 0) > REFRESH_REUSE_GRACE) {
+        // Dùng lại lâu sau khi đã bị thay (bị đánh cắp): gỡ thiết bị để buộc đăng nhập lại.
+        await store.updateDevice(stale.id, { revoked: true });
+        return err(401, 'invalid_refresh', 'Refresh token không hợp lệ hoặc đã hết hạn');
+      }
+      // Vừa bị thay (máy gửi lại vì mất phản hồi, hoặc làm mới song song): cấp tiếp. Lần xoay này đẩy token cũ ra
+      // khỏi `prevRefreshHash`, nên nó không dùng lại được lần nữa.
+      device = stale;
     }
     // Hết hạn tuyệt đối: tính từ lúc đăng nhập, không gia hạn mãi bằng cách xoay vòng.
     if (device.revoked || device.expiresAt <= now() || device.createdAt + REFRESH_TTL <= now()) {

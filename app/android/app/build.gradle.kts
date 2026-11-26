@@ -1,8 +1,19 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// Khóa ký bản phát hành: đọc từ android/key.properties (KHÔNG commit, đã có trong .gitignore).
+// Tạo bằng tao-khoa-ky-android.cmd ở gốc dự án. Mọi bản cài lên máy phải ký cùng một khóa, nếu không Android
+// không cho cài đè và người dùng buộc phải gỡ app (gỡ app là mất kho trên máy).
+val keyProps = Properties().apply {
+    val f = rootProject.file("key.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+val hasReleaseKey = keyProps.getProperty("storeFile") != null
 
 android {
     namespace = "com.vankey.vankey"
@@ -30,11 +41,29 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseKey) {
+            create("release") {
+                storeFile = rootProject.file(keyProps.getProperty("storeFile"))
+                storePassword = keyProps.getProperty("storePassword")
+                keyAlias = keyProps.getProperty("keyAlias")
+                keyPassword = keyProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (hasReleaseKey) {
+                signingConfigs.getByName("release")
+            } else if (System.getenv("CI") != null) {
+                // Trên CI không bao giờ ký bằng khóa debug: mỗi lần chạy CI là một khóa debug mới, bản phát hành
+                // sẽ không cài đè được bản cũ.
+                throw GradleException("Thiếu android/key.properties: chưa đặt secret khóa ký Android cho CI.")
+            } else {
+                logger.warn("CẢNH BÁO: chưa có android/key.properties, bản release đang ký bằng khóa DEBUG của máy này.")
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }

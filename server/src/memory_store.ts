@@ -56,7 +56,7 @@ export class MemoryStore implements Store {
     return null;
   }
 
-  async updateDevice(id: string, patch: Partial<Pick<Device, 'refreshHash' | 'prevRefreshHash' | 'lastSeen' | 'expiresAt' | 'revoked'>>): Promise<void> {
+  async updateDevice(id: string, patch: Partial<Pick<Device, 'refreshHash' | 'prevRefreshHash' | 'rotatedAt' | 'lastSeen' | 'expiresAt' | 'revoked'>>): Promise<void> {
     const d = this.devices.get(id);
     if (d) Object.assign(d, patch);
   }

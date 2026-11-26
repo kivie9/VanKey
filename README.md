@@ -31,6 +31,8 @@ flutter run --release -d <mã thiết bị>         # cài lên điện thoại 
 dart run tool/import_check.dart <file> --titles --codes   # thử nhập file xuất thật, in mã 2FA để so với app cũ
 ```
 
+**Ký bản phát hành Android:** chạy `tao-khoa-ky-android.cmd` một lần để tạo khóa (nằm ở `%USERPROFILE%ankey-signing`) và `app/android/key.properties`. Chưa có khóa thì bản build trên máy ký bằng khóa debug (có cảnh báo), còn CI dừng hẳn. Cất file `.jks` và mật khẩu ở nơi an toàn: mất là không cập nhật đè được bản đã cài nữa.
+
 Lưu ý: dự án ở ổ khác với pub cache nên `android/gradle.properties` đặt `kotlin.incremental=false`.
 
 ## Bảo mật: điều cần nhớ

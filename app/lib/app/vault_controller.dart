@@ -840,13 +840,15 @@ class VaultController extends ChangeNotifier {
     }
   }
 
-  void _saveCfSession(CloudflareSession s) {
+  /// Lưu phiên máy chủ vào kho an toàn. Được chờ xong sau mỗi lần làm mới token: nếu app bị tắt trước khi lưu,
+  /// lần mở sau sẽ gửi refresh token đã bị thay và máy chủ có thể gỡ thiết bị này.
+  Future<void> _saveCfSession(CloudflareSession s) async {
     cfSession = s;
-    unawaited(
-      _secure
-          .write(key: _cfKey, value: jsonEncode(s.toJson()))
-          .catchError((Object _) {}),
-    );
+    try {
+      await _secure.write(key: _cfKey, value: jsonEncode(s.toJson()));
+    } on Object {
+      // Không lưu được thì phiên vẫn dùng được tới khi tắt app.
+    }
   }
 
   /// Đăng nhập (hoặc đăng ký) tài khoản máy chủ và bật đồng bộ. Trả về thông báo lỗi, hoặc null nếu thành công.
@@ -876,7 +878,7 @@ class VaultController extends ChangeNotifier {
               registerCode: registerCode.trim(),
             )
           : await _cfLogin(base, name, password);
-      _saveCfSession(s);
+      await _saveCfSession(s);
       await _updateSettings(
         () => _syncConfig = {
           'type': 'cloudflare',
@@ -1006,7 +1008,7 @@ class VaultController extends ChangeNotifier {
       session.payload = const VaultData().toJson();
       _session = session;
       await _writeNow();
-      _saveCfSession(s);
+      await _saveCfSession(s);
       await _updateSettings(
         () => _syncConfig = {
           'type': 'cloudflare',
@@ -1101,7 +1103,7 @@ class VaultController extends ChangeNotifier {
   ) async {
     _session = session;
     await VaultStorage.writeAtomic(_file, blob.bytes);
-    _saveCfSession(s);
+    await _saveCfSession(s);
     await _updateSettings(
       () => _syncConfig = {
         'type': 'cloudflare',
@@ -1119,17 +1121,22 @@ class VaultController extends ChangeNotifier {
     _scheduleNotifications();
   }
 
-  Future<List<CloudflareDevice>> cloudflareDevices() =>
-      _cfApi.devices(cfSession!);
+  /// Phiên đồng bộ Cloudflare đang dùng (tự làm mới token), hoặc một phiên mới từ [cfSession].
+  CloudflareSync get _cfSync {
+    final p = provider;
+    return p is CloudflareSync
+        ? p
+        : CloudflareSync(_cfApi, cfSession!, onSession: _saveCfSession);
+  }
 
-  Future<void> revokeCloudflareDevice(String id) =>
-      _cfApi.revokeDevice(cfSession!, id);
+  Future<List<CloudflareDevice>> cloudflareDevices() => _cfSync.devices();
+
+  Future<void> revokeCloudflareDevice(String id) => _cfSync.revokeDevice(id);
 
   Future<void> signOutCloudflare() async {
-    final s = cfSession;
-    if (s != null) {
+    if (cfSession != null) {
       try {
-        await _cfApi.logout(s);
+        await _cfSync.logout();
       } on Object {
         // Không có mạng thì vẫn đăng xuất cục bộ.
       }

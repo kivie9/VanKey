@@ -5,13 +5,13 @@ import { DatabaseSync } from 'node:sqlite';
 import { test } from 'node:test';
 import { D1Store } from '../src/d1_store.ts';
 import type { D1Like } from '../src/d1_store.ts';
-import { createHandler, KDF_ITERATIONS } from '../src/handler.ts';
+import { createHandler, KDF_ITERATIONS, REFRESH_REUSE_GRACE } from '../src/handler.ts';
 import { pbkdf2, toBase64 } from '../src/util.ts';
 
 function sqliteD1(): D1Like {
   const db = new DatabaseSync(':memory:');
   db.exec('PRAGMA foreign_keys = ON');
-  for (const f of ['0001_init.sql', '0002_attempts_updated_at.sql', '0003_users_username.sql', '0004_users_kdf_iter.sql', '0005_devices_prev_refresh.sql']) db.exec(readFileSync(new URL(`../migrations/${f}`, import.meta.url), 'utf8'));
+  for (const f of ['0001_init.sql', '0002_attempts_updated_at.sql', '0003_users_username.sql', '0004_users_kdf_iter.sql', '0005_devices_prev_refresh.sql', '0006_devices_rotated_at.sql']) db.exec(readFileSync(new URL(`../migrations/${f}`, import.meta.url), 'utf8'));
   return {
     prepare(sql: string) {
       const stmt = db.prepare(sql);
@@ -179,12 +179,21 @@ test('D1: đổi mật khẩu, băm lại tài khoản cũ, xóa tài khoản x�
   assert.equal(await s.store.deviceById(a.deviceId), null);
 });
 
-test('D1: dùng lại refresh token cũ (cột prev_refresh_hash, migration 0005) gỡ thiết bị', async () => {
+test('D1: dùng lại refresh token cũ (migration 0005, 0006): ân hạn ngắn, quá hạn thì gỡ thiết bị', async () => {
   const s = setup();
   const a = (await (await s.call('POST', '/auth/register', { body: { username: USER, authKey: key(), deviceName: 'A' } })).json()) as any;
   const r1 = (await (await s.call('POST', '/auth/refresh', { body: { refreshToken: a.refreshToken } })).json()) as any;
   assert.equal(r1.refreshToken === undefined, false);
-  assert.equal((await s.call('POST', '/auth/refresh', { body: { refreshToken: a.refreshToken } })).status, 401);
+  // Trong khoảng ân hạn (cột rotated_at, migration 0006): gửi lại token vừa bị thay vẫn được cấp tiếp.
+  s.advance(10);
+  const r2 = (await (await s.call('POST', '/auth/refresh', { body: { refreshToken: r1.refreshToken } })).json()) as any;
+  const r3 = await s.call('POST', '/auth/refresh', { body: { refreshToken: r1.refreshToken } });
+  assert.equal(r3.status, 200);
+  const r3b = (await r3.json()) as any;
+  // Quá khoảng ân hạn: dùng lại token đã bị thay là lộ token, thiết bị bị gỡ.
+  s.advance(REFRESH_REUSE_GRACE + 1);
+  assert.equal((await s.call('POST', '/auth/refresh', { body: { refreshToken: r2.refreshToken } })).status, 401);
+  assert.equal((await s.call('GET', '/devices', { token: r3b.accessToken })).status, 401);
   assert.equal((await s.call('GET', '/devices', { token: r1.accessToken })).status, 401);
 });
 
