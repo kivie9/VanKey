@@ -24,6 +24,9 @@ Future<(VaultSession, RecoveryKey)> isoCreateWith(String passphrase, Argon2Param
 Future<VaultSession> isoOpenPassphrase(Uint8List bytes, String passphrase) =>
     Isolate.run(() => VaultSession.openWithPassphrase(bytes, passphrase));
 
+Future<VaultSession> isoOpenKey(Uint8List bytes, Uint8List key) =>
+    Isolate.run(() => VaultSession.openWithKey(bytes, key));
+
 Future<VaultSession> isoOpenRecovery(Uint8List bytes, RecoveryKey key) =>
     Isolate.run(() => VaultSession.openWithRecoveryKey(bytes, key));
 
@@ -33,4 +36,6 @@ Future<VaultSession> isoRewrap(VaultSession session, String passphrase, Argon2Pa
       return session;
     });
 
-Future<String> isoAuthKey(String email, String password) => Isolate.run(() => CloudflareApi.deriveAuthKey(email, password));
+Future<String> isoAuthKey(String username, String password) => Isolate.run(() => CloudflareApi.deriveAuthKey(username, password));
+
+Future<String> isoLegacyAuthKey(String username, String password) => Isolate.run(() => CloudflareApi.deriveLegacyAuthKey(username, password));

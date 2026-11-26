@@ -72,7 +72,7 @@
 | App (Dart) | Dữ liệu còn trong RAM sau khi khóa; GC không xóa được ngay | Xóa/ghi đè bộ đệm khóa khi khóa; giữ thời gian sống của bản rõ ngắn nhất có thể (**giới hạn đã biết**: Dart không bảo đảm xóa tuyệt đối) |
 | Lưu cục bộ | Đọc trực tiếp file | File luôn mã hóa; khóa thiết bị trong Keystore/Credential Manager |
 | Đồng bộ Drive | Token OAuth bị lấy | Token lưu trong kho an toàn của OS; scope tối thiểu `drive.appdata` |
-| Server Cloudflare | Tấn công đăng nhập, spam, chiếm slot lưu trữ | Giới hạn tốc độ, danh sách email cho phép (bản đầu), băm mật khẩu hai lớp, refresh token lưu dạng băm và thu hồi được |
+| Server Cloudflare | Tấn công đăng nhập, spam, chiếm slot lưu trữ | Giới hạn tốc độ theo IP và tài khoản, giới hạn số tài khoản, số lần đăng ký mỗi IP và số thiết bị, mã mời tùy chọn, băm mật khẩu hai lớp, refresh token lưu dạng băm và thu hồi được |
 | Nhập/xuất | File CSV/JSON không mã hóa nằm lại trên ổ đĩa | Cảnh báo rõ, yêu cầu passphrase, nhắc xóa file sau khi dùng |
 | Kiểm tra rò rỉ (HIBP) | Gửi mật khẩu ra ngoài | Chỉ gửi **5 ký tự đầu của mã băm SHA-1** (k-anonymity), không bao giờ gửi mật khẩu |
 | Thông báo | Lộ bí mật trên màn hình khóa | Chỉ ghi tên dịch vụ và hạn |

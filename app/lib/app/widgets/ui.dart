@@ -114,51 +114,48 @@ class AppLogo extends StatelessWidget {
         gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [c.accent, Color.lerp(c.accent, Colors.black, 0.25)!]),
         boxShadow: [BoxShadow(color: c.accent.withValues(alpha: 0.20), blurRadius: size * 0.45, offset: Offset(0, size * 0.12))],
       ),
-      child: CustomPaint(painter: _LogoMarkPainter()),
+      child: CustomPaint(painter: _LogoMarkPainter(c.accent)),
     );
   }
 }
 
-/// Hình logo: chữ V trắng viền đen và chiếc khiên ở đầu cánh trái. Hệ toạ độ 180x180 như docs/brand/vankey-logo.svg.
+/// Hình logo: khiên trắng lớn viền đậm, chữ V màu nhấn bên trong. Hệ toạ độ 180x180 như docs/brand/vankey-logo.svg.
 class _LogoMarkPainter extends CustomPainter {
+  _LogoMarkPainter(this.accent);
+  final Color accent;
   static const _ink = Color(0xFF0E1330);
   static const _unit = 180.0;
-  static const _shiftX = 7.0;
-  static const _shiftY = 3.0;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final s = size.width / _unit;
-    canvas.scale(s);
-    canvas.translate(_shiftX, _shiftY);
-
-    final v = Path()
-      ..moveTo(54, 80)
-      ..quadraticBezierTo(72, 106, 90, 128)
-      ..quadraticBezierTo(112, 98, 134, 46);
+    canvas.scale(size.width / _unit);
     Paint stroke(Color color, double width) => Paint()
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..strokeWidth = width
       ..color = color;
-    canvas.drawPath(v, stroke(_ink, 38));
-    canvas.drawPath(v, stroke(Colors.white, 24));
 
     final shield = Path()
-      ..moveTo(44, 34)
-      ..lineTo(62, 41)
-      ..lineTo(62, 58)
-      ..cubicTo(62, 68, 54, 74, 44, 78)
-      ..cubicTo(34, 74, 26, 68, 26, 58)
-      ..lineTo(26, 41)
+      ..moveTo(90, 48)
+      ..lineTo(123, 60.5)
+      ..lineTo(123, 90)
+      ..cubicTo(123, 110.5, 109, 124, 90, 134)
+      ..cubicTo(71, 124, 57, 110.5, 57, 90)
+      ..lineTo(57, 60.5)
       ..close();
-    canvas.drawPath(shield, stroke(_ink, 6));
+    canvas.drawPath(shield, stroke(_ink, 4));
     canvas.drawPath(shield, Paint()..color = Colors.white);
+
+    final v = Path()
+      ..moveTo(77, 82)
+      ..lineTo(90, 108)
+      ..lineTo(103, 82);
+    canvas.drawPath(v, stroke(accent, 10));
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _LogoMarkPainter old) => old.accent != accent;
 }
 
 /// Dải thông báo nhỏ (cảnh báo, lỗi, gợi ý) trong thẻ màu.

@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/vault/merge.dart';
+import '../google_drive_auth.dart';
 import '../../core/vault/models.dart';
 import '../theme.dart';
 import '../vault_controller.dart';
@@ -33,6 +34,50 @@ class SyncScreen extends StatelessWidget {
     if (uri != null) await controller.setFolderSync(uri.toFilePath());
   }
 
+  Future<void> _enableDrive(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final err = await controller.enableDriveSync();
+    messenger.showSnackBar(SnackBar(content: Text(err ?? tr('Đã bật đồng bộ Google Drive'))));
+  }
+
+  /// Xóa tài khoản máy chủ: xác nhận, nhập mật khẩu, rồi xóa trên máy chủ và trên máy này.
+  Future<void> _deleteAccount(BuildContext context) async {
+    final ok = await confirmDialog(
+      context,
+      title: tr('Xóa tài khoản?'),
+      message: tr('Tài khoản {p0}, kho trên máy chủ và kho trên máy này sẽ bị xóa vĩnh viễn. Các thiết bị khác bị đăng xuất. Không thể hoàn tác. Hãy xuất bản sao lưu trước nếu còn cần dữ liệu.', {'p0': controller.cfSession?.username ?? ''}),
+      confirmLabel: tr('Tiếp tục'),
+      danger: true,
+    );
+    if (!ok || !context.mounted) return;
+    final ctrl = TextEditingController();
+    final pw = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tr('Nhập mật khẩu để xóa tài khoản')),
+        content: TextField(controller: ctrl, obscureText: true, autofocus: true, autocorrect: false, enableSuggestions: false, decoration: InputDecoration(labelText: tr('Mật khẩu'))),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Hủy'))),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.of(ctx).danger),
+            onPressed: () => Navigator.pop(ctx, ctrl.text),
+            child: Text(tr('Xóa vĩnh viễn')),
+          ),
+        ],
+      ),
+    );
+    if (pw == null || pw.isEmpty || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final nav = Navigator.of(context);
+    final err = await controller.deleteServerAccount(pw);
+    if (err != null) {
+      messenger.showSnackBar(SnackBar(content: Text(err)));
+      return;
+    }
+    nav.popUntil((r) => r.isFirst);
+    messenger.showSnackBar(SnackBar(content: Text(tr('Đã xóa tài khoản'))));
+  }
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
         listenable: controller,
@@ -46,6 +91,16 @@ class SyncScreen extends StatelessWidget {
                 Notice(tr('Đồng bộ giữa các thiết bị bằng bản đã mã hóa. Nơi lưu chỉ thấy dữ liệu không đọc được.'), icon: Icons.lock_outline_rounded),
                 const SizedBox(height: Gap.lg),
                 CardList(children: [
+                  if (GoogleConfig.configured)
+                    ListTile(
+                      leading: const IconBadge(Icons.add_to_drive_outlined),
+                      title: Text(tr('Đồng bộ qua Google Drive')),
+                      subtitle: Text(tr('Dùng tài khoản Google của bạn, không cần máy chủ')),
+                      trailing: controller.busy ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5)) : const Icon(Icons.chevron_right_rounded),
+                      minVerticalPadding: Gap.md,
+                      enabled: !controller.busy,
+                      onTap: controller.busy ? null : () => _enableDrive(context),
+                    ),
                   ListTile(
                     leading: const IconBadge(Icons.cloud_outlined),
                     title: Text(tr('Đồng bộ qua máy chủ Cloudflare của bạn')),
@@ -130,6 +185,12 @@ class SyncScreen extends StatelessWidget {
                   style: TextButton.styleFrom(foregroundColor: AppColors.of(context).danger),
                   child: Text(controller.cfSession != null ? tr('Đăng xuất khỏi máy chủ (giữ nguyên dữ liệu trên máy)') : tr('Tắt đồng bộ (giữ nguyên dữ liệu trên máy)'), textAlign: TextAlign.center),
                 ),
+                if (controller.cfSession != null)
+                  TextButton(
+                    onPressed: syncing ? null : () => _deleteAccount(context),
+                    style: TextButton.styleFrom(foregroundColor: AppColors.of(context).danger),
+                    child: Text(tr('Xóa tài khoản')),
+                  ),
               ],
             ]),
           );

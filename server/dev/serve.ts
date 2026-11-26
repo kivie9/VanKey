@@ -1,5 +1,5 @@
 // Máy chủ chạy thử cục bộ bằng Node thuần (lưu trong bộ nhớ, tắt là mất). Dùng cho test đầu cuối và thử nhanh.
-//   node dev/serve.ts [cổng]          ALLOWED_EMAILS="a@b.c" TOKEN_SECRET="..." (có giá trị mặc định cho thử nghiệm)
+//   node dev/serve.ts [cổng]          TOKEN_SECRET="..." REGISTER_CODE="..." (tùy chọn; có giá trị mặc định cho thử nghiệm)
 import { createServer } from 'node:http';
 import { createHandler } from '../src/handler.ts';
 import { MemoryStore } from '../src/memory_store.ts';
@@ -8,8 +8,8 @@ const port = Number(process.argv[2] ?? process.env.PORT ?? 8787);
 const handler = createHandler({
   store: new MemoryStore(),
   config: {
-    allowedEmails: process.env.ALLOWED_EMAILS ?? 'test@example.com',
     tokenSecret: process.env.TOKEN_SECRET ?? 'dev-secret-dev-secret-dev-secret-0123456789',
+    registerCode: process.env.REGISTER_CODE || undefined, // bỏ trống = ai cũng đăng ký được
   },
 });
 

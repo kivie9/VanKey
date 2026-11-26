@@ -19,6 +19,18 @@ abstract final class Radii {
   static const pill = 999.0;
 }
 
+/// Phông chữ lấy từ prototype, đóng gói trong app (khai báo ở pubspec.yaml).
+abstract final class Fonts {
+  /// Chữ thường.
+  static const body = 'Inter';
+
+  /// Tiêu đề lớn.
+  static const head = 'SpaceGrotesk';
+
+  /// Mã 2FA, mật khẩu, khóa.
+  static const mono = 'JetBrainsMono';
+}
+
 /// Màu nhấn có thể chọn. Màu đầu (xanh ngọc) là màu của prototype.
 const accentColors = [0xFF0B7A6B, 0xFF4F6BED, 0xFF2563EB, 0xFF7C3AED, 0xFFDB2777, 0xFFEA580C];
 
@@ -113,8 +125,7 @@ class AppColors extends ThemeExtension<AppColors> {
 }
 
 abstract final class AppTheme {
-  /// [fontFamily]: để trống = phông hệ thống (Roboto trên Android). Chỉ test chụp ảnh mới truyền vào.
-  static ThemeData build(Brightness b, int accentIndex, {String? fontFamily}) {
+  static ThemeData build(Brightness b, int accentIndex) {
     final c = AppColors.forBrightness(b, accentIndex);
     final dark = b == Brightness.dark;
 
@@ -157,13 +168,14 @@ abstract final class AppTheme {
         OutlineInputBorder(borderRadius: BorderRadius.circular(Radii.md), borderSide: BorderSide(color: color, width: width));
     final noBorder = OutlineInputBorder(borderRadius: BorderRadius.circular(Radii.md), borderSide: BorderSide.none);
 
-    final text = _textTheme(c, fontFamily);
+    final text = _textTheme(c);
     // Không viền: thẻ tách khỏi nền trang nhờ khác màu nền.
     final cardShape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.lg));
 
     return ThemeData(
       useMaterial3: true,
       brightness: b,
+      fontFamily: Fonts.body,
       colorScheme: scheme,
       extensions: [c],
       scaffoldBackgroundColor: c.page,
@@ -383,15 +395,15 @@ abstract final class AppTheme {
     );
   }
 
-  static TextTheme _textTheme(AppColors c, String? family) {
-    TextStyle s(double size, FontWeight w, {double? h, double ls = 0, Color? color}) =>
+  static TextTheme _textTheme(AppColors c) {
+    TextStyle s(double size, FontWeight w, {double? h, double ls = 0, Color? color, String family = Fonts.body}) =>
         TextStyle(fontFamily: family, fontSize: size, fontWeight: w, height: h, letterSpacing: ls, color: color ?? c.fg);
     return TextTheme(
-      displaySmall: s(30, FontWeight.w800, h: 1.15, ls: -0.5),
-      headlineLarge: s(28, FontWeight.w800, h: 1.2, ls: -0.4),
-      headlineMedium: s(24, FontWeight.w800, h: 1.2, ls: -0.3),
-      headlineSmall: s(21, FontWeight.w700, h: 1.25, ls: -0.2),
-      titleLarge: s(21, FontWeight.w700, h: 1.25, ls: -0.2),
+      displaySmall: s(30, FontWeight.w700, h: 1.15, ls: -0.5, family: Fonts.head),
+      headlineLarge: s(28, FontWeight.w700, h: 1.2, ls: -0.4, family: Fonts.head),
+      headlineMedium: s(24, FontWeight.w700, h: 1.2, ls: -0.3, family: Fonts.head),
+      headlineSmall: s(21, FontWeight.w600, h: 1.25, ls: -0.2, family: Fonts.head),
+      titleLarge: s(21, FontWeight.w700, h: 1.25, ls: -0.2, family: Fonts.head),
       titleMedium: s(16, FontWeight.w600, h: 1.3),
       titleSmall: s(14, FontWeight.w600, h: 1.3, color: c.muted),
       bodyLarge: s(15.5, FontWeight.w400, h: 1.35),

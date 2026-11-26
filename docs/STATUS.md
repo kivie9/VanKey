@@ -7,7 +7,7 @@ Cập nhật: 2026-11-23. Chưa commit (xem `git status`).
 | Phần | Trạng thái | Kiểm chứng |
 |---|---|---|
 | Lõi mật mã, file kho `.vkv`, gộp 3 bên | Xong (M1) | 198+ test tự động, đối chiếu libsodium |
-| Tạo/mở kho, không mật khẩu hoặc có mật khẩu, mã khôi phục | Xong | Chạy trên Galaxy Note10+ (release) |
+| Tạo/mở kho bằng mật khẩu (đã bỏ chế độ "dùng ngay không mật khẩu"), mã khôi phục | Xong | Chạy trên Galaxy Note10+ (release) |
 | Danh sách, 2FA có đếm ngược, thêm/sửa/xóa, thùng rác, gom nhóm, tìm kiếm bỏ dấu | Xong | Widget test + máy thật |
 | Nhập: Google Authenticator, Aegis, 2FAS, Bitwarden, CSV, link otpauth | Xong | Test với dữ liệu giả; **chưa thử file thật** |
 | Quét QR (camera và ảnh) | Xong | **Chưa thử trên máy thật** |
@@ -22,7 +22,7 @@ Cập nhật: 2026-11-23. Chưa commit (xem `git status`).
 | HOTP (nút mã kế tiếp) và Steam Guard | Xong | Vector Steam đối chiếu bản cài độc lập (Node); **chưa thử với dịch vụ thật** |
 | Nhập KeePass XML, 1Password .1pux; xuất theo nhóm | Xong | Dữ liệu giả; **chưa thử file thật** |
 | Tự đo Argon2id khi tạo kho | Xong | Test chọn tham số; đo thật trên Note10+ ra 3 vòng 64 MiB |
-| **Máy chủ Cloudflare** (`server/`): đăng ký/đăng nhập email, Google (mã sẵn), thiết bị, kho có `If-Match`, khóa khi sai nhiều lần | Xong, **chưa deploy** | 34 test Node, gồm SQL thật trên SQLite; 5 test đầu cuối Dart ↔ server thật |
+| **Máy chủ Cloudflare** (`server/`): đăng ký mở (có giới hạn) và đăng nhập bằng tên đăng nhập + một mật khẩu, mã mời tùy chọn, thiết bị, kho có `If-Match`, khóa khi sai nhiều lần | Xong, **chưa deploy bản này** | 40 test Node, gồm SQL thật trên SQLite; test đầu cuối Dart ↔ server thật |
 | Client Cloudflare + màn đăng nhập/đăng ký, danh sách thiết bị, máy mới tải kho về | Xong | Test đầu cuối: 2 `VaultController` đồng bộ qua server thật, gỡ thiết bị |
 | Quét QR từ ảnh bằng Dart thuần (cho Windows và dự phòng ML Kit) | Xong | Test vòng đi vòng lại, ảnh lớn |
 | Biểu tượng chìa khóa (cổ điển + adaptive, sinh bằng `tool/make_icon.dart`), tên app VanKey | Xong | Xem ảnh docs/branding; **chưa xem trên màn hình chính điện thoại** |

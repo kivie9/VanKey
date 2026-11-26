@@ -46,7 +46,7 @@ class AboutScreen extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: Text(tr('Giới thiệu'))),
         body: ListView(padding: const EdgeInsets.all(16), children: [
-          Text('VanKey', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800)),
+          Text('VanKey', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 4),
           Text(tr('Phiên bản {p0} (bản thử nghiệm)', {'p0': appVersion})),
           const SizedBox(height: 16),

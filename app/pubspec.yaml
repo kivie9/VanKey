@@ -51,6 +51,7 @@ dependencies:
   image: ^4.13.1
   url_launcher: ^6.3.3
   simple_icons: ^16.23.0
+  google_sign_in: ^7.2.0
 
 dev_dependencies:
   flutter_test:
@@ -73,6 +74,41 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # Phông của prototype (OFL), đóng gói sẵn để Windows và Android hiển thị giống nhau, không tải qua mạng.
+  assets:
+    - assets/fonts/OFL-Inter.txt
+    - assets/fonts/OFL-SpaceGrotesk.txt
+    - assets/fonts/OFL-JetBrainsMono.txt
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-400.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-500.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-600.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-700.ttf
+          weight: 700
+        - asset: assets/fonts/Inter-800.ttf
+          weight: 800
+    - family: SpaceGrotesk
+      fonts:
+        - asset: assets/fonts/SpaceGrotesk-500.ttf
+          weight: 500
+        - asset: assets/fonts/SpaceGrotesk-600.ttf
+          weight: 600
+        - asset: assets/fonts/SpaceGrotesk-700.ttf
+          weight: 700
+    - family: JetBrainsMono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono-500.ttf
+          weight: 500
+        - asset: assets/fonts/JetBrainsMono-600.ttf
+          weight: 600
+        - asset: assets/fonts/JetBrainsMono-700.ttf
+          weight: 700
 
   # To add assets to your application, add an assets section, like this:
   # assets:

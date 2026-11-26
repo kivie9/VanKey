@@ -2,10 +2,9 @@ name = "vankey"
 main = "src/index.ts"
 compatibility_date = "2025-01-01"
 
-# Email được phép đăng ký/đăng nhập (ngăn cách bằng dấu phẩy). SỬA thành email của bạn trước khi deploy.
+# Số tài khoản tối đa (bảo vệ hạn mức miễn phí). Đăng ký là mở; muốn đóng hoặc mời riêng thì đặt secret REGISTER_CODE.
 [vars]
-ALLOWED_EMAILS = "admintest@example.com"
-# GOOGLE_CLIENT_IDS = "xxxxxxxx.apps.googleusercontent.com"   # bỏ comment khi bật đăng nhập Google
+MAX_USERS = "200"
 
 # Sau khi chạy `npx wrangler d1 create vankey`, dán database_id vào đây.
 [[d1_databases]]
@@ -15,3 +14,4 @@ database_id = "a2381b9e-3de8-43e6-8e75-56caa5909430"
 migrations_dir = "migrations"
 
 # Bí mật KHÔNG đặt ở đây. Dùng:  npx wrangler secret put TOKEN_SECRET   (chuỗi ngẫu nhiên ≥ 32 ký tự)
+# Tùy chọn: npx wrangler secret put REGISTER_CODE   (mã mời ≥ 12 ký tự; đã đặt thì tạo tài khoản phải nhập mã)

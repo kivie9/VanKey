@@ -16,7 +16,8 @@ class NodeServer {
     }
   }
 
-  static Future<NodeServer> start({String emails = 'test@example.com'}) async {
+  /// Máy chủ thử cho đăng ký mở. [registerCode] != null thì bật mã mời.
+  static Future<NodeServer> start({String? registerCode}) async {
     final sock = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
     final port = sock.port;
     await sock.close();
@@ -24,7 +25,7 @@ class NodeServer {
       'node',
       ['dev/serve.ts', '$port'],
       workingDirectory: '../server',
-      environment: {'ALLOWED_EMAILS': emails},
+      environment: {'REGISTER_CODE': ?registerCode},
     );
     final ready = Completer<void>();
     p.stdout.transform(utf8.decoder).listen((s) {

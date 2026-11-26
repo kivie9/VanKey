@@ -80,7 +80,7 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
             padding: const EdgeInsets.all(Gap.lg),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               SelectableText.rich(
-                TextSpan(children: _spans(context), style: text.headlineSmall?.copyWith(fontWeight: FontWeight.w600, letterSpacing: 1.2, height: 1.4)),
+                TextSpan(children: _spans(context), style: text.headlineSmall?.copyWith(fontFamily: Fonts.mono, fontWeight: FontWeight.w600, letterSpacing: 0.6, height: 1.4)),
               ),
               StrengthMeter(PasswordStrength.estimate(_pw)),
             ]),

@@ -69,6 +69,8 @@ Map<String, _State> _index(VaultData? d) {
 /// - Cả hai bên đổi → bản có HLC lớn hơn thắng; nếu cả hai đều là mục còn tồn tại thì ghi nhận [ItemConflict]
 ///   để giao diện hỏi người dùng (không ghi đè âm thầm).
 /// - Mục xóa vĩnh viễn (tombstone) đối đầu với bản sửa → bản có HLC lớn hơn thắng (sửa sau xóa thì giữ bản sửa).
+/// - Vắng mặt (không có mục, không có tombstone) **không phải là xóa**: giữ bản của bên còn lại. Nhờ vậy một bản
+///   cập nhật bị ghi đè mất trên nơi lưu không biến thành "xóa" ở các máy khác.
 ///
 /// Kết quả **không phụ thuộc thứ tự** [local]/[remote] (giao hoán) và gộp lại kết quả với chính nó không đổi (lũy đẳng).
 MergeResult mergeVaults({required VaultData local, required VaultData remote, VaultData? base}) {
@@ -94,6 +96,13 @@ MergeResult mergeVaults({required VaultData local, required VaultData remote, Va
       // Hai tombstone cùng "đã xóa" nhưng có thể mang HLC khác nhau (cùng xóa trên hai máy):
       // chọn bản HLC lớn hơn để kết quả không phụ thuộc thứ tự local/remote.
       result = (L.tomb != null && R.tomb != null && R.version > L.version) ? R : L;
+    } else if (L.isAbsent) {
+      // VẮNG MẶT KHÔNG PHẢI XÓA: việc xóa luôn để lại tombstone (hoặc đưa vào thùng rác, là một phiên bản bình thường).
+      // Một bên không có mục mà cũng không có tombstone nghĩa là bên đó chưa có, hoặc đã MẤT bản cập nhật (ví dụ nơi lưu
+      // không có ghi có điều kiện nên hai máy ghi đè nhau). Giữ bản của bên còn lại, kể cả khi bản gốc có mục này.
+      result = R;
+    } else if (R.isAbsent) {
+      result = L;
     } else if (B != null) {
       final lChanged = !_same(L, B);
       final rChanged = !_same(R, B);
@@ -104,10 +113,6 @@ MergeResult mergeVaults({required VaultData local, required VaultData remote, Va
       } else {
         result = _winner(L, R, conflicts, id);
       }
-    } else if (L.isAbsent) {
-      result = R;
-    } else if (R.isAbsent) {
-      result = L;
     } else {
       result = _winner(L, R, conflicts, id);
     }

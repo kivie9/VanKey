@@ -14,7 +14,7 @@ void main() {
 
   test('mọi mức tự khóa nằm trong giới hạn hợp lệ', () {
     for (final s in LockPolicy.autoLockChoices) {
-      expect(s, inInclusiveRange(0, LockPolicy.maxAutoLockSeconds));
+      expect(s, inInclusiveRange(LockPolicy.never, LockPolicy.maxAutoLockSeconds));
     }
   });
 }

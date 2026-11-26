@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 
 import '../crypto/kdf.dart';
+import '../crypto/passphrase.dart';
 import 'sync_provider.dart';
 
 /// Phiên đăng nhập vào máy chủ Cloudflare. Giữ refresh token: lưu ở nơi an toàn (Keystore), không lưu ra file thường.
@@ -17,7 +18,7 @@ final class CloudflareSession {
     required this.expiresAt,
     required this.deviceId,
     required this.accountId,
-    required this.email,
+    required this.username,
   });
 
   final String baseUrl;
@@ -26,7 +27,7 @@ final class CloudflareSession {
   final DateTime expiresAt;
   final String deviceId;
   final String accountId;
-  final String email;
+  final String username;
 
   Map<String, dynamic> toJson() => {
         'baseUrl': baseUrl,
@@ -35,7 +36,7 @@ final class CloudflareSession {
         'expiresAt': expiresAt.toUtc().toIso8601String(),
         'deviceId': deviceId,
         'accountId': accountId,
-        'email': email,
+        'username': username,
       };
 
   factory CloudflareSession.fromJson(Map<String, dynamic> j) => CloudflareSession(
@@ -45,7 +46,7 @@ final class CloudflareSession {
         expiresAt: DateTime.parse(j['expiresAt'] as String),
         deviceId: j['deviceId'] as String,
         accountId: j['accountId'] as String,
-        email: j['email'] as String,
+        username: (j['username'] ?? j['email']) as String, // bản cũ lưu khóa 'email'
       );
 
   CloudflareSession withTokens(String access, String refresh, DateTime expires) => CloudflareSession(
@@ -55,7 +56,7 @@ final class CloudflareSession {
         expiresAt: expires,
         deviceId: deviceId,
         accountId: accountId,
-        email: email,
+        username: username,
       );
 }
 
@@ -67,7 +68,7 @@ final class CloudflareDevice {
   final bool current;
 }
 
-/// Lỗi có thông điệp hiển thị được từ máy chủ (sai mật khẩu, email không được phép, bị khóa tạm...).
+/// Lỗi có thông điệp hiển thị được từ máy chủ (sai mật khẩu, tên đăng nhập đã dùng, bị khóa tạm...).
 final class CloudflareApiException implements Exception {
   const CloudflareApiException(this.status, this.code, this.message, {this.retryAfter});
   final int status;
@@ -97,12 +98,34 @@ final class CloudflareApi {
 
   final HttpClient _client;
 
-  /// Khóa đăng nhập dẫn xuất từ mật khẩu TÀI KHOẢN (khác passphrase của kho). Máy chủ chỉ thấy khóa này,
-  /// không thấy mật khẩu. Tham số cố định vì mọi thiết bị phải ra cùng một khóa.
-  static Future<String> deriveAuthKey(String email, String password, {Argon2Params params = Argon2Params.standard}) async {
-    final salt = Uint8List.fromList(sha256.convert(utf8.encode('vankey-auth-v1|${email.trim().toLowerCase()}')).bytes.sublist(0, Kdf.saltLength));
-    final key = await const Kdf().argon2id(passphraseBytes: Uint8List.fromList(utf8.encode(password)), salt: salt, params: params);
+  /// Khóa đăng nhập dẫn xuất từ mật khẩu. Máy chủ chỉ thấy khóa này, không thấy mật khẩu; khóa mở kho dẫn xuất riêng
+  /// (salt khác, ngẫu nhiên trong file kho) nên máy chủ không dùng khóa này mở được kho. Tham số cố định vì mọi thiết bị
+  /// phải ra cùng một khóa.
+  ///
+  /// Mật khẩu được chuẩn hóa NFKC như mật khẩu kho (`normalizePassphrase`), nên mật khẩu tiếng Việt gõ bằng bàn phím
+  /// dựng sẵn hay tổ hợp đều ra cùng một khóa.
+  static Future<String> deriveAuthKey(String username, String password, {Argon2Params params = Argon2Params.standard}) =>
+      _derive(username, normalizePassphrase(password), params);
+
+  /// Khóa theo cách cũ (chưa chuẩn hóa), chỉ để đăng nhập tài khoản tạo trước khi có chuẩn hóa rồi chuyển sang khóa mới.
+  static Future<String> deriveLegacyAuthKey(String username, String password, {Argon2Params params = Argon2Params.standard}) =>
+      _derive(username, Uint8List.fromList(utf8.encode(password)), params);
+
+  /// Mật khẩu này có thể đã được đăng ký bằng khóa cũ khác khóa mới (chuẩn hóa làm đổi byte).
+  static bool hasLegacyAuthKey(String password) => !_bytesEqual(normalizePassphrase(password), utf8.encode(password));
+
+  static Future<String> _derive(String username, Uint8List passwordBytes, Argon2Params params) async {
+    final salt = Uint8List.fromList(sha256.convert(utf8.encode('vankey-auth-v1|${username.trim().toLowerCase()}')).bytes.sublist(0, Kdf.saltLength));
+    final key = await const Kdf().argon2id(passphraseBytes: passwordBytes, salt: salt, params: params);
     return base64.encode(key);
+  }
+
+  static bool _bytesEqual(List<int> a, List<int> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   Uri _uri(String baseUrl, String path) => Uri.parse('${baseUrl.replaceAll(RegExp(r'/+$'), '')}$path');
@@ -160,7 +183,7 @@ final class CloudflareApi {
       expiresAt: (now ?? DateTime.now()).add(Duration(seconds: (j['expiresIn'] as int?) ?? CloudflareApi.defaultSessionSeconds)),
       deviceId: j['deviceId'] as String,
       accountId: j['accountId'] as String,
-      email: (j['email'] as String?) ?? '',
+      username: (j['username'] as String?) ?? '',
     );
   }
 
@@ -170,14 +193,12 @@ final class CloudflareApi {
     return _sessionFrom(baseUrl, resBody);
   }
 
-  Future<CloudflareSession> register(String baseUrl, String email, String authKey, String deviceName) =>
-      _auth(baseUrl, '/auth/register', {'email': email, 'authKey': authKey, 'deviceName': deviceName});
+  /// [registerCode]: mã mời, chỉ cần khi chủ máy chủ có đặt secret `REGISTER_CODE`.
+  Future<CloudflareSession> register(String baseUrl, String username, String authKey, String deviceName, {String registerCode = ''}) =>
+      _auth(baseUrl, '/auth/register', {'username': username, 'authKey': authKey, 'deviceName': deviceName, 'registerCode': registerCode});
 
-  Future<CloudflareSession> login(String baseUrl, String email, String authKey, String deviceName) =>
-      _auth(baseUrl, '/auth/login', {'email': email, 'authKey': authKey, 'deviceName': deviceName});
-
-  Future<CloudflareSession> google(String baseUrl, String idToken, String deviceName) =>
-      _auth(baseUrl, '/auth/google', {'idToken': idToken, 'deviceName': deviceName});
+  Future<CloudflareSession> login(String baseUrl, String username, String authKey, String deviceName) =>
+      _auth(baseUrl, '/auth/login', {'username': username, 'authKey': authKey, 'deviceName': deviceName});
 
   /// Xoay vòng refresh token. Máy chủ trả 401 nếu thiết bị đã bị gỡ hoặc token hết hạn.
   Future<CloudflareSession> refresh(CloudflareSession s) async {
@@ -253,6 +274,26 @@ final class CloudflareSync implements SyncProvider {
     if (r.$1 == 401 || r.$1 == 403) throw const SyncAuthException('Phiên đăng nhập không còn hiệu lực. Hãy đăng nhập lại.');
     return r;
   }
+
+  /// Gọi một thao tác tài khoản cần nhập lại mật khẩu. 403 ở đây là "mật khẩu hiện tại sai", không phải mất phiên.
+  Future<void> _account(String method, String path, Map<String, Object?> json) async {
+    await _ensureFresh();
+    var r = await api.send(method, _session.baseUrl, path, token: _session.accessToken, json: json);
+    if (r.$1 == 401) {
+      await _refresh();
+      r = await api.send(method, _session.baseUrl, path, token: _session.accessToken, json: json);
+    }
+    if (r.$1 == 204) return;
+    if (r.$1 == 401) throw const SyncAuthException('Phiên đăng nhập không còn hiệu lực. Hãy đăng nhập lại.');
+    throw api._apiError(r.$1, r.$2);
+  }
+
+  /// Đổi khóa đăng nhập trên máy chủ (sau khi đổi mật khẩu). Máy chủ gỡ các thiết bị khác của tài khoản.
+  Future<void> changeAuthKey(String currentAuthKey, String newAuthKey) =>
+      _account('POST', '/auth/password', {'authKey': currentAuthKey, 'newAuthKey': newAuthKey});
+
+  /// Xóa hẳn tài khoản, kho trên máy chủ và mọi thiết bị. Không hoàn tác được.
+  Future<void> deleteAccount(String authKey) => _account('DELETE', '/account', {'authKey': authKey});
 
   @override
   Future<RemoteBlob?> fetch() async {

@@ -30,11 +30,16 @@ const _enabled = bool.fromEnvironment('VK_SHOTS');
 Future<void> _loadFonts() async {
   final dir = '${Platform.environment['FLUTTER_ROOT'] ?? 'E:/code/libs/flutter'}/bin/cache/artifacts/material_fonts';
   Future<ByteData> read(String f) async => ByteData.sublistView(Uint8List.fromList(File('$dir/$f').readAsBytesSync()));
-  // Mỗi tệp một lần nạp cho cùng họ Roboto: nạp gộp trong một FontLoader làm các độ đậm bị trộn lẫn.
-  for (final f in ['roboto-regular.ttf', 'roboto-medium.ttf', 'roboto-bold.ttf', 'roboto-black.ttf', 'roboto-light.ttf']) {
-    final l = FontLoader('Roboto')..addFont(read(f));
+  // Phông của app. Mỗi họ nạp mọi độ đậm trong một FontLoader, engine chọn theo độ đậm ghi trong tệp.
+  for (final family in [Fonts.body, Fonts.head, Fonts.mono]) {
+    final l = FontLoader(family);
+    for (final f in Directory('assets/fonts').listSync().whereType<File>().where((f) => f.uri.pathSegments.last.startsWith('$family-') && f.path.endsWith('.ttf'))) {
+      l.addFont(Future.value(ByteData.sublistView(f.readAsBytesSync())));
+    }
     await l.load();
   }
+  // Roboto vẫn cần cho vài thành phần Material tự đặt phông.
+  await (FontLoader('Roboto')..addFont(read('roboto-regular.ttf'))).load();
   final brand = FontLoader('packages/simple_icons/SimpleIcons')
     ..addFont(Future.value(ByteData.sublistView(File('C:/Users/vanlo/AppData/Local/Pub/Cache/hosted/pub.dev/simple_icons-16.23.0/fonts/SimpleIcons.ttf').readAsBytesSync())));
   await brand.load();
@@ -66,8 +71,8 @@ VaultController _sample() {
 
 Widget _app(Widget home, Brightness b) => MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.build(Brightness.light, 0, fontFamily: 'Roboto'),
-      darkTheme: AppTheme.build(Brightness.dark, 0, fontFamily: 'Roboto'),
+      theme: AppTheme.build(Brightness.light, 0),
+      darkTheme: AppTheme.build(Brightness.dark, 0),
       themeMode: b == Brightness.dark ? ThemeMode.dark : ThemeMode.light,
       home: home,
     );

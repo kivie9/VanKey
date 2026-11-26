@@ -44,7 +44,10 @@ abstract final class LockPolicy {
   static const maxAutoLockSeconds = 3600;
 
   /// Các mức người dùng được chọn (giây). 0 = khóa ngay khi thoát app.
-  static const autoLockChoices = [0, 30, 60, 300, 900];
+  static const autoLockChoices = [never, 0, 30, 60, 300, 900];
+
+  /// Không tự khóa khi chuyển app (vẫn phải mở khóa sau khi tắt hẳn app).
+  static const never = -1;
 
   /// Từ lần sai thứ mấy thì bắt đầu bắt chờ.
   static const freeAttempts = 3;
@@ -64,7 +67,26 @@ abstract final class LockPolicy {
   }
 }
 
+/// Quy tắc cho mật khẩu và tên đăng nhập khi tạo mới (khớp quy tắc phía máy chủ trong server/src/handler.ts).
+abstract final class AccountPolicy {
+  /// Một mật khẩu bảo vệ cả tài khoản lẫn kho: dài hơn mức cũ (8) vì kẻ tấn công có file kho có thể đoán ngoại tuyến.
+  static const minPasswordLength = 8;
+  static final _username = RegExp(r'^[a-z0-9][a-z0-9._-]{2,31}$');
+
+  /// Chuẩn hóa tên đăng nhập (bỏ khoảng trắng đầu cuối, chữ thường); null nếu không hợp lệ.
+  static String? normalizeUsername(String raw) {
+    final u = raw.trim().toLowerCase();
+    return _username.hasMatch(u) ? u : null;
+  }
+}
+
 /// Máy chủ đồng bộ: chỉ cho http với các host phát triển (máy này, máy ảo Android).
+/// Bản MVP: màn đầu chỉ có đăng nhập / đăng ký trên máy chủ VanKey ([ServerPolicy.defaultUrl]).
+/// Tự dựng máy chủ, Google Drive và mã mời bị ẩn. Đặt `false` để hiện lại màn chọn đầy đủ.
+abstract final class Mvp {
+  static const serverOnly = true;
+}
+
 abstract final class ServerPolicy {
   static const secureScheme = 'https';
   static const devScheme = 'http';

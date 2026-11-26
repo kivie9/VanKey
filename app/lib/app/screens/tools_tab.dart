@@ -40,13 +40,14 @@ class ToolsTab extends StatelessWidget {
       (Icons.file_download_outlined, tr('Nhập dữ liệu'), 0, () => pushPage(context, ImportScreen(controller: c))),
       (Icons.sync, tr('Đồng bộ'), 0, () => pushPage(context, SyncScreen(controller: c))),
       (Icons.science_outlined, tr('Nạp dữ liệu mẫu'), 0, () => loadDemoData(context, c)),
+      (Icons.layers_clear_outlined, tr('Xóa dữ liệu mẫu'), 0, () => removeDemoData(context, c)),
     ];
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Padding(
         padding: const EdgeInsets.fromLTRB(Gap.sm, Gap.sm, Gap.lg, Gap.sm),
         child: Row(children: [
           SettingsButton(controller: c),
-          Expanded(child: Text(tr('Tiện ích'), style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800))),
+          Expanded(child: Text(tr('Tiện ích'), style: Theme.of(context).textTheme.titleLarge)),
         ]),
       ),
       Expanded(

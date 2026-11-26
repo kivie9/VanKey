@@ -4,12 +4,12 @@ import { createHandler } from './handler.ts';
 
 interface Env {
   DB: D1Like;
-  /** Biến thường: email được phép, ngăn cách bằng dấu phẩy. */
-  ALLOWED_EMAILS: string;
-  /** Biến thường: Google OAuth client ID (tùy chọn). */
-  GOOGLE_CLIENT_IDS?: string;
+  /** Biến thường: số tài khoản tối đa (mặc định 200). */
+  MAX_USERS?: string;
   /** Bí mật (`wrangler secret put TOKEN_SECRET`). */
   TOKEN_SECRET: string;
+  /** Bí mật tùy chọn (`wrangler secret put REGISTER_CODE`, từ 12 ký tự): đã đặt thì tạo tài khoản phải nhập mã mời này. */
+  REGISTER_CODE?: string;
 }
 
 export default {
@@ -22,7 +22,7 @@ export default {
     }
     const handler = createHandler({
       store: new D1Store(env.DB),
-      config: { allowedEmails: env.ALLOWED_EMAILS ?? '', tokenSecret: env.TOKEN_SECRET, googleClientIds: env.GOOGLE_CLIENT_IDS },
+      config: { tokenSecret: env.TOKEN_SECRET, registerCode: env.REGISTER_CODE, maxUsers: Number(env.MAX_USERS) || undefined },
     });
     return handler(req);
   },

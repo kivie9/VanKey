@@ -17,6 +17,8 @@ import io.flutter.plugin.common.MethodChannel
  * - Chép vào clipboard kèm cờ "nhạy cảm" để Android 13+ không hiện bản xem trước nội dung.
  */
 class MainActivity : FlutterFragmentActivity() {
+    private val bio by lazy { BiometricVault(this) }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "vankey/platform").setMethodCallHandler { call, result ->
@@ -40,6 +42,23 @@ class MainActivity : FlutterFragmentActivity() {
                     extras.putBoolean(key, true)
                     clip.description.extras = extras
                     cm.setPrimaryClip(clip)
+                    result.success(null)
+                }
+                "bioAvailable" -> result.success(bio.available())
+                "bioEncrypt" -> bio.encrypt(
+                    call.argument<ByteArray>("data") ?: ByteArray(0),
+                    call.argument<String>("title") ?: "VanKey",
+                    call.argument<String>("cancel") ?: "Cancel",
+                    result,
+                )
+                "bioDecrypt" -> bio.decrypt(
+                    call.argument<ByteArray>("data") ?: ByteArray(0),
+                    call.argument<String>("title") ?: "VanKey",
+                    call.argument<String>("cancel") ?: "Cancel",
+                    result,
+                )
+                "bioDelete" -> {
+                    bio.deleteKey()
                     result.success(null)
                 }
                 else -> result.notImplemented()

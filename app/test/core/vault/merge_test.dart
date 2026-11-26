@@ -143,6 +143,43 @@ void main() {
       expect(r.merged.items.single.inTrash, isTrue);
     });
 
+    test('VẮNG MẶT KHÔNG PHẢI XÓA: máy chủ mất bản cập nhật (mục có ở gốc và ở máy này, vắng ở máy chủ, không có tombstone) → giữ lại và tải lên lại', () {
+      final p = mk(a, 'P', rnd);
+      final base = vault([p]);
+      final r = mergeVaults(local: base, remote: vault([]), base: base);
+      expect(r.merged.items.map((i) => i.title), ['P'], reason: 'không được coi là bên kia đã xóa');
+      expect(r.merged.tombstones, isEmpty);
+      expect(r.changesRemote, isTrue, reason: 'cần ghi lại lên máy chủ');
+      expect(r.changesLocal, isFalse);
+    });
+
+    test('đối xứng: máy này mất mục (vắng, không tombstone), máy chủ còn → mục được khôi phục ở máy này', () {
+      final p = mk(a, 'P', rnd);
+      final base = vault([p]);
+      final r = mergeVaults(local: vault([]), remote: base, base: base);
+      expect(r.merged.items.map((i) => i.title), ['P']);
+      expect(r.changesLocal, isTrue);
+    });
+
+    test('kịch bản ghi đè: A thêm P và ghi; B (chưa thấy P) thêm Q và ghi đè; A đồng bộ lại vẫn giữ P và thêm Q', () {
+      final base = vault([]);
+      final withP = vault([mk(a, 'P', rnd)]);
+      final overwritten = vault([mk(b, 'Q', rnd)]); // bản B ghi đè, mất P
+      // Trạng thái của A sau khi tải lên thành công: gốc = bản có P; máy chủ giờ chỉ có Q.
+      final r = mergeVaults(local: withP, remote: overwritten, base: withP);
+      expect(r.merged.items.map((i) => i.title).toSet(), {'P', 'Q'});
+      expect(base.items, isEmpty);
+    });
+
+    test('xóa thật vẫn là xóa: tombstone lan sang bên kia dù mục vắng ở một bên', () {
+      final x = mk(a, 'x', rnd);
+      final base = vault([x]);
+      final purged = base.purge(x.id, clock: b);
+      final r = mergeVaults(local: base, remote: purged, base: base);
+      expect(r.merged.items, isEmpty);
+      expect(r.merged.tombstones.single.id, x.id);
+    });
+
     test('chưa có bản chung (lần đồng bộ đầu): bên thiếu lấy từ bên có; cùng mục khác nhau → bản mới thắng + báo xung đột', () {
       final onlyLocal = mk(a, 'chỉ ở máy này', rnd);
       final onlyRemote = mk(b, 'chỉ ở máy chủ', rnd);
@@ -266,6 +303,30 @@ void main() {
         final m = mergeVaults(local: va, remote: vb, base: base).merged;
         expect(sig(mergeVaults(local: m, remote: va, base: base).merged), sig(m), reason: 'seed $seed (với A)');
         expect(sig(mergeVaults(local: m, remote: vb, base: base).merged), sig(m), reason: 'seed $seed (với B)');
+      }
+    });
+
+    test('mất bản cập nhật: bên nào bị làm rơi ngẫu nhiên vài mục (không tombstone) thì kết quả vẫn giữ mọi mục của bên còn lại (500 kịch bản)', () {
+      for (var seed = 0; seed < 500; seed++) {
+        final (base, va, vb) = scenario(seed);
+        final rnd2 = Random(seed + 7);
+        // vbLossy: bản máy chủ bị ghi đè nên mất vài mục, mà không để lại dấu xóa nào.
+        final dropped = {for (final i in vb.items) if (rnd2.nextBool()) i.id};
+        final vbLossy = VaultData(
+          groups: vb.groups,
+          items: [for (final i in vb.items) if (!dropped.contains(i.id)) i],
+          tombstones: vb.tombstones,
+        );
+        final m = mergeVaults(local: va, remote: vbLossy, base: base).merged;
+        final ids = {for (final i in m.items) i.id};
+        final tombs = {for (final t in m.tombstones) t.id: t.version};
+        for (final i in va.items) {
+          if (!ids.contains(i.id)) {
+            expect(tombs[i.id] != null && tombs[i.id]! > i.version, isTrue, reason: 'seed $seed: mất mục ${i.id} của máy này không có lý do');
+          }
+        }
+        // Và kết quả vẫn hội tụ khi gộp lại.
+        expect(sig(mergeVaults(local: m, remote: vbLossy, base: base).merged), sig(m), reason: 'seed $seed');
       }
     });
 

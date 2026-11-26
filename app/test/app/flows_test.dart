@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:vankey/app/screens/home_screen.dart';
@@ -116,7 +117,7 @@ void main() {
     expect(find.text('Ngân hàng'), findsOneWidget);
     expect(find.text('Gmail có 2FA'), findsOneWidget);
     expect(find.text('Dropbox 2FA'), findsNothing);
-    expect(find.byType(TotpChip), findsNothing);
+    expect(find.byType(TotpCode), findsNothing);
 
     // Tab 2FA: chỉ mục có mã, kèm mã.
     await tester.tap(find.text('2FA'));
@@ -124,6 +125,38 @@ void main() {
     expect(find.text('Ngân hàng'), findsNothing);
     expect(find.text('Gmail có 2FA'), findsOneWidget);
     expect(find.text('Dropbox 2FA'), findsOneWidget);
-    expect(find.byType(TotpChip), findsNWidgets(2));
+    expect(find.byType(TotpCode), findsNWidgets(2));
+  });
+
+  testWidgets('tab 2FA: chạm vào mục là chép mã (không mở mục); nhấn giữ vẫn ra menu, có thêm "Xem chi tiết"', (tester) async {
+    final c = _controller();
+    c.upsert(Item.create(type: ItemType.totp, title: 'Dropbox 2FA', clock: c.clock, totp: const TotpParams(secret: 'JBSWY3DPEHPK3PXP')));
+    String? copied;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'Clipboard.setData') copied = (call.arguments as Map)['text'] as String?;
+      return null;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
+    await tester.binding.setSurfaceSize(const Size(420, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(_wrap(HomeScreen(controller: c)));
+    await tester.pump();
+    await tester.tap(find.text('2FA'));
+    await tester.pump();
+
+    await tester.tap(find.text('Dropbox 2FA'));
+    await tester.pump();
+    expect(copied, matches(RegExp(r'^\d{6}$')));
+    expect(find.text('Đã chép mã 2FA'), findsOneWidget);
+    expect(find.byType(ItemDetailScreen), findsNothing, reason: 'không mở màn chi tiết');
+
+    await tester.longPress(find.text('Dropbox 2FA'));
+    await tester.pumpAndSettle();
+    expect(find.text('Xem chi tiết'), findsOneWidget);
+    expect(find.text('Chép mã 2FA'), findsOneWidget);
+    await tester.tap(find.text('Xem chi tiết'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ItemDetailScreen), findsOneWidget);
+    await tester.pump(const Duration(seconds: 31)); // hết hẹn giờ tự xóa clipboard
   });
 }

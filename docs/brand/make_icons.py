@@ -1,4 +1,4 @@
-"""Sinh logo VanKey (chữ V trắng viền đen + khiên) ra PNG cho icon Android.
+"""Sinh logo VanKey (khiên trắng lớn, chữ V xanh bên trong) ra PNG cho icon Android.
 Chạy:  python docs/brand/make_icons.py   (cần Pillow)
 Hình học khớp với docs/brand/vankey-logo.svg và AppLogo trong app/lib/app/widgets/ui.dart."""
 import os
@@ -8,13 +8,8 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 RES = os.path.join(ROOT, 'app', 'android', 'app', 'src', 'main', 'res')
 BRAND = os.path.dirname(os.path.abspath(__file__))
 DARK, WHITE, BLUE = (14, 19, 48, 255), (255, 255, 255, 255), (79, 107, 237, 255)
-TILE, SHIFT = 180, (7, 3)  # hệ toạ độ 180x180, cả logo dời (7,3)
-HI = 8                      # vẽ ở 8 px/đơn vị rồi thu nhỏ để mịn cạnh
-
-
-def quad(p0, c, p1, n=240):
-    return [((1 - t) ** 2 * p0[0] + 2 * t * (1 - t) * c[0] + t * t * p1[0],
-             (1 - t) ** 2 * p0[1] + 2 * t * (1 - t) * c[1] + t * t * p1[1]) for t in (i / n for i in range(n + 1))]
+TILE = 180  # hệ toạ độ 180x180
+HI = 8      # vẽ ở 8 px/đơn vị rồi thu nhỏ để mịn cạnh
 
 
 def cubic(p0, c1, c2, p1, n=120):
@@ -26,19 +21,18 @@ def cubic(p0, c1, c2, p1, n=120):
     return out
 
 
-def line(a, b, n=40):
+def line(a, b, n=60):
     return [(a[0] + (b[0] - a[0]) * i / n, a[1] + (b[1] - a[1]) * i / n) for i in range(n + 1)]
 
 
-V = quad((54, 80), (72, 106), (90, 128)) + quad((90, 128), (112, 98), (134, 46))
-SHIELD = (line((44, 34), (62, 41)) + line((62, 41), (62, 58)) + cubic((62, 58), (62, 68), (54, 74), (44, 78))
-          + cubic((44, 78), (34, 74), (26, 68), (26, 58)) + line((26, 58), (26, 41)) + line((26, 41), (44, 34)))
+SHIELD = (line((90, 48), (123, 60.5)) + line((123, 60.5), (123, 90)) + cubic((123, 90), (123, 110.5), (109, 124), (90, 134))
+          + cubic((90, 134), (71, 124), (57, 110.5), (57, 90)) + line((57, 90), (57, 60.5)) + line((57, 60.5), (90, 48)))
+V = line((77, 82), (90, 108), 200) + line((90, 108), (103, 82), 200)
 
 
 def blobs(d, pts, r, fill, s):
     for x, y in pts:
-        X, Y = (x + SHIFT[0]) * s, (y + SHIFT[1]) * s
-        d.ellipse((X - r * s, Y - r * s, X + r * s, Y + r * s), fill=fill)
+        d.ellipse((x * s - r * s, y * s - r * s, x * s + r * s, y * s + r * s), fill=fill)
 
 
 def mark(size_px):
@@ -46,10 +40,9 @@ def mark(size_px):
     s = size_px / TILE
     img = Image.new('RGBA', (size_px, size_px), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    blobs(d, V, 19, DARK, s)
-    blobs(d, V, 12, WHITE, s)
-    blobs(d, SHIELD, 3, DARK, s)  # viền khiên 6 đơn vị, 3 nằm ngoài
-    d.polygon([((x + SHIFT[0]) * s, (y + SHIFT[1]) * s) for x, y in SHIELD], fill=WHITE)
+    blobs(d, SHIELD, 2, DARK, s)  # viền khiên 4 đơn vị, 2 nằm ngoài
+    d.polygon([(x * s, y * s) for x, y in SHIELD], fill=WHITE)
+    blobs(d, V, 5, BLUE, s)
     return img
 
 
@@ -61,8 +54,8 @@ def tile(size_px):
     return img.resize((size_px, size_px), Image.LANCZOS)
 
 
-def foreground(size_px, radius_frac=0.345):
-    """Lớp nổi của adaptive icon: logo căn giữa, mọi điểm nằm trong vòng an toàn (bán kính ~36/108)."""
+def foreground(size_px, radius_frac=0.20):
+    """Lớp nổi của adaptive icon: logo căn giữa, mọi điểm nằm trong vòng an toàn (bán kính 33/108)."""
     big = mark(TILE * HI)
     box = big.getbbox()
     cx, cy = (box[0] + box[2]) / 2, (box[1] + box[3]) / 2

@@ -54,7 +54,79 @@ Future<(Dev, Dev, FakeSyncProvider)> _pair() async {
   return (a, b, p);
 }
 
+/// Nơi lưu KHÔNG có ghi có điều kiện (như Google Drive): mọi lần tải lên đều thành công và ghi đè bản cũ.
+class NoCasProvider implements SyncProvider {
+  NoCasProvider(this.inner);
+  final FakeSyncProvider inner;
+
+  @override
+  String get name => 'no-cas';
+
+  @override
+  Future<RemoteBlob?> fetch() => inner.fetch();
+
+  @override
+  Future<String> upload(Uint8List bytes, {String? ifMatch}) async {
+    inner.put(bytes); // bỏ qua ifMatch
+    return inner.version;
+  }
+}
+
+/// Máy đọc một bản CŨ (đọc trước khi máy kia ghi) rồi ghi đè lên nơi lưu không có ghi có điều kiện.
+class StaleReadProvider implements SyncProvider {
+  StaleReadProvider(this.stale, this.target);
+  final RemoteBlob? stale;
+  final SyncProvider target;
+  bool _first = true;
+
+  @override
+  String get name => 'stale';
+
+  @override
+  Future<RemoteBlob?> fetch() async {
+    if (_first) {
+      _first = false;
+      return stale;
+    }
+    return target.fetch();
+  }
+
+  @override
+  Future<String> upload(Uint8List bytes, {String? ifMatch}) => target.upload(bytes, ifMatch: ifMatch);
+}
+
 void main() {
+  test('nơi lưu không có ghi có điều kiện: hai máy ghi đè nhau nhưng sau vài lần đồng bộ không ai mất mục nào', () async {
+    final (a, b, p) = await _pair();
+    final nocas = NoCasProvider(p);
+    a.add('chỉ có ở A');
+    b.add('chỉ có ở B');
+    final stale = await p.fetch(); // B đọc bản này TRƯỚC khi A ghi
+    final serviceA = SyncService(nocas, delay: (_) async {});
+    final serviceB = SyncService(StaleReadProvider(stale, nocas), delay: (_) async {});
+    final outA = await serviceA.sync(session: a.session, local: a.data, state: a.state);
+    a..data = outA.data..state = outA.state;
+    final outB = await serviceB.sync(session: b.session, local: b.data, state: b.state);
+    b..data = outB.data..state = outB.state;
+
+    // Xác nhận đúng kịch bản: B đã ghi đè A, bản trên nơi lưu chỉ còn mục của B.
+    final onStore = await VaultSession.openWithPassphrase(p.stored!, 'correct horse battery');
+    final titlesOnStore = VaultData.fromJson(onStore.payload).items.map((i) => i.title).toSet();
+    expect(titlesOnStore, {'chỉ có ở B'}, reason: 'A bị ghi đè');
+
+    // Đồng bộ lại vài vòng: kết quả cuối cùng phải có đủ cả hai mục ở cả hai máy.
+    for (var round = 0; round < 3; round++) {
+      final oa = await serviceA.sync(session: a.session, local: a.data, state: a.state);
+      a..data = oa.data..state = oa.state;
+      final ob = await serviceB.sync(session: b.session, local: b.data, state: b.state);
+      b..data = ob.data..state = ob.state;
+    }
+    final expected = {'chỉ có ở A', 'chỉ có ở B'};
+    expect(a.data.items.map((i) => i.title).toSet(), expected);
+    expect(b.data.items.map((i) => i.title).toSet(), expected);
+    expect(a.data.tombstones, isEmpty, reason: 'không được sinh tombstone từ việc mất bản cập nhật');
+  });
+
   test('tải bản đầu lên khi máy chủ còn trống', () async {
     final (s, _) = await VaultSession.create(passphrase: 'x' * 10, params: _fast);
     final d = Dev(s, 'a');

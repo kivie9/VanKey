@@ -36,6 +36,24 @@ Future<void> loadDemoData(BuildContext context, VaultController controller) asyn
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Đã thêm {p0} mục mẫu', {'p0': n}))));
 }
 
+Future<void> removeDemoData(BuildContext context, VaultController controller) async {
+  final count = controller.demoItems.length;
+  if (count == 0) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Không còn mục mẫu nào'))));
+    return;
+  }
+  final ok = await confirmDialog(
+    context,
+    title: tr('Xóa dữ liệu mẫu?'),
+    message: tr('Xóa hẳn {p0} mục mẫu (kể cả trên máy khác khi đồng bộ). Mục mẫu bạn đã sửa và mục của bạn được giữ nguyên.', {'p0': count}),
+    confirmLabel: tr('Xóa'),
+    danger: true,
+  );
+  if (!ok || !context.mounted) return;
+  final n = controller.removeDemoData();
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Đã xóa {p0} mục mẫu', {'p0': n}))));
+}
+
 /// Nút bánh răng (góc trên trái) mở trang Cài đặt.
 class SettingsButton extends StatelessWidget {
   const SettingsButton({super.key, required this.controller});
@@ -74,6 +92,7 @@ class SettingsTab extends StatelessWidget {
 
   /// Nhãn của một mức tự khóa (giây). Các mức nằm ở [LockPolicy.autoLockChoices].
   static String _lockLabel(int seconds) => switch (seconds) {
+        LockPolicy.never => tr('Không tự khóa'),
         0 => tr('Ngay khi thoát app'),
         < 60 => tr('Sau {p0} giây', {'p0': seconds}),
         60 => tr('Sau 1 phút'),
@@ -122,7 +141,24 @@ class SettingsTab extends StatelessWidget {
         ],
       ),
     );
-    if (v != null) await controller.setLockAfter(v);
+    if (v == null || !context.mounted) return;
+    if (v == LockPolicy.never && controller.lockAfterSeconds != LockPolicy.never) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          icon: const Icon(Icons.warning_amber_rounded),
+          title: Text(tr('Tắt tự khóa?')),
+          content: Text(tr(
+              'Khóa mở kho sẽ được cất trên máy này để mở app là vào thẳng, không hỏi mật khẩu. Ai cầm được điện thoại đang mở khóa màn hình là xem được toàn bộ mật khẩu và mã 2FA của bạn. Chỉ nên chọn nếu điện thoại luôn có khóa màn hình và không ai khác dùng.')),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Giữ tự khóa'))),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Vẫn tắt'))),
+          ],
+        ),
+      );
+      if (ok != true) return;
+    }
+    await controller.setLockAfter(v);
   }
 
   Future<String?> _askPassword(BuildContext context, String title, {String? hint}) async {
@@ -169,14 +205,6 @@ class SettingsTab extends StatelessWidget {
     messenger.showSnackBar(SnackBar(content: Text(err ?? tr('Đã đổi mật khẩu'))));
   }
 
-  Future<void> _removePassword(BuildContext context) async {
-    final pw = await _askPassword(context, tr('Tắt mật khẩu?'), hint: tr('App sẽ mở thẳng không hỏi gì. Nhập mật khẩu hiện tại để xác nhận.'));
-    if (pw == null || !context.mounted) return;
-    final messenger = ScaffoldMessenger.of(context);
-    final err = await controller.removePassword(pw);
-    messenger.showSnackBar(SnackBar(content: Text(err ?? tr('Đã tắt mật khẩu'))));
-  }
-
   Future<void> _recovery(BuildContext context) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -200,7 +228,7 @@ class SettingsTab extends StatelessWidget {
         content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(tr('Cất ở nơi an toàn, ngoài chiếc điện thoại này. Đây là cách duy nhất mở lại kho khi quên mật khẩu hoặc mất máy.')),
           const SizedBox(height: 12),
-          SelectableText(key, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, fontFamily: 'monospace')),
+          SelectableText(key, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, fontFamily: Fonts.mono)),
         ]),
         actions: [
           TextButton(onPressed: () => copyText(ctx, key, what: tr('Đã chép mã khôi phục')), child: Text(tr('Chép'))),
@@ -315,7 +343,7 @@ class SettingsTab extends StatelessWidget {
     _sub(context, tr('Tài khoản'), (ctx) => [
         ListTile(
           leading: Icon(controller.cfSession != null ? Icons.cloud_done_outlined : Icons.phone_android),
-          title: Text(controller.cfSession != null ? controller.cfSession!.email : tr('Chỉ lưu trên máy này')),
+          title: Text(controller.cfSession != null ? controller.cfSession!.username : tr('Chỉ lưu trên máy này')),
           subtitle: Text(controller.syncLabel),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => pushPage(ctx, SyncScreen(controller: controller)),
@@ -329,7 +357,6 @@ class SettingsTab extends StatelessWidget {
           )
         else ...[
           ListTile(leading: const Icon(Icons.password), title: Text(tr('Đổi mật khẩu kho')), onTap: () => _changePassword(ctx)),
-          ListTile(leading: const Icon(Icons.lock_open), title: Text(tr('Tắt mật khẩu')), subtitle: Text(tr('App sẽ mở thẳng không hỏi gì')), onTap: () => _removePassword(ctx)),
           if (bio)
             SwitchListTile(
               secondary: const Icon(Icons.fingerprint),
@@ -357,6 +384,7 @@ class SettingsTab extends StatelessWidget {
           ListTile(leading: const Icon(Icons.file_download_outlined), title: Text(tr('Nhập dữ liệu')), onTap: () => pushPage(ctx, ImportScreen(controller: controller))),
           ListTile(leading: const Icon(Icons.file_upload_outlined), title: Text(tr('Xuất và sao lưu')), onTap: () => _export(ctx)),
           ListTile(leading: const Icon(Icons.science_outlined), title: Text(tr('Nạp dữ liệu mẫu')), subtitle: Text(tr('Thêm các mục giả để xem giao diện')), onTap: () => _demo(ctx)),
+          ListTile(leading: const Icon(Icons.layers_clear_outlined), title: Text(tr('Xóa dữ liệu mẫu')), subtitle: Text(tr('Chỉ xóa các mục giả đã nạp, không đụng mục của bạn')), onTap: () => removeDemoData(ctx, controller)),
           ListTile(leading: const Icon(Icons.content_copy), title: Text(tr('Mục trùng lặp')), onTap: () => pushPage(ctx, DuplicatesScreen(controller: controller))),
           ListTile(
             leading: const Icon(Icons.delete_outline),
@@ -377,6 +405,11 @@ class SettingsTab extends StatelessWidget {
               controller.lock();
             }),
             ListTile(leading: const Icon(Icons.timer_outlined), title: Text(tr('Tự khóa')), subtitle: Text(lockLabel), onTap: () => _pickLock(ctx)),
+            if (controller.lockAfterSeconds == LockPolicy.never)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(Gap.lg, 0, Gap.lg, Gap.md),
+                child: Notice(tr('Đang không tự khóa: ai cầm điện thoại đang mở là vào được kho. Nên chọn một mức tự khóa, nhất là khi đã bật mở bằng vân tay.'), tone: NoticeTone.warn, icon: Icons.warning_amber_rounded),
+              ),
           ],
           if (Platform.isAndroid)
             SwitchListTile(
@@ -455,14 +488,14 @@ class _NewPasswordDialogState extends State<_NewPasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final ok = _a.text.length >= 8 && _a.text == _b.text;
+    final ok = _a.text.length >= AccountPolicy.minPasswordLength && _a.text == _b.text;
     return _PasswordPage(
       title: tr('Đặt mật khẩu'),
       note: tr('Từ giờ app sẽ hỏi mật khẩu này mỗi khi mở. Hãy nhớ kỹ: quên mật khẩu thì chỉ mở lại được bằng mã khôi phục.'),
       confirmLabel: tr('Đặt'),
       onConfirm: ok ? () => Navigator.pop(context, _a.text) : null,
       children: [
-        _pwField(_a, tr('Mật khẩu (từ 8 ký tự)'), () => setState(() {})),
+        _pwField(_a, tr('Mật khẩu (từ {p0} ký tự)', {'p0': AccountPolicy.minPasswordLength}), () => setState(() {})),
         _pwField(_b, tr('Nhập lại'), () => setState(() {})),
       ],
     );
@@ -494,14 +527,14 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final ok = _cur.text.isNotEmpty && _a.text.length >= 8 && _a.text == _b.text;
+    final ok = _cur.text.isNotEmpty && _a.text.length >= AccountPolicy.minPasswordLength && _a.text == _b.text;
     return _PasswordPage(
       title: tr('Đổi mật khẩu kho'),
       confirmLabel: tr('Đổi'),
       onConfirm: ok ? () => Navigator.pop(context, (_cur.text, _a.text)) : null,
       children: [
         _field(_cur, tr('Mật khẩu hiện tại')),
-        _field(_a, tr('Mật khẩu mới (từ 8 ký tự)')),
+        _field(_a, tr('Mật khẩu mới (từ {p0} ký tự)', {'p0': AccountPolicy.minPasswordLength})),
         _field(_b, tr('Nhập lại mật khẩu mới')),
       ],
     );

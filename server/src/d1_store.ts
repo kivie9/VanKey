@@ -28,9 +28,10 @@ function bytes(v: unknown): Uint8Array | null {
 function toUser(r: Row): User {
   return {
     id: r.id as string,
-    email: r.email as string,
-    salt: bytes(r.salt),
-    pwHash: bytes(r.pw_hash),
+    username: r.username as string,
+    salt: bytes(r.salt) ?? new Uint8Array(0),
+    pwHash: bytes(r.pw_hash) ?? new Uint8Array(0),
+    kdfIter: Number(r.kdf_iter ?? 100000),
     createdAt: r.created_at as number,
   };
 }
@@ -56,9 +57,14 @@ export class D1Store implements Store {
     this.db = db;
   }
 
-  async userByEmail(email: string): Promise<User | null> {
-    const r = await this.db.prepare('SELECT * FROM users WHERE email = ?').bind(email).first<Row>();
+  async userByUsername(username: string): Promise<User | null> {
+    const r = await this.db.prepare('SELECT * FROM users WHERE username = ?').bind(username).first<Row>();
     return r ? toUser(r) : null;
+  }
+
+  async countUsers(): Promise<number> {
+    const r = await this.db.prepare('SELECT COUNT(*) AS n FROM users').first<Row>();
+    return r ? Number(r.n) : 0;
   }
 
   async userById(id: string): Promise<User | null> {
@@ -68,10 +74,21 @@ export class D1Store implements Store {
 
   async createUser(u: User): Promise<boolean> {
     const res = await this.db
-      .prepare('INSERT OR IGNORE INTO users (id, email, salt, pw_hash, created_at) VALUES (?, ?, ?, ?, ?)')
-      .bind(u.id, u.email, u.salt, u.pwHash, u.createdAt)
+      .prepare('INSERT OR IGNORE INTO users (id, username, salt, pw_hash, kdf_iter, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+      .bind(u.id, u.username, u.salt, u.pwHash, u.kdfIter, u.createdAt)
       .run();
     return (res.meta?.changes ?? 0) > 0;
+  }
+
+  async setPassword(userId: string, salt: Uint8Array, pwHash: Uint8Array, kdfIter: number): Promise<void> {
+    await this.db.prepare('UPDATE users SET salt = ?, pw_hash = ?, kdf_iter = ? WHERE id = ?').bind(salt, pwHash, kdfIter, userId).run();
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    // Xóa từng bảng (không dựa vào ON DELETE CASCADE, vì khóa ngoại có thể không được bật).
+    await this.db.prepare('DELETE FROM vaults WHERE user_id = ?').bind(userId).run();
+    await this.db.prepare('DELETE FROM devices WHERE user_id = ?').bind(userId).run();
+    await this.db.prepare('DELETE FROM users WHERE id = ?').bind(userId).run();
   }
 
   async createDevice(d: Device): Promise<void> {
@@ -107,6 +124,10 @@ export class D1Store implements Store {
     return (r.results ?? []).map(toDevice);
   }
 
+  async revokeDevicesExcept(userId: string, keepId: string): Promise<void> {
+    await this.db.prepare('UPDATE devices SET revoked = 1 WHERE user_id = ? AND id != ?').bind(userId, keepId).run();
+  }
+
   async getVault(userId: string): Promise<VaultRow | null> {
     const r = await this.db.prepare('SELECT * FROM vaults WHERE user_id = ?').bind(userId).first<Row>();
     if (!r) return null;
@@ -137,14 +158,27 @@ export class D1Store implements Store {
     return r ? { count: r.count as number, lockedUntil: r.locked_until as number } : { count: 0, lockedUntil: 0 };
   }
 
-  async setAttempt(key: string, a: Attempt): Promise<void> {
-    await this.db
-      .prepare('INSERT INTO attempts (key, count, locked_until) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET count = excluded.count, locked_until = excluded.locked_until')
-      .bind(key, a.count, a.lockedUntil)
-      .run();
+  async bumpFailure(key: string, now: number): Promise<number> {
+    // Một câu duy nhất: nhiều yêu cầu song song vẫn đếm đúng, mỗi yêu cầu nhận một số lần khác nhau.
+    const r = await this.db
+      .prepare(
+        'INSERT INTO attempts (key, count, locked_until, updated_at) VALUES (?, 1, 0, ?) ' +
+          'ON CONFLICT(key) DO UPDATE SET count = count + 1, updated_at = excluded.updated_at RETURNING count',
+      )
+      .bind(key, now)
+      .first<Row>();
+    return r ? (r.count as number) : 1;
+  }
+
+  async lockUntil(key: string, until: number): Promise<void> {
+    await this.db.prepare('UPDATE attempts SET locked_until = ? WHERE key = ?').bind(until, key).run();
   }
 
   async clearAttempt(key: string): Promise<void> {
     await this.db.prepare('DELETE FROM attempts WHERE key = ?').bind(key).run();
+  }
+
+  async purgeAttempts(before: number): Promise<void> {
+    await this.db.prepare('DELETE FROM attempts WHERE updated_at < ?').bind(before).run();
   }
 }

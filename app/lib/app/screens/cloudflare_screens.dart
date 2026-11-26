@@ -7,12 +7,14 @@ import '../theme.dart';
 import '../vault_controller.dart';
 import '../widgets/ui.dart';
 
-/// Đăng nhập / đăng ký tài khoản máy chủ Cloudflare.
-/// [join] = máy mới: đăng nhập rồi tải kho có sẵn về (cần mật khẩu hoặc mã khôi phục của KHO).
+/// Đăng nhập / đăng ký tài khoản máy chủ Cloudflare cho kho đang có trên máy (bật đồng bộ từ Cài đặt).
+/// [join] = mở kho bằng mật khẩu kho hoặc mã khôi phục riêng, dùng khi mật khẩu tài khoản không mở được kho.
 class CloudflareLoginScreen extends StatefulWidget {
-  const CloudflareLoginScreen({super.key, required this.controller, this.join = false});
+  const CloudflareLoginScreen({super.key, required this.controller, this.join = false, this.initialUrl, this.initialUsername});
   final VaultController controller;
   final bool join;
+  final String? initialUrl;
+  final String? initialUsername;
 
   @override
   State<CloudflareLoginScreen> createState() => _CloudflareLoginScreenState();
@@ -20,9 +22,10 @@ class CloudflareLoginScreen extends StatefulWidget {
 
 class _CloudflareLoginScreenState extends State<CloudflareLoginScreen> {
   final _url = TextEditingController();
-  final _email = TextEditingController();
+  final _user = TextEditingController();
   final _password = TextEditingController();
   final _vault = TextEditingController();
+  final _registerCode = TextEditingController();
   bool _register = false;
   bool _useRecovery = false;
   bool _busy = false;
@@ -31,22 +34,24 @@ class _CloudflareLoginScreenState extends State<CloudflareLoginScreen> {
   @override
   void initState() {
     super.initState();
-    _url.text = ServerPolicy.defaultUrl;
+    _url.text = widget.initialUrl ?? ServerPolicy.defaultUrl;
+    _user.text = widget.initialUsername ?? '';
   }
 
   @override
   void dispose() {
     _url.dispose();
-    _email.dispose();
+    _user.dispose();
     _password.dispose();
     _vault.dispose();
+    _registerCode.dispose();
     super.dispose();
   }
 
   bool get _valid =>
       VaultController.isAllowedServerUrl(_url.text) &&
-      _email.text.contains('@') &&
-      _password.text.length >= 8 &&
+      AccountPolicy.normalizeUsername(_user.text) != null &&
+      (_register && !widget.join ? _password.text.length >= AccountPolicy.minPasswordLength : _password.text.isNotEmpty) &&
       (!widget.join || _vault.text.isNotEmpty);
 
   Future<void> _submit() async {
@@ -59,13 +64,13 @@ class _CloudflareLoginScreenState extends State<CloudflareLoginScreen> {
     if (widget.join) {
       err = await c.joinFromCloud(
         url: _url.text,
-        email: _email.text.trim(),
+        username: _user.text,
         accountPassword: _password.text,
         vaultPassphrase: _useRecovery ? null : _vault.text,
         recoveryKey: _useRecovery ? _vault.text : null,
       );
     } else {
-      err = await c.signInCloudflare(url: _url.text, email: _email.text.trim(), password: _password.text, register: _register);
+      err = await c.signInCloudflare(url: _url.text, username: _user.text, password: _password.text, register: _register, registerCode: _registerCode.text);
     }
     if (!mounted) return;
     setState(() {
@@ -96,14 +101,14 @@ class _CloudflareLoginScreenState extends State<CloudflareLoginScreen> {
         body: ListView(padding: const EdgeInsets.all(16), children: [
           Notice(
             widget.join
-                ? tr('Đăng nhập để tải kho đã đồng bộ về máy này.')
-                : tr('Máy chủ chỉ giữ bản đã mã hóa của kho. Mật khẩu tài khoản khác với mật khẩu kho.'),
+                ? tr('Đăng nhập bằng mật khẩu tài khoản, rồi nhập mật khẩu hoặc mã khôi phục của kho để mở kho đã đồng bộ.')
+                : tr('Máy chủ chỉ giữ bản đã mã hóa của kho. Nên dùng cùng mật khẩu với mật khẩu kho để máy khác đăng nhập là mở được kho.'),
             icon: Icons.cloud_outlined,
           ),
           const SizedBox(height: Gap.lg),
           _field(_url, tr('Địa chỉ máy chủ'), type: TextInputType.url, helper: tr('Ví dụ: https://vankey.ten-ban.workers.dev')),
-          _field(_email, tr('Email'), type: TextInputType.emailAddress),
-          _field(_password, tr('Mật khẩu tài khoản (từ 8 ký tự)'), secret: true),
+          _field(_user, tr('Tên đăng nhập')),
+          _field(_password, _register && !widget.join ? tr('Mật khẩu tài khoản (từ {p0} ký tự)', {'p0': AccountPolicy.minPasswordLength}) : tr('Mật khẩu tài khoản'), secret: true),
           if (widget.join) ...[
             _field(_vault, _useRecovery ? tr('Mã khôi phục của kho') : tr('Mật khẩu của kho'), secret: !_useRecovery),
             Align(
@@ -120,11 +125,15 @@ class _CloudflareLoginScreenState extends State<CloudflareLoginScreen> {
             SectionCard(children: [
               SwitchListTile(
                 title: Text(tr('Tạo tài khoản mới')),
-                subtitle: Text(tr('Chỉ email đã được chủ máy chủ cho phép mới đăng ký được')),
+                subtitle: Text(tr('Bật nếu bạn chưa có tài khoản trên máy chủ này')),
                 value: _register,
                 onChanged: (v) => setState(() => _register = v),
               ),
             ]),
+          if (!widget.join && _register) ...[
+            const SizedBox(height: Gap.lg),
+            _field(_registerCode, tr('Mã mời (nếu máy chủ yêu cầu)'), secret: true, helper: tr('Chủ máy chủ đặt mã này. Bỏ trống nếu không có.')),
+          ],
           if (_error != null) Padding(padding: const EdgeInsets.only(top: Gap.sm), child: Notice(_error!, tone: NoticeTone.error, icon: Icons.error_outline)),
           const SizedBox(height: Gap.xl),
           FilledButton(

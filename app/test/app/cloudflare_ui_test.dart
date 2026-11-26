@@ -23,7 +23,7 @@ void main() {
     });
   });
 
-  testWidgets('màn đăng nhập: nút chỉ bật khi địa chỉ, email và mật khẩu hợp lệ', (tester) async {
+  testWidgets('màn đăng nhập: nút chỉ bật khi địa chỉ, tên đăng nhập và mật khẩu hợp lệ', (tester) async {
     await tester.binding.setSurfaceSize(const Size(420, 1000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final c = VaultController()..debugUnlock();
@@ -33,8 +33,8 @@ void main() {
     expect(button().onPressed, isNull);
 
     await tester.enterText(find.widgetWithText(TextField, 'Địa chỉ máy chủ'), 'http://vankey.example.com');
-    await tester.enterText(find.widgetWithText(TextField, 'Email'), 'a@b.c');
-    await tester.enterText(find.widgetWithText(TextField, 'Mật khẩu tài khoản (từ 8 ký tự)'), 'matkhau-dai');
+    await tester.enterText(find.widgetWithText(TextField, 'Tên đăng nhập'), 'a.b');
+    await tester.enterText(find.widgetWithText(TextField, 'Mật khẩu tài khoản'), 'matkhau-dai');
     await tester.pump();
     expect(button().onPressed, isNull, reason: 'http ra Internet không được phép');
 
@@ -42,9 +42,14 @@ void main() {
     await tester.pump();
     expect(button().onPressed, isNotNull);
 
-    await tester.enterText(find.widgetWithText(TextField, 'Mật khẩu tài khoản (từ 8 ký tự)'), 'ngan');
+    await tester.enterText(find.widgetWithText(TextField, 'Mật khẩu tài khoản'), '');
     await tester.pump();
-    expect(button().onPressed, isNull);
+    expect(button().onPressed, isNull, reason: 'đăng nhập cần có mật khẩu');
+
+    await tester.enterText(find.widgetWithText(TextField, 'Mật khẩu tài khoản'), 'matkhau-dai');
+    await tester.enterText(find.widgetWithText(TextField, 'Tên đăng nhập'), 'a');
+    await tester.pump();
+    expect(button().onPressed, isNull, reason: 'tên đăng nhập quá ngắn');
   });
 
   testWidgets('chế độ máy mới đòi thêm mật khẩu hoặc mã khôi phục của kho', (tester) async {
@@ -54,8 +59,8 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: CloudflareLoginScreen(controller: c, join: true)));
 
     await tester.enterText(find.widgetWithText(TextField, 'Địa chỉ máy chủ'), 'https://vankey.example.com');
-    await tester.enterText(find.widgetWithText(TextField, 'Email'), 'a@b.c');
-    await tester.enterText(find.widgetWithText(TextField, 'Mật khẩu tài khoản (từ 8 ký tự)'), 'matkhau-dai');
+    await tester.enterText(find.widgetWithText(TextField, 'Tên đăng nhập'), 'a.b');
+    await tester.enterText(find.widgetWithText(TextField, 'Mật khẩu tài khoản'), 'matkhau-dai');
     await tester.pump();
     expect(tester.widget<FilledButton>(find.byType(FilledButton)).onPressed, isNull, reason: 'thiếu mật khẩu kho');
 
@@ -66,5 +71,25 @@ void main() {
     await tester.tap(find.text('Dùng mã khôi phục'));
     await tester.pump();
     expect(find.widgetWithText(TextField, 'Mã khôi phục của kho'), findsOneWidget);
+  });
+
+  testWidgets('tạo tài khoản mới đòi mật khẩu từ 8 ký tự; đăng nhập thường chỉ cần có mật khẩu', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(420, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final c = VaultController()..debugUnlock();
+    await tester.pumpWidget(MaterialApp(home: CloudflareLoginScreen(controller: c)));
+    await tester.enterText(find.widgetWithText(TextField, 'Tên đăng nhập'), 'a.b');
+    await tester.enterText(find.widgetWithText(TextField, 'Mật khẩu tài khoản'), 'ngan');
+    await tester.pump();
+
+    bool enabled() => tester.widget<FilledButton>(find.byType(FilledButton)).onPressed != null;
+    expect(enabled(), isTrue, reason: 'đăng nhập thường chỉ cần có mật khẩu');
+
+    await tester.tap(find.byType(Switch));
+    await tester.pump();
+    expect(enabled(), isFalse, reason: 'tạo tài khoản đòi mật khẩu dài');
+    await tester.enterText(find.widgetWithText(TextField, 'Mật khẩu tài khoản (từ 8 ký tự)'), 'mat-khau-du-dai-1');
+    await tester.pump();
+    expect(enabled(), isTrue);
   });
 }

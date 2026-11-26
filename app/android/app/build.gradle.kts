@@ -51,4 +51,6 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // Cùng phiên bản local_auth_android đã kéo về; dùng trực tiếp cho vân tay gắn khóa Keystore (BiometricVault.kt).
+    implementation("androidx.biometric:biometric:1.1.0")
 }

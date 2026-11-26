@@ -95,6 +95,20 @@ final class VaultSession {
     return _finishOpen(file, key, slots, random);
   }
 
+  /// Mở bằng vault key đã có sẵn (đã cất trong Keystore ở chế độ "Không tự khóa"): bỏ qua Argon2id nên mở gần như tức thì.
+  /// Khóa không khớp (kho đã xoay khóa) → [AuthenticationFailedException].
+  static Future<VaultSession> openWithKey(Uint8List fileBytes, Uint8List vaultKey, {Kdf kdf = const Kdf(), RandomSource? random}) async {
+    if (vaultKey.length != 32) throw const AuthenticationFailedException();
+    final file = VaultFileCodec.parse(fileBytes);
+    return _finishOpen(file, Uint8List.fromList(vaultKey), _makeSlots(kdf, random), random);
+  }
+
+  /// Bản sao vault key để cất vào kho khóa của hệ điều hành. Người gọi tự xóa bản sao khi dùng xong.
+  Uint8List exportKey() {
+    _ensureOpen();
+    return Uint8List.fromList(_vaultKey);
+  }
+
   static Future<VaultSession> _finishOpen(ParsedVaultFile file, Uint8List key, KeySlots slots, RandomSource? random) async {
     try {
       final payload = await VaultFileCodec.decrypt(file, key);

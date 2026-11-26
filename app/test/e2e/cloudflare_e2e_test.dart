@@ -14,7 +14,7 @@ import 'package:vankey/core/vault/vault_session.dart';
 import '../helpers/node_server.dart';
 
 const _fast = Argon2Params(opslimit: 2, memlimitBytes: 32 * 1024 * 1024);
-const _email = 'test@example.com';
+const _username = 'test.user';
 
 Future<void> main() async {
   final hasNode = await NodeServer.available();
@@ -31,34 +31,46 @@ Future<void> main() async {
     api.close();
   });
 
-  Future<String> authKey(String pw) => CloudflareApi.deriveAuthKey(_email, pw, params: _fast);
+  Future<String> authKey(String pw) => CloudflareApi.deriveAuthKey(_username, pw, params: _fast);
 
-  test('khóa đăng nhập: cùng email+mật khẩu ra cùng khóa; khác mật khẩu hoặc khác email ra khóa khác; email không phân biệt hoa thường', () async {
-    final a = await CloudflareApi.deriveAuthKey(_email, 'mật khẩu', params: _fast);
-    expect(await CloudflareApi.deriveAuthKey('TEST@Example.com', 'mật khẩu', params: _fast), a);
-    expect(await CloudflareApi.deriveAuthKey(_email, 'mật khẩu 2', params: _fast), isNot(a));
-    expect(await CloudflareApi.deriveAuthKey('khac@example.com', 'mật khẩu', params: _fast), isNot(a));
+  test('khóa đăng nhập: cùng tên đăng nhập+mật khẩu ra cùng khóa; khác mật khẩu hoặc khác tên ra khóa khác; tên không phân biệt hoa thường', () async {
+    final a = await CloudflareApi.deriveAuthKey(_username, 'mật khẩu', params: _fast);
+    expect(await CloudflareApi.deriveAuthKey('TEST.User', 'mật khẩu', params: _fast), a);
+    expect(await CloudflareApi.deriveAuthKey(_username, 'mật khẩu 2', params: _fast), isNot(a));
+    expect(await CloudflareApi.deriveAuthKey('khac.user', 'mật khẩu', params: _fast), isNot(a));
     expect(base64.decode(a), hasLength(32));
     expect(a.contains('mật khẩu'), isFalse);
   });
 
-  test('đăng ký, đăng nhập, sai mật khẩu, email không được phép', skip: skip, () async {
-    final key = await authKey('mật-khẩu-tài-khoản');
-    final s = await api.register(server.url, _email, key, 'Máy A');
-    expect(s.accessToken, isNotEmpty);
-    expect(s.email, _email);
+  test('khóa đăng nhập chuẩn hóa NFKC: chữ Việt dựng sẵn và tổ hợp ra cùng khóa; khóa cũ chỉ khác khi byte khác', () async {
+    const nfc = 'mật khẩu'; // "mật khẩu" dựng sẵn
+    const nfd = 'mật khẩu'; // cùng chữ, dấu rời
+    expect(nfc == nfd, isFalse);
+    final a = await CloudflareApi.deriveAuthKey(_username, nfc, params: _fast);
+    expect(await CloudflareApi.deriveAuthKey(_username, nfd, params: _fast), a);
+    expect(CloudflareApi.hasLegacyAuthKey(nfc), isFalse);
+    expect(CloudflareApi.hasLegacyAuthKey(nfd), isTrue);
+    expect(await CloudflareApi.deriveLegacyAuthKey(_username, nfc, params: _fast), a, reason: 'mật khẩu đã chuẩn: khóa cũ = khóa mới');
+    expect(await CloudflareApi.deriveLegacyAuthKey(_username, nfd, params: _fast), isNot(a));
+  });
 
-    await expectLater(api.register(server.url, _email, key, 'Máy A'), throwsA(isA<CloudflareApiException>().having((e) => e.status, 'status', 409)));
-    final login = await api.login(server.url, _email, key, 'Máy B');
+  test('đăng ký, đăng nhập, sai mật khẩu, tên đăng nhập sai quy tắc', skip: skip, () async {
+    final key = await authKey('mật-khẩu-tài-khoản');
+    final s = await api.register(server.url, _username, key, 'Máy A');
+    expect(s.accessToken, isNotEmpty);
+    expect(s.username, _username);
+
+    await expectLater(api.register(server.url, _username, key, 'Máy A'), throwsA(isA<CloudflareApiException>().having((e) => e.status, 'status', 409)));
+    final login = await api.login(server.url, _username, key, 'Máy B');
     expect(login.accountId, s.accountId);
 
     await expectLater(
-      api.login(server.url, _email, await authKey('sai'), 'X'),
+      api.login(server.url, _username, await authKey('sai'), 'X'),
       throwsA(isA<CloudflareApiException>().having((e) => e.status, 'status', 401)),
     );
     await expectLater(
-      api.register(server.url, 'la@example.com', key, 'X'),
-      throwsA(isA<CloudflareApiException>().having((e) => e.status, 'status', 403)),
+      api.register(server.url, 'a', key, 'X'),
+      throwsA(isA<CloudflareApiException>().having((e) => e.status, 'status', 400)),
     );
   });
 
@@ -66,8 +78,8 @@ Future<void> main() async {
     final srv = await NodeServer.start();
     addTearDown(srv.stop);
     final key = await authKey('mk-2');
-    final sa = await api.register(srv.url, _email, key, 'Điện thoại');
-    final sb = await api.login(srv.url, _email, key, 'Máy tính');
+    final sa = await api.register(srv.url, _username, key, 'Điện thoại');
+    final sb = await api.login(srv.url, _username, key, 'Máy tính');
 
     final (vaultA, _) = await VaultSession.create(passphrase: 'vault-passphrase-1', params: _fast);
     final clockA = HlcClock(node: 'phone');
@@ -101,8 +113,8 @@ Future<void> main() async {
     final srv = await NodeServer.start();
     addTearDown(srv.stop);
     final key = await authKey('mk-3');
-    final sa = await api.register(srv.url, _email, key, 'A');
-    final sb = await api.login(srv.url, _email, key, 'B');
+    final sa = await api.register(srv.url, _username, key, 'A');
+    final sb = await api.login(srv.url, _username, key, 'B');
 
     final (va, _) = await VaultSession.create(passphrase: 'vault-passphrase-2', params: _fast);
     final ca = HlcClock(node: 'a');
@@ -123,7 +135,7 @@ Future<void> main() async {
   test('refresh tự động khi access token hết hạn, và báo lại token mới', skip: skip, () async {
     final srv = await NodeServer.start();
     addTearDown(srv.stop);
-    final s0 = await api.register(srv.url, _email, await authKey('mk-4'), 'A');
+    final s0 = await api.register(srv.url, _username, await authKey('mk-4'), 'A');
     final stale = s0.withTokens(s0.accessToken, s0.refreshToken, DateTime.now().subtract(const Duration(minutes: 1)));
     CloudflareSession? saved;
     final sync = CloudflareSync(api, stale, onSession: (s) => saved = s);
@@ -137,8 +149,8 @@ Future<void> main() async {
     final srv = await NodeServer.start();
     addTearDown(srv.stop);
     final key = await authKey('mk-5');
-    final sa = await api.register(srv.url, _email, key, 'Điện thoại');
-    final sb = await api.login(srv.url, _email, key, 'Máy bị mất');
+    final sa = await api.register(srv.url, _username, key, 'Điện thoại');
+    final sb = await api.login(srv.url, _username, key, 'Máy bị mất');
 
     final list = await api.devices(sa);
     expect(list.map((d) => d.name), containsAll(['Điện thoại', 'Máy bị mất']));
@@ -159,7 +171,7 @@ Future<void> main() async {
         expiresAt: DateTime.now().add(const Duration(hours: 1)),
         deviceId: 'd',
         accountId: 'a',
-        email: _email,
+        username: _username,
       ),
     );
     await expectLater(unreachable.fetch(), throwsA(isA<SyncNetworkException>()));

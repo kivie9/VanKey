@@ -5,11 +5,15 @@ export class MemoryStore implements Store {
   users = new Map<string, User>();
   devices = new Map<string, Device>();
   vaults = new Map<string, VaultRow>();
-  attempts = new Map<string, Attempt>();
+  attempts = new Map<string, Attempt & { updatedAt: number }>();
 
-  async userByEmail(email: string): Promise<User | null> {
-    for (const u of this.users.values()) if (u.email === email) return u;
+  async userByUsername(username: string): Promise<User | null> {
+    for (const u of this.users.values()) if (u.username === username) return u;
     return null;
+  }
+
+  async countUsers(): Promise<number> {
+    return this.users.size;
   }
 
   async userById(id: string): Promise<User | null> {
@@ -17,9 +21,20 @@ export class MemoryStore implements Store {
   }
 
   async createUser(u: User): Promise<boolean> {
-    if (await this.userByEmail(u.email)) return false;
+    if (await this.userByUsername(u.username)) return false;
     this.users.set(u.id, u);
     return true;
+  }
+
+  async setPassword(userId: string, salt: Uint8Array, pwHash: Uint8Array, kdfIter: number): Promise<void> {
+    const u = this.users.get(userId);
+    if (u) Object.assign(u, { salt, pwHash, kdfIter });
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    this.vaults.delete(userId);
+    for (const [id, d] of this.devices) if (d.userId === userId) this.devices.delete(id);
+    this.users.delete(userId);
   }
 
   async createDevice(d: Device): Promise<void> {
@@ -45,6 +60,10 @@ export class MemoryStore implements Store {
     return [...this.devices.values()].filter((d) => d.userId === userId && !d.revoked).map((d) => ({ ...d }));
   }
 
+  async revokeDevicesExcept(userId: string, keepId: string): Promise<void> {
+    for (const d of this.devices.values()) if (d.userId === userId && d.id !== keepId) d.revoked = true;
+  }
+
   async getVault(userId: string): Promise<VaultRow | null> {
     const v = this.vaults.get(userId);
     return v ? { ...v, blob: new Uint8Array(v.blob) } : null;
@@ -64,14 +83,28 @@ export class MemoryStore implements Store {
   }
 
   async getAttempt(key: string): Promise<Attempt> {
-    return this.attempts.get(key) ?? { count: 0, lockedUntil: 0 };
+    const a = this.attempts.get(key);
+    return a ? { count: a.count, lockedUntil: a.lockedUntil } : { count: 0, lockedUntil: 0 };
   }
 
-  async setAttempt(key: string, a: Attempt): Promise<void> {
-    this.attempts.set(key, { ...a });
+  async bumpFailure(key: string, now: number): Promise<number> {
+    const a = this.attempts.get(key) ?? { count: 0, lockedUntil: 0, updatedAt: now };
+    a.count += 1;
+    a.updatedAt = now;
+    this.attempts.set(key, a);
+    return a.count;
+  }
+
+  async lockUntil(key: string, until: number): Promise<void> {
+    const a = this.attempts.get(key);
+    if (a) a.lockedUntil = until;
   }
 
   async clearAttempt(key: string): Promise<void> {
     this.attempts.delete(key);
+  }
+
+  async purgeAttempts(before: number): Promise<void> {
+    for (const [k, a] of this.attempts) if (a.updatedAt < before) this.attempts.delete(k);
   }
 }

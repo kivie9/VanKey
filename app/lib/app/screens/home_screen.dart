@@ -256,7 +256,7 @@ class _ItemsTabState extends State<_ItemsTab> {
                         decoration: InputDecoration(hintText: tr('Tìm theo tên, tài khoản, thẻ…'), border: InputBorder.none),
                         onChanged: (_) => setState(() {}),
                       )
-                    : Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                    : Text(title, style: Theme.of(context).textTheme.titleLarge),
               ),
               if (!_searching) Builder(builder: (context) {
                 final n = pendingAlerts(c.data.items, now, snoozedUntil: c.snoozed).length;
@@ -306,15 +306,17 @@ class _ItemsTabState extends State<_ItemsTab> {
                         item: list[i],
                         now: now,
                         showCode: widget.onlyTotp,
+                        // Tab 2FA: chạm là chép mã (ItemTile tự làm), nhấn giữ có thêm "Xem chi tiết".
                         onTap: () => _open(list[i]),
-                        onLongPress: () => showItemActions(this.context, widget.controller, list[i]),
+                        onLongPress: () => showItemActions(this.context, widget.controller, list[i], onOpen: widget.onlyTotp ? () => _open(list[i]) : null),
                         onNext: list[i].totp?.isHotp == true ? () => widget.controller.hotpNext(list[i]) : null,
                       );
                   Widget tiles(List<Item> list) => wide
                       ? SliverPadding(
                           padding: const EdgeInsets.symmetric(horizontal: Gap.lg),
                           sliver: SliverGrid(
-                            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 440, mainAxisExtent: 76, mainAxisSpacing: Gap.sm, crossAxisSpacing: Gap.sm),
+                            // Ô cao hơn để tên dài xuống dòng; tab 2FA còn có mã nằm dưới tên.
+                            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 440, mainAxisExtent: widget.onlyTotp ? 104 : 92, mainAxisSpacing: Gap.sm, crossAxisSpacing: Gap.sm),
                             delegate: SliverChildBuilderDelegate(
                               (c, i) => Card(child: Center(child: tile(list, i))),
                               childCount: list.length,

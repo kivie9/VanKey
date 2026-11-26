@@ -201,7 +201,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(L.field(f), style: text.labelSmall?.copyWith(letterSpacing: 0.3)),
             const SizedBox(height: 3),
-            SelectableText(hidden ? Mask.dots : f.value, style: text.bodyLarge?.copyWith(fontWeight: FontWeight.w500, color: colors.fg, letterSpacing: hidden ? Mask.letterSpacing : 0)),
+            SelectableText(hidden ? Mask.dots : f.value, style: text.bodyLarge?.copyWith(fontFamily: f.secret ? Fonts.mono : null, fontWeight: FontWeight.w500, color: colors.fg, letterSpacing: hidden ? Mask.letterSpacing : 0)),
           ]),
         ),
         if (f.secret)

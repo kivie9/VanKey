@@ -29,7 +29,8 @@ Future<void> openExternalUrl(BuildContext context, VaultController controller, S
 }
 
 /// Nhấn giữ một mục: hiện ngay các thao tác nhanh, khỏi phải mở chi tiết.
-Future<void> showItemActions(BuildContext context, VaultController c, Item item) async {
+/// [onOpen]: thêm dòng "Xem chi tiết" (tab 2FA, nơi chạm vào mục là chép mã thay vì mở).
+Future<void> showItemActions(BuildContext context, VaultController c, Item item, {VoidCallback? onOpen}) async {
   unawaited(HapticFeedback.mediumImpact());
   final colors = AppColors.of(context);
   final user = (item.valueOf('username') ?? item.valueOf('account') ?? '').trim();
@@ -68,6 +69,7 @@ Future<void> showItemActions(BuildContext context, VaultController c, Item item)
               subtitle: item.subtitle.isEmpty ? null : Text(item.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             const Divider(),
+            if (onOpen != null) act(Icons.visibility_outlined, tr('Xem chi tiết'), onOpen),
             if (code != null) act(Icons.pin_outlined, tr('Chép mã 2FA'), () => copyText(context, code!, what: tr('Đã chép mã 2FA'))),
             if (user.isNotEmpty) act(Icons.person_outline, tr('Chép tên đăng nhập'), () => copyText(context, user, what: tr('Đã chép tên đăng nhập'))),
             if (password.isNotEmpty) act(Icons.key_rounded, tr('Chép mật khẩu'), () => copyText(context, password, what: tr('Đã chép mật khẩu'))),
