@@ -13,14 +13,16 @@ import 'import_screen.dart';
 import 'qr_scan_screen.dart';
 import 'quick_view_screen.dart';
 import 'reminders_screen.dart';
+import 'service_suggestions_screen.dart';
 import 'settings_tab.dart';
 import 'sync_screen.dart';
 import 'trash_screen.dart';
 
 /// Tab "Tiện ích": lưới ô vuông, mỗi ô là một chức năng mở rộng. Ô có huy hiệu số khi có việc cần chú ý.
 class ToolsTab extends StatelessWidget {
-  const ToolsTab({super.key, required this.controller});
+  const ToolsTab({super.key, required this.controller, this.showSettings = true});
   final VaultController controller;
+  final bool showSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +37,7 @@ class ToolsTab extends StatelessWidget {
       (Icons.health_and_safety_outlined, tr('Kiểm tra bảo mật'), 0, () => pushPage(context, HealthScreen(controller: c))),
       (Icons.notifications_none, tr('Nhắc nhở'), alerts, () => pushPage(context, RemindersScreen(controller: c))),
       (Icons.content_copy, tr('Mục trùng lặp'), dups, () => pushPage(context, DuplicatesScreen(controller: c))),
+      (Icons.auto_awesome_outlined, tr('Gợi ý dịch vụ'), c.serviceSuggestions.length, () => pushPage(context, ServiceSuggestionsScreen(controller: c))),
       (Icons.delete_outline, tr('Thùng rác'), trashed, () => pushPage(context, TrashScreen(controller: c))),
       (Icons.qr_code_scanner, tr('Quét QR'), 0, () => pushPage(context, QrScanScreen(controller: c))),
       (Icons.file_download_outlined, tr('Nhập dữ liệu'), 0, () => pushPage(context, ImportScreen(controller: c))),
@@ -46,7 +49,7 @@ class ToolsTab extends StatelessWidget {
       Padding(
         padding: const EdgeInsets.fromLTRB(Gap.sm, Gap.sm, Gap.lg, Gap.sm),
         child: Row(children: [
-          SettingsButton(controller: c),
+          if (showSettings) SettingsButton(controller: c) else const SizedBox(width: Gap.sm, height: 44),
           Expanded(child: Text(tr('Tiện ích'), style: Theme.of(context).textTheme.titleLarge)),
         ]),
       ),

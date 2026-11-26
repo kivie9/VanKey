@@ -22,6 +22,7 @@ import '../core/vault/merge.dart';
 import 'google_drive_auth.dart';
 import '../core/vault/hlc.dart';
 import '../core/vault/models.dart';
+import '../core/vault/services.dart';
 import '../core/vault/vault_session.dart';
 import '../core/vault/vault_storage.dart';
 import 'notification_service.dart';
@@ -33,7 +34,7 @@ import './i18n.dart';
 
 enum Phase { loading, onboarding, locked, unlocked }
 
-enum GroupBy { group, type, none }
+enum GroupBy { group, type, service, none }
 
 enum SortBy { name, updated, created }
 
@@ -65,6 +66,9 @@ class VaultController extends ChangeNotifier {
   bool showLogos = true;
   ItemType lastType = ItemType.login; // loại mục vừa tạo gần nhất: lần sau chọn sẵn
   Map<String, DateTime> snoozed = {};
+
+  /// Gợi ý dịch vụ người dùng đã trả lời "Không" (`id mục:id dịch vụ`). Chỉ lưu trên máy này.
+  Set<String> dismissedServices = {};
 
   // Làm chậm khi nhập sai mật khẩu liên tiếp (chỉ chặn giao diện; không thay thế độ khó của Argon2id).
   // Lưu trong kho khóa của hệ điều hành để tắt app mở lại không được đếm lại từ đầu.
@@ -152,6 +156,8 @@ class VaultController extends ChangeNotifier {
         if (sn is Map<String, dynamic>) {
           snoozed = {for (final e in sn.entries) if (e.value is String && DateTime.tryParse(e.value as String) != null) e.key: DateTime.parse(e.value as String)};
         }
+        final ds = j[SettingsKey.dismissedServices];
+        if (ds is List) dismissedServices = ds.whereType<String>().toSet();
         final so = j[SettingsKey.sortBy];
         if (so is String) sortBy = SortBy.values.firstWhere((e) => e.name == so, orElse: () => SortBy.name);
         final lt = j[SettingsKey.lastType];
@@ -526,6 +532,33 @@ class VaultController extends ChangeNotifier {
     phase = Phase.locked;
     error = null;
     notifyListeners();
+  }
+
+  // ---- Gợi ý dịch vụ cho mục chưa có địa chỉ web ----
+
+  /// Gợi ý cho một mục, trừ khi người dùng đã từ chối.
+  KnownService? serviceSuggestionFor(Item item) {
+    final s = suggestService(item);
+    return s == null || dismissedServices.contains('${item.id}:${s.id}') ? null : s;
+  }
+
+  List<(Item, KnownService)> get serviceSuggestions => [
+        for (final i in data.items)
+          if (serviceSuggestionFor(i) case final s?) (i, s),
+      ];
+
+  Future<void> dismissServiceSuggestion(Item item, KnownService service) =>
+      _updateSettings(() => dismissedServices = {...dismissedServices, '${item.id}:${service.id}'});
+
+  /// Người dùng xác nhận gợi ý: điền địa chỉ web của dịch vụ. Tên và các trường khác giữ nguyên.
+  void applyService(Item item, KnownService service) {
+    final current = data.byId(item.id);
+    if (current == null || (current.valueOf('url') ?? '').trim().isNotEmpty) return;
+    final url = Field(key: 'url', value: service.domains.first, kind: 'url');
+    final fields = current.valueOf('url') == null
+        ? [...current.fields, url]
+        : [for (final f in current.fields) f.key == 'url' ? url : f];
+    upsert(current.edit(clock: clock, fields: fields));
   }
 
   // ---- Nhắc nhở ----
@@ -1271,6 +1304,7 @@ class VaultController extends ChangeNotifier {
           SettingsKey.showLogos: showLogos,
           SettingsKey.lastType: lastType.name,
           SettingsKey.snooze: {for (final e in snoozed.entries) e.key: e.value.toUtc().toIso8601String()},
+          SettingsKey.dismissedServices: dismissedServices.toList(),
           if (_syncConfig != null) SettingsKey.sync: _syncConfig,
         }),
         flush: true,

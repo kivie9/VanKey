@@ -142,16 +142,23 @@ class Clock extends StatefulWidget {
 
 class _ClockState extends State<Clock> {
   late final ValueNotifier<DateTime> _now = ValueNotifier(DateTime.now());
+  Timer? _align;
   Timer? _t;
 
   @override
   void initState() {
     super.initState();
-    _t = Timer.periodic(Timing.clockTick, (_) => _now.value = DateTime.now());
+    // Căn mốc theo giây thật (không theo lúc mở màn), để mọi Clock trong app đổi số và vòng tròn cùng một nhịp.
+    final msToNextSecond = 1000 - DateTime.now().millisecond;
+    _align = Timer(Duration(milliseconds: msToNextSecond), () {
+      _now.value = DateTime.now();
+      _t = Timer.periodic(Timing.clockTick, (_) => _now.value = DateTime.now());
+    });
   }
 
   @override
   void dispose() {
+    _align?.cancel();
     _t?.cancel();
     _now.dispose();
     super.dispose();
@@ -221,10 +228,10 @@ class TotpChip extends StatelessWidget {
           // Chữ số dùng màu chữ chính (tương phản cao trên nền nhạt); màu nhấn chỉ dành cho vòng đếm.
           codeText(urgent ? c.danger : c.fg),
           SizedBox(width: big ? Gap.md : 10),
-          SizedBox(
-            width: big ? 26 : 20,
-            height: big ? 26 : 20,
-            child: CircularProgressIndicator(value: frac, strokeWidth: big ? 3 : 2.5, color: color, backgroundColor: c.line),
+          // Cùng hướng và cùng kiểu quét với vòng ở danh sách (_PiePainter).
+          SizedBox.square(
+            dimension: big ? 26 : 20,
+            child: CustomPaint(painter: _PiePainter(frac, color, c.line, stroke: big ? 3 : 2.5)),
           ),
         ]),
         tint: urgent ? c.danger.withValues(alpha: 0.10) : c.accentSoft,
@@ -251,8 +258,11 @@ class TotpChip extends StatelessWidget {
 
 /// Dòng mục dùng chung cho tab Kho và tab 2FA.
 class ItemTile extends StatelessWidget {
-  const ItemTile({super.key, required this.item, required this.now, required this.onTap, this.showCode = true, this.onNext, this.onLongPress});
+  const ItemTile({super.key, required this.item, required this.now, required this.onTap, this.showCode = true, this.onNext, this.onLongPress, this.labels});
   final Item item;
+
+  /// Thay (dòng chính, dòng phụ), dùng trong nhóm xếp chồng theo dịch vụ.
+  final (String, String)? labels;
   final DateTime now;
   final VoidCallback onTap;
   final bool showCode;
@@ -275,8 +285,9 @@ class ItemTile extends StatelessWidget {
       }
     }
     final current = code;
+    final (title, subtitle) = labels ?? (item.title, item.subtitle);
     Widget name(TextStyle? style) => Row(children: [
-          Flexible(child: Text(item.title, style: style)), // tên hiện đầy đủ, dài thì xuống dòng
+          Flexible(child: Text(title, style: style)), // tên hiện đầy đủ, dài thì xuống dòng
           if (item.favorite) Padding(padding: const EdgeInsets.only(left: 6), child: Icon(Icons.star_rounded, size: 16, color: c.warn)),
         ]);
 
@@ -293,7 +304,7 @@ class ItemTile extends StatelessWidget {
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 name(text.titleMedium),
-                if (item.subtitle.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 2), child: Text(item.subtitle, style: text.bodyMedium?.copyWith(color: c.muted))),
+                if (subtitle.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 2), child: Text(subtitle, style: text.bodyMedium?.copyWith(color: c.muted))),
               ]),
             ),
             const SizedBox(width: Gap.md),
@@ -331,14 +342,15 @@ class ItemTile extends StatelessWidget {
         ]),
       ),
       title: name(null),
-      subtitle: item.subtitle.isEmpty ? null : Text(item.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: subtitle.isEmpty ? null : Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
     );
   }
 }
 
 /// Mã 2FA trong danh sách: chữ số lớn không khung, hình tròn đếm ngược bên cạnh. Chạm vào dòng để chép (do dòng xử lý).
 class TotpCode extends StatelessWidget {
-  const TotpCode({super.key, required this.params, required this.now, this.onNext});
+  const TotpCode({super.key, required this.params, required this.now, this.onNext, this.compact = false});
+  final bool compact;
   final TotpParams params;
   final DateTime now;
   final VoidCallback? onNext;
@@ -352,7 +364,7 @@ class TotpCode extends StatelessWidget {
     } on Object {
       return Text(tr('Khóa 2FA lỗi'), style: TextStyle(color: c.danger));
     }
-    const style = TextStyle(fontFamily: Fonts.mono, fontSize: 22, fontWeight: FontWeight.w600, letterSpacing: 0.5, height: 1.1, fontFeatures: [FontFeature.tabularFigures()]);
+    final style = TextStyle(fontFamily: Fonts.mono, fontSize: compact ? 16 : 22, fontWeight: FontWeight.w600, letterSpacing: 0.5, height: 1.1, fontFeatures: const [FontFeature.tabularFigures()]);
 
     if (params.isHotp) {
       return Row(mainAxisSize: MainAxisSize.min, children: [
@@ -371,26 +383,39 @@ class TotpCode extends StatelessWidget {
         Text(Otp.grouped(code), style: style.copyWith(color: color)),
         const SizedBox(width: 10),
         // Hình tròn đặc thu nhỏ dần theo thời gian còn lại của mã.
-        SizedBox.square(dimension: 18, child: CustomPaint(painter: _PiePainter(frac, color, c.line))),
+        SizedBox.square(dimension: compact ? 15 : 18, child: CustomPaint(painter: _PiePainter(frac, color, c.line))),
       ]),
     );
   }
 }
 
+/// Vòng đếm ngược dùng chung. [stroke] = null: hình tròn đặc; có giá trị: vòng viền.
+/// Luôn quét ngược chiều kim đồng hồ từ 12 giờ, để mọi màn hiển thị giống nhau.
 class _PiePainter extends CustomPainter {
-  _PiePainter(this.frac, this.color, this.track);
+  _PiePainter(this.frac, this.color, this.track, {this.stroke});
   final double frac;
   final Color color;
   final Color track;
+  final double? stroke;
 
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
-    canvas.drawOval(rect, Paint()..color = track);
-    // Quét ngược chiều kim đồng hồ từ 12 giờ.
-    canvas.drawArc(rect, -math.pi / 2, -2 * math.pi * frac.clamp(0.0, 1.0), true, Paint()..color = color);
+    final sweep = -2 * math.pi * frac.clamp(0.0, 1.0);
+    final s = stroke;
+    if (s == null) {
+      canvas.drawOval(rect, Paint()..color = track);
+      canvas.drawArc(rect, -math.pi / 2, sweep, true, Paint()..color = color);
+      return;
+    }
+    final ring = rect.deflate(s / 2);
+    final base = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = s;
+    canvas.drawOval(ring, base..color = track);
+    canvas.drawArc(ring, -math.pi / 2, sweep, false, base..color = color);
   }
 
   @override
-  bool shouldRepaint(covariant _PiePainter old) => old.frac != frac || old.color != color || old.track != track;
+  bool shouldRepaint(covariant _PiePainter old) => old.frac != frac || old.color != color || old.track != track || old.stroke != stroke;
 }

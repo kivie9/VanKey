@@ -12,13 +12,17 @@ import '../widgets/common.dart';
 import '../widgets/ui.dart';
 import 'item_editor_screen.dart';
 import 'qr_show_screen.dart';
+import 'service_suggestions_screen.dart';
 import '../group_actions.dart';
 import '../i18n.dart';
 
 class ItemDetailScreen extends StatefulWidget {
-  const ItemDetailScreen({super.key, required this.controller, required this.itemId});
+  const ItemDetailScreen({super.key, required this.controller, required this.itemId, this.inDialog = false});
   final VaultController controller;
   final String itemId;
+
+  /// Đang nằm trong hộp thoại (bố cục máy tính): thanh trên dùng nút đóng và cùng màu hộp thoại.
+  final bool inDialog;
 
   @override
   State<ItemDetailScreen> createState() => _ItemDetailScreenState();
@@ -54,10 +58,11 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       builder: (context, _) {
         final item = c.data.byId(widget.itemId);
         if (item == null || item.inTrash) {
-          return Scaffold(appBar: AppBar(), body: Center(child: Text(tr('Mục không còn tồn tại'))));
+          return Scaffold(appBar: AppBar(leading: widget.inDialog ? const CloseButton() : null), body: Center(child: Text(tr('Mục không còn tồn tại'))));
         }
         return Scaffold(
           appBar: AppBar(
+            leading: widget.inDialog ? const CloseButton() : null,
             actions: [
               IconButton(
                 tooltip: item.favorite ? tr('Bỏ yêu thích') : tr('Yêu thích'),
@@ -127,6 +132,10 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   ),
                 ]),
                 const SizedBox(height: Gap.lg),
+                if (c.serviceSuggestionFor(item) case final service?) ...[
+                  ServiceSuggestionCard(controller: c, item: item, service: service),
+                  const SizedBox(height: Gap.md),
+                ],
                 if (hasTotp) ...[
                   Card(
                     child: Padding(

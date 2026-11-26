@@ -1,10 +1,10 @@
 import 'package:material_ui/material_ui.dart';
 
-import '../constants.dart';
 import '../../core/security/reminders.dart';
 import '../../core/vault/models.dart';
 import '../../core/vault/search.dart';
-import '../labels.dart';
+import '../../core/vault/services.dart';
+import '../widgets/service_stack_header.dart';
 import '../vault_controller.dart';
 import '../item_actions.dart';
 import '../theme.dart';
@@ -20,6 +20,9 @@ import 'sync_screen.dart';
 import '../group_actions.dart';
 import 'tools_tab.dart';
 import '../i18n.dart';
+import '../item_list.dart';
+import '../widgets/speed_dial.dart';
+import 'desktop_home.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.controller});
@@ -48,7 +51,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final c = widget.controller;
     return LayoutBuilder(builder: (context, box) {
-      final wide = box.maxWidth >= 840;
+      // Cửa sổ rộng (Windows, máy tính bảng ngang): bố cục máy tính theo prototype.
+      if (box.maxWidth >= DesktopHome.minWidth) return DesktopHome(controller: c);
       final body = ListenableBuilder(
         listenable: c,
         builder: (context, _) => IndexedStack(index: _tab, children: [
@@ -65,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return Scaffold(
         floatingActionButton: _tab == 2
             ? null
-            : _SpeedDial(
+            : SpeedDial(
                 open: _dialOpen,
                 onOpenChanged: (v) => setState(() => _dialOpen = v),
                 // Tab 2FA mở sẵn loại "Mã 2FA"; tab Kho không mở sẵn loại 2FA dù lần trước vừa tạo mã.
@@ -79,43 +83,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 onScan: () => _push(QrScanScreen(controller: c)),
                 onImport: () => _push(ImportScreen(controller: c)),
               ),
-        bottomNavigationBar: wide
-            ? null
-            : Stack(children: [
-                NavigationBar(
-                  selectedIndex: _tab,
-                  onDestinationSelected: (i) => setState(() => _tab = i),
-                  destinations: [for (final d in dests) NavigationDestination(icon: Icon(d.$1), selectedIcon: Icon(d.$2), label: d.$3)],
-                ),
-                if (_dialOpen && _tab != 2) _scrim(),
-              ]),
+        bottomNavigationBar: Stack(children: [
+          NavigationBar(
+            selectedIndex: _tab,
+            onDestinationSelected: (i) => setState(() => _tab = i),
+            destinations: [for (final d in dests) NavigationDestination(icon: Icon(d.$1), selectedIcon: Icon(d.$2), label: d.$3)],
+          ),
+          if (_dialOpen && _tab != 2) _scrim(),
+        ]),
         body: Stack(children: [
-          SafeArea(
-          child: wide
-              ? Row(children: [
-                  NavigationRail(
-                    selectedIndex: _tab,
-                    onDestinationSelected: (i) => setState(() => _tab = i),
-                    labelType: NavigationRailLabelType.all,
-                    destinations: [for (final d in dests) NavigationRailDestination(icon: Icon(d.$1), selectedIcon: Icon(d.$2), label: Text(d.$3))],
-                  ),
-                  const VerticalDivider(width: 1),
-                  Expanded(child: body),
-                ])
-              : body,
-        ),
+          SafeArea(child: body),
           if (_dialOpen && _tab != 2) _scrim(),
         ]),
       );
     });
   }
 }
-
-/// Mục có mã 2FA: tab 2FA chỉ hiện các mục này.
-bool _hasCode(Item i) => i.totp != null && i.totp!.secret.isNotEmpty;
-
-/// Tab Kho không hiện mục loại "Mã 2FA" (đã có tab riêng). Mục loại 2FA hỏng, không có khóa, vẫn hiện ở Kho để không bị ẩn mất.
-bool _inVault(Item i) => i.type != ItemType.totp || !_hasCode(i);
 
 /// Tab Kho (mật khẩu, thẻ, ghi chú...; không hiện mã) hoặc tab 2FA (chỉ mục có mã).
 class _ItemsTab extends StatefulWidget {
@@ -131,6 +114,7 @@ class _ItemsTabState extends State<_ItemsTab> {
   bool _searching = false;
   final _q = TextEditingController();
   final _collapsed = <String>{};
+  final _openStacks = <String>{}; // nhóm dịch vụ đang mở (mặc định đóng)
   String _groupFilter = ''; // rỗng = mọi nhóm
 
   @override
@@ -180,7 +164,7 @@ class _ItemsTabState extends State<_ItemsTab> {
                   ),
                 ]),
                 label(tr('Gom theo')),
-                chips<GroupBy>([(GroupBy.group, tr('Thẻ')), (GroupBy.type, tr('Loại')), (GroupBy.none, tr('Không gom'))], c.groupBy, c.setGroupBy),
+                chips<GroupBy>([(GroupBy.group, tr('Thẻ')), (GroupBy.type, tr('Loại')), (GroupBy.service, tr('Dịch vụ')), (GroupBy.none, tr('Không gom'))], c.groupBy, c.setGroupBy),
                 label(tr('Sắp xếp')),
                 chips<SortBy>([(SortBy.name, tr('Tên A–Z')), (SortBy.updated, tr('Mới sửa')), (SortBy.created, tr('Mới tạo'))], c.sortBy, c.setSortBy),
                 if (groups.isNotEmpty) ...[
@@ -216,28 +200,14 @@ class _ItemsTabState extends State<_ItemsTab> {
     final c = widget.controller;
     final items = c.data.items
         .where((i) => !i.inTrash)
-        .where((i) => widget.onlyTotp ? _hasCode(i) : _inVault(i))
+        .where((i) => widget.onlyTotp ? hasCode(i) : inVault(i))
         .where((i) => matchesQuery(i, _q.text))
         .where((i) => _groupFilter.isEmpty || i.group == _groupFilter)
-        .toList()
-      ..sort((a, b) => switch (c.sortBy) {
-            SortBy.name => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
-            SortBy.updated => b.updatedAt.compareTo(a.updatedAt),
-            SortBy.created => b.createdAt.compareTo(a.createdAt),
-          });
+        .toList();
+    sortItems(items, c.sortBy);
 
-    final groups = <String, List<Item>>{};
     final favs = items.where((i) => i.favorite).toList();
-    for (final i in items) {
-      final key = switch (c.groupBy) {
-        GroupBy.group => i.group.isEmpty ? tr('Chưa gắn thẻ') : i.group,
-        GroupBy.type => L.type(i.type),
-        GroupBy.none => '',
-      };
-      groups.putIfAbsent(key, () => []).add(i);
-    }
-    final names = groups.keys.toList()
-      ..sort((a, b) => a == tr('Chưa gắn thẻ') ? 1 : (b == tr('Chưa gắn thẻ') ? -1 : a.compareTo(b)));
+    final groups = groupItems(items, c.groupBy);
 
     final title = widget.onlyTotp ? tr('Mã 2FA') : tr('Kho');
     return Clock(
@@ -302,8 +272,9 @@ class _ItemsTabState extends State<_ItemsTab> {
               : LayoutBuilder(builder: (context, box) {
                   // Màn rộng: nhiều cột (tối đa ~440 px mỗi cột); điện thoại: một cột.
                   final wide = box.maxWidth >= 640;
-                  Widget tile(List<Item> list, int i) => ItemTile(
+                  Widget tile(List<Item> list, int i, {(String, String)? labels}) => ItemTile(
                         item: list[i],
+                        labels: labels,
                         now: now,
                         showCode: widget.onlyTotp,
                         // Tab 2FA: chạm là chép mã (ItemTile tự làm), nhấn giữ có thêm "Xem chi tiết".
@@ -329,22 +300,48 @@ class _ItemsTabState extends State<_ItemsTab> {
                             childCount: list.length,
                           ),
                         );
+                  // Gom theo dịch vụ: dịch vụ có từ hai tài khoản là một thẻ, bấm để mở. Đang tìm thì mở sẵn.
+                  Widget stacks() {
+                    final rows = <Widget>[];
+                    for (final s in stackByService(items, byName: c.sortBy == SortBy.name)) {
+                      if (!s.isStack) {
+                        rows.add(Card(child: tile(s.items, 0)));
+                        continue;
+                      }
+                      final open = _q.text.isNotEmpty || _openStacks.contains(s.key);
+                      rows.add(Card(
+                        child: Column(children: [
+                          ServiceStackHeader(stack: s, open: open, onTap: () => setState(() => _openStacks.contains(s.key) ? _openStacks.remove(s.key) : _openStacks.add(s.key))),
+                          if (open)
+                            for (var i = 0; i < s.items.length; i++) ...[
+                              const Divider(indent: Gap.lg),
+                              Padding(padding: const EdgeInsets.only(left: Gap.md), child: tile(s.items, i, labels: stackedLabels(s.items[i], s.name))),
+                            ],
+                        ]),
+                      ));
+                    }
+                    return SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(Gap.lg, Gap.md, Gap.lg, 0),
+                      sliver: SliverList.separated(itemCount: rows.length, separatorBuilder: (_, _) => const SizedBox(height: Gap.sm), itemBuilder: (_, i) => rows[i]),
+                    );
+                  }
+
                   return CustomScrollView(slivers: [
                     if (favs.isNotEmpty && _q.text.isEmpty) ...[
                       SliverToBoxAdapter(child: _Header(tr('Yêu thích'))),
                       tiles(favs),
                     ],
-                    for (final n in names) ...[
+                    if (c.groupBy == GroupBy.service) stacks() else for (final (n, list) in groups) ...[
                       if (n.isNotEmpty)
                         SliverToBoxAdapter(
                           child: _Header(
                             n,
-                            count: groups[n]!.length,
+                            count: list.length,
                             collapsed: _collapsed.contains(n),
                             onTap: () => setState(() => _collapsed.contains(n) ? _collapsed.remove(n) : _collapsed.add(n)),
                           ),
                         ),
-                      if (n.isEmpty || !_collapsed.contains(n)) tiles(groups[n]!),
+                      if (n.isEmpty || !_collapsed.contains(n)) tiles(list),
                     ],
                     const SliverToBoxAdapter(child: SizedBox(height: 96)),
                   ]);
@@ -377,75 +374,4 @@ class _Empty extends StatelessWidget {
         title: searching ? tr('Không tìm thấy') : (onlyTotp ? tr('Chưa có mã 2FA nào') : tr('Kho đang trống')),
         message: searching ? null : tr('Bấm dấu + để thêm mục đầu tiên'),
       );
-}
-
-/// Nút tròn dấu cộng: xoay thành × và bung các lựa chọn thêm mục.
-class _SpeedDial extends StatefulWidget {
-  const _SpeedDial({required this.open, required this.onOpenChanged, required this.onManual, required this.onScan, required this.onImport});
-  final bool open;
-  final ValueChanged<bool> onOpenChanged;
-  final VoidCallback onManual;
-  final VoidCallback onScan;
-  final VoidCallback onImport;
-
-  @override
-  State<_SpeedDial> createState() => _SpeedDialState();
-}
-
-class _SpeedDialState extends State<_SpeedDial> {
-  bool get _open => widget.open;
-
-  void _run(VoidCallback f) {
-    widget.onOpenChanged(false);
-    f();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final actions = [
-      (Icons.edit_outlined, tr('Nhập tay'), widget.onManual),
-      (Icons.qr_code_scanner, tr('Quét QR'), widget.onScan),
-      (Icons.file_download_outlined, tr('Nhập từ file'), widget.onImport),
-    ];
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        for (final a in actions.reversed)
-          AnimatedSize(
-            duration: Timing.fast,
-            curve: Curves.easeOut,
-            child: _open
-                ? Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      // Nhãn cũng bấm được (không chỉ icon tròn).
-                      // Nền được làm mờ khi menu mở, nên menu dùng màu thẻ bình thường là đủ nổi.
-                      Material(
-                        color: AppColors.of(context).card,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.sm + 2)),
-                        child: InkWell(
-                          customBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.sm + 2)),
-                          onTap: () => _run(a.$3),
-                          child: Padding(padding: const EdgeInsets.symmetric(horizontal: Gap.md, vertical: 10), child: Text(a.$2, style: Theme.of(context).textTheme.labelLarge)),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      FloatingActionButton.small(heroTag: a.$2, tooltip: a.$2, backgroundColor: AppColors.of(context).card, foregroundColor: AppColors.of(context).accent, onPressed: () => _run(a.$3), child: Icon(a.$1)),
-                    ]),
-                  )
-                : const SizedBox(width: 0, height: 0),
-          ),
-        DecoratedBox(
-          decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [BoxShadow(color: AppColors.of(context).accent.withValues(alpha: 0.35), blurRadius: 16, offset: const Offset(0, 6))]),
-          child: FloatingActionButton(
-            heroTag: 'main',
-            tooltip: _open ? tr('Đóng') : tr('Thêm mục'),
-            onPressed: () => widget.onOpenChanged(!_open),
-            child: AnimatedRotation(turns: _open ? 0.125 : 0, duration: Timing.fast, child: const Icon(Icons.add)),
-          ),
-        ),
-      ],
-    );
-  }
 }

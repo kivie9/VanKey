@@ -153,6 +153,17 @@ const Map<String, String> enStrings = {
 
   // ---- Cài đặt ----
   'Khóa ngay': 'Lock now',
+  'Có xung đột': 'Conflicts',
+  'Chọn hoặc gõ, ví dụ Facebook': 'Pick or type, e.g. Facebook',
+  'Thêm dịch vụ "{p0}"': 'Add service "{p0}"',
+  '{p0} tài khoản': '{p0} accounts',
+  '"{p0}" có phải là {p1}?': 'Is "{p0}" a {p1} account?',
+  'Bấm "Đúng" sẽ điền địa chỉ {p0}, tên giữ nguyên.': '"Yes" fills in the address {p0} and keeps the name.',
+  'Không': 'No',
+  'Đúng': 'Yes',
+  'Gợi ý dịch vụ': 'Service suggestions',
+  'Không còn gợi ý nào': 'No more suggestions',
+  'Mục chưa có địa chỉ web mà tên giống một dịch vụ sẽ hiện ở đây.': 'Items without a web address whose name looks like a known service show up here.',
   'Tự khóa': 'Auto-lock',
   'Không tự khóa': 'Never auto-lock',
   'Máy chủ chưa đổi được mật khẩu: {p0}': 'The server could not change the password: {p0}',

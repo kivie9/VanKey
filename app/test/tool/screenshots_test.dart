@@ -170,4 +170,50 @@ void main() {
       });
     }
   }
+
+  // Gom theo dịch vụ (xếp chồng) và form thêm mục có ô "Dịch vụ".
+  for (final (name, size) in [('25_dich_vu_may_tinh', const Size(1280, 720)), ('26_dich_vu_dien_thoai', const Size(412, 915))]) {
+    testWidgets(name, (t) async {
+      await t.binding.setSurfaceSize(size);
+      addTearDown(() => t.binding.setSurfaceSize(null));
+      final c = _sample()..groupBy = GroupBy.service;
+      for (final (title, user) in [('FB bán hàng', 'shop.vanle@gmail.com'), ('Facebook', 'van.phu@gmail.com'), ('Google', 'van.le@congty.vn')]) {
+        c.upsert(Item.create(type: ItemType.login, title: title, clock: c.clock, group: 'Công việc', values: {'username': user, 'url': title == 'Google' ? 'google.com' : 'facebook.com'}));
+      }
+      await t.pumpWidget(RepaintBoundary(child: _app(HomeScreen(controller: c), Brightness.light)));
+      await t.pump(const Duration(milliseconds: 300));
+      await t.tap(find.text('Facebook').first);
+      await t.pumpAndSettle(const Duration(milliseconds: 100), EnginePhase.sendSemanticsUpdate, const Duration(seconds: 3));
+      await shot(t, '${name}_light');
+    });
+  }
+  testWidgets('27_o_dich_vu', (t) async {
+    await t.binding.setSurfaceSize(const Size(800, 600));
+    addTearDown(() => t.binding.setSurfaceSize(null));
+    final c = _sample();
+    await t.pumpWidget(RepaintBoundary(child: _app(ItemEditorScreen(controller: c, startType: ItemType.login), Brightness.light)));
+    await t.pump(const Duration(milliseconds: 300));
+    await t.enterText(find.byType(TextField).first, 'goo');
+    await t.pumpAndSettle(const Duration(milliseconds: 100), EnginePhase.sendSemanticsUpdate, const Duration(seconds: 3));
+    await shot(t, '27_o_dich_vu_light');
+  });
+
+  // Bố cục máy tính (cửa sổ Windows 1280x720).
+  final desktop = <String, String?>{'20_may_tinh': null, '21_may_tinh_chi_tiet': 'GitHub', '22_may_tinh_2fa': 'Mã 2FA', '23_may_tinh_cai_dat': 'Cài đặt', '24_may_tinh_tien_ich': 'Tiện ích'};
+  for (final b in [Brightness.light, Brightness.dark]) {
+    for (final e in desktop.entries) {
+      testWidgets('${e.key} ${b.name}', (t) async {
+        await t.binding.setSurfaceSize(const Size(1280, 720));
+        addTearDown(() => t.binding.setSurfaceSize(null));
+        final c = _sample();
+        await t.pumpWidget(RepaintBoundary(child: _app(HomeScreen(controller: c), b)));
+        await t.pump(const Duration(milliseconds: 300));
+        if (e.value != null) {
+          await t.tap(find.text(e.value!).first);
+          await t.pumpAndSettle(const Duration(milliseconds: 100), EnginePhase.sendSemanticsUpdate, const Duration(seconds: 3));
+        }
+        await shot(t, '${e.key}_${b.name}');
+      });
+    }
+  }
 }
