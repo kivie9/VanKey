@@ -47,5 +47,5 @@ app.*.map.json
 # Widget Preview related
 .widget_preview/
 
-# Ban build chep ra de chay (build-windows.cmd)
+# Ban build chep ra de chay (build-windows.cmd cu; gio scripts/build-windows.cmd cai bang bo cai)
 /dist/

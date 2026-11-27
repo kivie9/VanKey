@@ -1,12 +1,12 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../widgets/form_layout.dart';
 
 import '../i18n.dart';
 import '../theme.dart';
+import '../update_check.dart';
 import '../widgets/ui.dart';
-
-const appVersion = '0.1.0';
 
 /// Hỗ trợ: các câu hỏi thường gặp.
 class HelpScreen extends StatelessWidget {
@@ -125,6 +125,7 @@ class AboutScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
+        const _UpdateTile(),
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.description_outlined),
@@ -138,4 +139,62 @@ class AboutScreen extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// "Kiểm tra bản mới": chỉ hỏi GitHub khi người dùng bấm, có bản mới thì mở trang tải về.
+class _UpdateTile extends StatefulWidget {
+  const _UpdateTile();
+
+  @override
+  State<_UpdateTile> createState() => _UpdateTileState();
+}
+
+class _UpdateTileState extends State<_UpdateTile> {
+  bool _busy = false;
+  String? _status;
+  ReleaseInfo? _newer;
+
+  Future<void> _check() async {
+    setState(() {
+      _busy = true;
+      _status = null;
+      _newer = null;
+    });
+    String status;
+    ReleaseInfo? newer;
+    try {
+      final r = await fetchLatestRelease();
+      if (isNewerVersion(r.version, appVersion)) {
+        newer = r;
+        status = tr('Có bản mới {p0}. Bấm để tải về.', {'p0': r.version});
+      } else {
+        status = tr('Bạn đang dùng bản mới nhất.');
+      }
+    } catch (_) {
+      status = tr('Không kiểm tra được. Kiểm tra mạng rồi thử lại.');
+    }
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      _status = status;
+      _newer = newer;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final newer = _newer;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(newer != null ? Icons.download_outlined : Icons.system_update_outlined),
+      title: Text(tr('Kiểm tra bản mới')),
+      subtitle: _status == null ? null : Text(_status!),
+      trailing: _busy ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : null,
+      onTap: _busy
+          ? null
+          : newer != null
+          ? () => launchUrl(newer.page, mode: LaunchMode.externalApplication)
+          : _check,
+    );
+  }
 }

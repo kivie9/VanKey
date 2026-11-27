@@ -11,6 +11,7 @@ import '../constants.dart';
 import '../i18n.dart';
 import '../widgets/common.dart';
 import '../theme.dart';
+import '../update_check.dart';
 import '../widgets/form_layout.dart';
 import '../widgets/ui.dart';
 import '../vault_controller.dart';

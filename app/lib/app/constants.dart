@@ -13,6 +13,9 @@ abstract final class Timing {
   /// Thông báo "Đã chép".
   static const copiedSnack = Duration(seconds: 2);
 
+  /// Thông báo có nút Hoàn tác tự đóng sau chừng này.
+  static const undoSnack = Duration(seconds: 6);
+
   /// Mọi thứ đã hiện ra ở màn chi tiết tự ẩn lại sau chừng này.
   static const autoHideSecrets = Duration(seconds: 30);
 
@@ -49,8 +52,12 @@ abstract final class LockPolicy {
   /// Các mức người dùng được chọn (giây). 0 = khóa ngay khi thoát app.
   static const autoLockChoices = [never, 0, 30, 60, 300, 900];
 
-  /// Không tự khóa khi chuyển app (vẫn phải mở khóa sau khi tắt hẳn app).
+  /// Không tự khóa: khóa mở kho được cất trong kho khóa của hệ điều hành, mở app (kể cả sau khi tắt hẳn hay khởi
+  /// động lại máy) là vào thẳng. Người dùng phải tự chọn và xác nhận cảnh báo.
   static const never = -1;
+
+  /// Mặc định cho kho mới: khóa sau 5 phút ở nền, và luôn hỏi mật khẩu khi mở lại app.
+  static const defaultSeconds = 300;
 
   /// Từ lần sai thứ mấy thì bắt đầu bắt chờ.
   static const freeAttempts = 3;

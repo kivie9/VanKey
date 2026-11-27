@@ -257,6 +257,10 @@ const Map<String, String> enStrings = {
   'Bản thử nghiệm. Dữ liệu chỉ nằm trên máy này, chưa đồng bộ.':
       'Test build. Data stays on this device and is not synced yet.',
   'Giấy phép mã nguồn mở': 'Open-source licenses',
+  'Kiểm tra bản mới': 'Check for updates',
+  'Có bản mới {p0}. Bấm để tải về.': 'Version {p0} is available. Tap to download.',
+  'Bạn đang dùng bản mới nhất.': 'You have the latest version.',
+  'Không kiểm tra được. Kiểm tra mạng rồi thử lại.': 'Could not check. Check your connection and try again.',
 
   // ---- Thùng rác, trùng lặp ----
   'Thùng rác trống': 'Trash is empty',

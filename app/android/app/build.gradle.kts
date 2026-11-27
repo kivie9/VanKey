@@ -7,7 +7,7 @@ plugins {
 }
 
 // Khóa ký bản phát hành: đọc từ android/key.properties (KHÔNG commit, đã có trong .gitignore).
-// Tạo bằng tao-khoa-ky-android.cmd ở gốc dự án. Mọi bản cài lên máy phải ký cùng một khóa, nếu không Android
+// Tạo bằng app/scripts/create-android-signing-key.cmd. Mọi bản cài lên máy phải ký cùng một khóa, nếu không Android
 // không cho cài đè và người dùng buộc phải gỡ app (gỡ app là mất kho trên máy).
 val keyProps = Properties().apply {
     val f = rootProject.file("key.properties")

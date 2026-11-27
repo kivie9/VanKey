@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:vankey/app/constants.dart';
 import 'package:vankey/app/screens/home_screen.dart';
 import 'package:vankey/app/screens/item_detail_screen.dart';
 import 'package:vankey/app/screens/item_editor_screen.dart';
@@ -40,6 +41,10 @@ void main() {
       expect(c.data.byId(item.id)!.inTrash, isTrue);
       expect(find.byType(ItemDetailScreen), findsNothing);
       expect(find.text('Hoàn tác'), findsOneWidget);
+
+      await tester.pump(Timing.undoSnack);
+      await tester.pumpAndSettle();
+      expect(find.text('Hoàn tác'), findsNothing, reason: 'thanh Hoàn tác tự đóng');
     });
   });
 

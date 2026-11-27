@@ -1,7 +1,8 @@
 name: Build & Release
 
 # - Push lên nhánh main: build Android và Windows (rẻ), tải về phần Artifacts.
-# - Push tag v* (ví dụ v0): build cả 3 nền tảng rồi tạo GitHub Release.
+# - Push tag dạng v1.2.3: build cả 3 nền tảng rồi tạo GitHub Release. Số phiên bản của app lấy từ tag,
+#   push lên main thì lấy từ pubspec.yaml. Số build là số lần chạy workflow (tăng dần, Android cần để cài đè).
 # - Chạy tay (Actions -> Run workflow): chọn nền tảng cần build. iOS tốn phút nhiều nhất nên chỉ chạy khi chọn.
 
 on:
@@ -46,7 +47,22 @@ jobs:
 
       - run: flutter pub get
 
-      # Khóa ký bản phát hành (tạo bằng tao-khoa-ky-android.cmd). Thiếu secret thì dừng hẳn: bản ký bằng khóa debug
+      - name: Số phiên bản
+        id: ver
+        shell: bash
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            v="${GITHUB_REF_NAME#v}"
+          else
+            v=$(sed -nE 's/^version: *([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' pubspec.yaml)
+          fi
+          if ! [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Phiên bản phải có dạng 1.2.3 (tag v1.2.3), đang là '$v'."
+            exit 1
+          fi
+          echo "name=$v" >> "$GITHUB_OUTPUT"
+
+      # Khóa ký bản phát hành (tạo bằng app/scripts/create-android-signing-key.cmd). Thiếu secret thì dừng hẳn: bản ký bằng khóa debug
       # của CI đổi mỗi lần chạy, không cài đè được bản cũ (người dùng phải gỡ app và mất kho trên máy).
       - name: Khóa ký Android
         env:
@@ -55,7 +71,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
           if [ -z "$KEYSTORE_B64" ] || [ -z "$KEYSTORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ]; then
-            echo "::error::Chưa đặt secret ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS (xem tao-khoa-ky-android.ps1)."
+            echo "::error::Chưa đặt secret ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS (xem app/scripts/create-android-signing-key.ps1)."
             exit 1
           fi
           echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
@@ -66,7 +82,7 @@ jobs:
             echo "keyPassword=$KEYSTORE_PASSWORD"
           } > android/key.properties
 
-      - run: flutter build apk --release
+      - run: flutter build apk --release --build-name=${{ steps.ver.outputs.name }} --build-number=${{ github.run_number }} --dart-define=APP_VERSION=${{ steps.ver.outputs.name }}
 
       - uses: actions/upload-artifact@v4
         with:
@@ -87,16 +103,46 @@ jobs:
 
       - run: flutter pub get
 
-      - run: flutter build windows --release
+      - name: Số phiên bản
+        id: ver
+        shell: bash
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            v="${GITHUB_REF_NAME#v}"
+          else
+            v=$(sed -nE 's/^version: *([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' pubspec.yaml)
+          fi
+          if ! [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Phiên bản phải có dạng 1.2.3 (tag v1.2.3), đang là '$v'."
+            exit 1
+          fi
+          echo "name=$v" >> "$GITHUB_OUTPUT"
 
-      - name: Đóng gói thư mục Release thành zip
+      - run: flutter build windows --release --build-name=${{ steps.ver.outputs.name }} --build-number=${{ github.run_number }} --dart-define=APP_VERSION=${{ steps.ver.outputs.name }}
+
+      # Máy chưa cài Visual C++ Redistributable cần 3 DLL này cạnh vankey.exe (windows/CMakeLists.txt tự chép vào).
+      - name: Kiểm tra đã kèm VC++ runtime
         shell: pwsh
-        run: Compress-Archive -Path "build\windows\x64\runner\Release\*" -DestinationPath "vankey-windows.zip"
+        run: |
+          foreach ($f in 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll') {
+            if (-not (Test-Path "build\windows\x64\runner\Release\$f")) { Write-Error "Thiếu $f trong bản build"; exit 1 }
+          }
+
+      - name: Tạo bộ cài (Inno Setup)
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /Qp "/DAppVersion=${{ steps.ver.outputs.name }}" installer\vankey.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Đóng gói bản portable (zip)
+        shell: pwsh
+        run: Compress-Archive -Path "build\windows\x64\runner\Release\*" -DestinationPath "build\installer\vankey-windows-portable.zip"
 
       - uses: actions/upload-artifact@v4
         with:
           name: vankey-windows
-          path: app/vankey-windows.zip
+          path: app/build/installer/
           retention-days: 7
 
   ios:
@@ -150,7 +196,8 @@ jobs:
         run: |
           mkdir -p upload
           cp release-files/vankey-android/app-release.apk "upload/vankey-${TAG}-android.apk"
-          cp release-files/vankey-windows/vankey-windows.zip "upload/vankey-${TAG}-windows.zip"
+          cp release-files/vankey-windows/*-windows-setup.exe "upload/vankey-${TAG}-windows-setup.exe"
+          cp release-files/vankey-windows/vankey-windows-portable.zip "upload/vankey-${TAG}-windows-portable.zip"
           gh release create "$TAG" upload/* \
             --title "VanKey $TAG" \
             --generate-notes

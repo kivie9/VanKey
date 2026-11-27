@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
+import '../helpers/clipboard.dart';
 import 'package:vankey/app/screens/home_screen.dart';
 import 'package:vankey/app/screens/item_detail_screen.dart';
 import 'package:vankey/app/screens/item_editor_screen.dart';
@@ -132,11 +133,7 @@ void main() {
     final c = _controller();
     c.upsert(Item.create(type: ItemType.totp, title: 'Dropbox 2FA', clock: c.clock, totp: const TotpParams(secret: 'JBSWY3DPEHPK3PXP')));
     String? copied;
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
-      if (call.method == 'Clipboard.setData') copied = (call.arguments as Map)['text'] as String?;
-      return null;
-    });
-    addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
+    mockClipboard(tester, (text) => copied = text);
     await tester.binding.setSurfaceSize(const Size(420, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(_wrap(HomeScreen(controller: c)));

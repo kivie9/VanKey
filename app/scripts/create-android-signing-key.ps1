@@ -9,7 +9,7 @@ $ErrorActionPreference = 'Stop'
 $dir = Join-Path $env:USERPROFILE 'vankey-signing'
 $jks = Join-Path $dir 'vankey-release.jks'
 $alias = 'vankey'
-$props = Join-Path $PSScriptRoot 'app\android\key.properties'
+$props = Join-Path $PSScriptRoot '..\android\key.properties'
 
 if (Test-Path $jks) {
   Write-Host "Đã có khóa: $jks"

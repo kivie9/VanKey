@@ -96,7 +96,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   final messenger = ScaffoldMessenger.of(context);
                   c.trash(item);
                   Navigator.of(context).pop();
-                  messenger.showSnackBar(
+                  showUndoSnack(
+                    messenger,
                     SnackBar(content: Text(tr('Đã chuyển "{p0}" vào thùng rác', {'p0': item.title})), action: SnackBarAction(label: tr('Hoàn tác'), onPressed: () => c.restore(c.data.byId(item.id)!))),
                   );
                 },
@@ -147,7 +148,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   ),
                   const SizedBox(height: Gap.md),
                 ],
-                if (shown.isNotEmpty) SectionCard(children: [for (final i in shown) _fieldRow(item.fields[i], i)]),
+                if (shown.isNotEmpty) SectionCard(children: [for (final i in shown) _fieldRow(item.fields[i], i, plain: item.typeName == ItemType.note.name && item.fields[i].key == 'content')]),
                 if (item.pwHistory.isNotEmpty) ...[const SizedBox(height: Gap.md), _history(item)],
                 if (shown.isEmpty && !hasTotp)
                   Padding(padding: const EdgeInsets.all(Gap.xl), child: Center(child: Text(tr('Mục này chưa có thông tin nào.'), style: text.bodyMedium?.copyWith(color: colors.muted)))),
@@ -194,8 +195,10 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         ),
       );
 
-  Widget _fieldRow(Field f, int index) {
-    final hidden = f.secret && !_revealed.contains(index);
+  /// [plain]: trường không cần che (ví dụ nội dung ghi chú ngắn) nên hiện luôn, không có nút mắt.
+  Widget _fieldRow(Field f, int index, {bool plain = false}) {
+    final secret = f.secret && !plain;
+    final hidden = secret && !_revealed.contains(index);
     final text = Theme.of(context).textTheme;
     final colors = AppColors.of(context);
     return Padding(
@@ -205,10 +208,10 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(L.field(f), style: text.labelSmall?.copyWith(letterSpacing: 0.3)),
             const SizedBox(height: 3),
-            SelectableText(hidden ? Mask.dots : f.value, style: text.bodyLarge?.copyWith(fontFamily: f.secret ? Fonts.mono : null, fontWeight: FontWeight.w500, color: colors.fg, letterSpacing: hidden ? Mask.letterSpacing : 0)),
+            SelectableText(hidden ? Mask.dots : f.value, style: text.bodyLarge?.copyWith(fontFamily: secret ? Fonts.mono : null, fontWeight: FontWeight.w500, color: colors.fg, letterSpacing: hidden ? Mask.letterSpacing : 0)),
           ]),
         ),
-        if (f.secret)
+        if (secret)
           IconButton(
             tooltip: hidden ? tr('Hiện') : tr('Ẩn'),
             icon: Icon(hidden ? Icons.visibility_outlined : Icons.visibility_off_outlined),

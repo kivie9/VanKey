@@ -35,6 +35,15 @@ Future<void> copyText(BuildContext context, String text, {String? what}) async {
   });
 }
 
+/// Hiện thanh thông báo có nút Hoàn tác rồi tự đóng sau [Timing.undoSnack].
+/// Flutter không tự đóng thanh có nút khi đang bật trình đọc màn hình (Narrator/NVDA/VoiceOver),
+/// nên thanh sẽ hiện mãi; vì vậy tự hẹn giờ đóng.
+void showUndoSnack(ScaffoldMessengerState messenger, SnackBar snack) {
+  final controller = messenger.showSnackBar(snack);
+  final timer = Timer(Timing.undoSnack, controller.close);
+  controller.closed.whenComplete(timer.cancel);
+}
+
 /// Mở một trang mới (đẩy lên ngăn xếp điều hướng). Dùng chung cho mọi nơi cần chuyển trang.
 Future<void> pushPage(BuildContext context, Widget page, {bool full = false}) =>
     Navigator.of(context).push(

@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:material_ui/material_ui.dart';
 
 /// Khoảng cách chuẩn (bội của 4). Dùng thay cho số rời rạc trong từng màn hình.
@@ -354,10 +356,17 @@ abstract final class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: c.fg,
-        contentTextStyle: text.bodyMedium?.copyWith(color: c.page),
+        // Trên máy tính, thanh thông báo có chiều rộng cố định thay vì kéo hết cửa sổ.
+        width: Platform.isWindows || Platform.isMacOS || Platform.isLinux ? 360 : null,
+        // Giao diện tối: thanh nền thẻ tối + chữ sáng, để nút Hoàn tác (màu nhấn) đọc được.
+        // Giao diện sáng giữ thanh tối như cũ.
+        backgroundColor: b == Brightness.dark ? c.card : c.fg,
+        contentTextStyle: text.bodyMedium?.copyWith(color: b == Brightness.dark ? c.fg : c.page),
         actionTextColor: c.accent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.md)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Radii.md),
+          side: b == Brightness.dark ? BorderSide(color: c.line) : BorderSide.none,
+        ),
         elevation: 4,
       ),
       tooltipTheme: TooltipThemeData(

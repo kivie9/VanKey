@@ -28,13 +28,25 @@ void main() {
 
   Future<void> created() async {
     final a = await _open(dir);
-    expect(a.lockAfterSeconds, LockPolicy.never, reason: 'mặc định không tự khóa');
+    await a.setLockAfter(LockPolicy.never);
     await a.createVault(_pass);
     a.confirmRecoverySaved();
     a.upsert(Item.create(type: ItemType.login, title: 'GitHub', clock: a.clock));
     await a.lock(); // ghi kho xuống đĩa
     expect(await a.unlockWithPassphrase(_pass), isTrue);
   }
+
+  test('mặc định tự khóa sau 5 phút: mở lại app phải nhập mật khẩu, không cất khóa kho', () async {
+    final a = await _open(dir);
+    expect(a.lockAfterSeconds, LockPolicy.defaultSeconds);
+    await a.createVault(_pass);
+    a.confirmRecoverySaved();
+    await a.lock();
+    expect(await a.unlockWithPassphrase(_pass), isTrue);
+    expect(await const FlutterSecureStorage().read(key: 'vault.remember.key'), isNull);
+    final b = await _open(dir);
+    expect(b.phase, Phase.locked);
+  });
 
   test('không tự khóa: mở lại app vào thẳng kho, không hỏi mật khẩu', () async {
     await created();

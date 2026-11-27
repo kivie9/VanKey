@@ -89,11 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
+            // CompanyName + ProductName pick the vault folder (%APPDATA%\com.vankey\vankey, via path_provider).
+            // DO NOT change them: the app would look for the vault elsewhere and appear to lose all data.
             VALUE "CompanyName", "com.vankey" "\0"
-            VALUE "FileDescription", "vankey" "\0"
+            VALUE "FileDescription", "VanKey" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "vankey" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.vankey. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 VanKey" "\0"
             VALUE "OriginalFilename", "vankey.exe" "\0"
             VALUE "ProductName", "vankey" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"

@@ -2,6 +2,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:simple_icons/simple_icons.dart';
+import '../helpers/clipboard.dart';
+import 'package:vankey/app/constants.dart';
 import 'package:vankey/app/screens/home_screen.dart';
 import 'package:vankey/app/screens/item_editor_screen.dart';
 import 'package:vankey/app/vault_controller.dart';
@@ -34,11 +36,7 @@ void main() {
     await t.binding.setSurfaceSize(const Size(412, 915));
     addTearDown(() => t.binding.setSurfaceSize(null));
     // Bắt nội dung được chép vào clipboard.
-    t.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
-      if (call.method == 'Clipboard.setData') copied.add((call.arguments as Map)['text'] as String);
-      return null;
-    });
-    addTearDown(() => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
+    mockClipboard(t, copied.add);
     await t.pumpWidget(MaterialApp(home: HomeScreen(controller: c)));
     await t.pump();
   }
@@ -126,6 +124,9 @@ void main() {
     await t.pumpAndSettle();
     expect(c.data.byId(full.id)!.inTrash, isTrue);
     expect(find.text('Hoàn tác'), findsOneWidget);
+    // Thanh Hoàn tác tự đóng bằng Timer; chạy hết thời gian để không để lại Timer đang chờ.
+    await t.pump(Timing.undoSnack);
+    await t.pumpAndSettle();
   });
 
   testWidgets('chạm thường vẫn mở chi tiết, nhấn giữ không mở chi tiết', (t) async {

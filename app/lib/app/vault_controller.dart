@@ -57,7 +57,7 @@ class VaultController extends ChangeNotifier {
   String? pendingRecovery;
 
   /// Tự khóa sau bao nhiêu giây khi app ra nền (0 = ngay lập tức).
-  int lockAfterSeconds = LockPolicy.never;
+  int lockAfterSeconds = LockPolicy.defaultSeconds;
   String themeMode = 'light'; // light | dark | system. Mặc định sáng: giao diện tối gần đen khiến màn đầu khó nhìn với người mới
   String language = 'system'; // system | vi | en
   int accent = 1; // chỉ số trong accentColors: 1 = xanh của logo

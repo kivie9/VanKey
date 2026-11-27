@@ -87,7 +87,7 @@ Future<void> showItemActions(BuildContext context, VaultController c, Item item,
               );
               if (!ok) return;
               c.trash(item);
-              messenger.showSnackBar(SnackBar(
+              showUndoSnack(messenger, SnackBar(
                 content: Text(tr('Đã chuyển "{p0}" vào thùng rác', {'p0': item.title})),
                 action: SnackBarAction(label: tr('Hoàn tác'), onPressed: () => c.restore(c.data.byId(item.id)!)),
               ));

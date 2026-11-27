@@ -3,7 +3,7 @@ rem Bam dup: build ban release tu code hien tai va cai len dien thoai dang cam U
 setlocal
 set FLUTTER=E:\code\libs\flutter\bin\flutter.bat
 set ADB=E:\code\libs\android-sdk\platform-tools\adb.exe
-cd /d "%~dp0app"
+cd /d "%~dp0.."
 
 echo === Kiem tra dien thoai ===
 "%ADB%" start-server >nul 2>&1

@@ -70,8 +70,10 @@ abstract final class PlatformBridge {
   }
 
   /// Chép vào clipboard kèm cờ "nhạy cảm". Trả về `false` nếu không làm được (khi đó dùng cách thường).
+  /// Android: ẩn nội dung ở thông báo "đã chép". Windows (flutter_window.cpp): không vào lịch sử clipboard (Win+V)
+  /// và không đồng bộ lên clipboard đám mây.
   static Future<bool> copySensitive(String text) async {
-    if (!Platform.isAndroid) return false;
+    if (!Platform.isAndroid && !Platform.isWindows) return false;
     try {
       await _ch.invokeMethod<void>('copySensitive', {'text': text});
       return true;
