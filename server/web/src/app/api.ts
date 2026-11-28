@@ -26,10 +26,16 @@ export interface Session {
 const TIMEOUT_MS = 20_000;
 
 async function call(path: string, init: RequestInit): Promise<Response> {
+  // AbortController + setTimeout thay cho AbortSignal.timeout (Safari dưới 16 không có).
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
-    return await fetch(path, { ...init, cache: 'no-store', credentials: 'omit', signal: AbortSignal.timeout(TIMEOUT_MS) });
-  } catch {
-    throw new NetworkError('Không kết nối được máy chủ');
+    return await fetch(path, { ...init, cache: 'no-store', credentials: 'omit', signal: ctrl.signal });
+  } catch (e) {
+    const reason = ctrl.signal.aborted ? 'hết thời gian chờ' : e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+    throw new NetworkError(reason);
+  } finally {
+    clearTimeout(timer);
   }
 }
 

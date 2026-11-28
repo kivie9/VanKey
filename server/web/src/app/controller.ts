@@ -79,8 +79,8 @@ function message(e: unknown): string {
     if (e.status === 401) return 'Sai tên đăng nhập hoặc mật khẩu';
     return e.message;
   }
-  if (e instanceof NetworkError) return 'Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.';
-  return 'Có lỗi xảy ra';
+  if (e instanceof NetworkError) return `Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại. (${e.message})`;
+  return `Có lỗi xảy ra (${e instanceof Error ? `${e.name}: ${e.message}` : String(e)})`;
 }
 
 // ---------- Phiên đăng nhập, niêm phong bằng khóa dẫn xuất từ vault key ----------
