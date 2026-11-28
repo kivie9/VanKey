@@ -111,7 +111,7 @@ final class ParsedVaultFile {
   final Uint8List sealed;
 }
 
-/// Mã hóa/giải mã định dạng `.vkv`. Đặc tả: `docs/vault-format.md`.
+/// Mã hóa/giải mã định dạng `.vkv`. Đặc tả: `docs/technical/vault-format.md`.
 abstract final class VaultFileCodec {
   static const magic = [0x56, 0x4B, 0x56, 0x31]; // "VKV1"
   static const formatVersion = 1;

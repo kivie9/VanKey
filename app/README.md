@@ -1,57 +1,57 @@
-# VanKey: app Flutter
+# VanKey: Flutter app
 
-App Android, Windows (và iOS chưa ký) của VanKey. Tổng quan dự án ở [README gốc](../README.md).
+The VanKey Android, Windows (and unsigned iOS) app. Project overview in the [main README](../README.md).
 
-## Cấu trúc
+## Structure
 
 ```
-lib/main.dart          điểm vào: khởi tạo, đăng ký giấy phép phông chữ, chọn màn đầu
-lib/core/              lõi Dart thuần, không phụ thuộc Flutter (xem docs/core-api.md)
-  crypto/ vault/       mật mã, file kho .vkv, gộp 3 bên
+lib/main.dart          entry point: initialisation, font licence registration, choice of first screen
+lib/core/              pure Dart core, no Flutter dependency (see docs/technical/core-api.md)
+  crypto/ vault/       cryptography, .vkv vault file, 3-way merge
   totp/                2FA (TOTP, HOTP, Steam Guard)
-  import_export/       nhập từ app khác, xuất CSV/link/QR
-  security/            sinh mật khẩu, độ mạnh, trùng lặp, HIBP, nhắc nhở
-  sync/                đồng bộ Cloudflare, Google Drive, thư mục
-  notify/ platform/    lịch nhắc nhở, giao tiếp với hệ điều hành
-lib/app/               giao diện và trạng thái
-  vault_controller.dart  trạng thái kho, khóa/mở, đồng bộ
-  isolate_ops.dart       mọi phép Argon2id chạy ở isolate riêng
-  platform_bridge.dart   gọi mã gốc (FLAG_SECURE, Windows Hello...)
-  i18n.dart, i18n_en.dart  chuỗi tiếng Việt là khóa, bản dịch tiếng Anh
-  screens/ widgets/      màn hình và thành phần dùng chung
-test/                  test lõi, giao diện, đầu cuối (e2e), vector đối chiếu
-tool/                  import_check (thử nhập file thật), make_icon, interop (đối chiếu libsodium)
-scripts/               build và cài đặt bấm đúp trên Windows
-installer/vankey.iss   bộ cài Windows (Inno Setup 6)
+  import_export/       import from other apps, export to CSV/links/QR
+  security/            password generation, strength, duplicates, HIBP, reminders
+  sync/                Cloudflare sync, Google Drive, folder
+  notify/ platform/    reminder schedule, communication with the operating system
+lib/app/               UI and state
+  vault_controller.dart  vault state, lock/unlock, sync
+  isolate_ops.dart       all Argon2id operations run in a separate isolate
+  platform_bridge.dart   calls to native code (FLAG_SECURE, Windows Hello...)
+  i18n.dart, i18n_en.dart  Vietnamese strings are the keys, English translations
+  screens/ widgets/      screens and shared components
+test/                  tests for core, UI, end-to-end (e2e), reference vectors
+tool/                  import_check (test import with real files), make_icon, interop (checks against libsodium)
+scripts/               one-click build and install scripts for Windows
+installer/vankey.iss   Windows installer (Inno Setup 6)
 ```
 
-## Lệnh hay dùng
+## Common commands
 
 ```powershell
-flutter test                      # toàn bộ test (e2e cần Node 22.6+, không có thì tự bỏ qua)
-flutter analyze                   # phải sạch
-flutter run --release -d <máy>    # bản debug chậm rất nhiều với Argon2id
+flutter test                      # all tests (e2e needs Node 22.6+, skipped automatically without it)
+flutter analyze                   # must be clean
+flutter run --release -d <device> # debug builds are very slow with Argon2id
 dart run tool/import_check.dart <file> --titles --codes
 ```
 
-## Build và cài
+## Build and install
 
-| Việc | Cách |
+| Task | How |
 |---|---|
-| Cài lên điện thoại đang cắm USB, giữ dữ liệu | `scripts\install-android.cmd` |
-| Build Windows, tạo bộ cài và cài đè | `scripts\build-windows.cmd` (cần Inno Setup 6) |
-| Tạo khóa ký Android (một lần) | `scripts\create-android-signing-key.cmd` |
-| Bản phát hành cả 3 nền tảng | push tag `v1.2.3`, CI ở `.github/workflows/build.yml` tạo GitHub Release |
+| Install on a phone connected by USB, keep data | `scripts\install-android.cmd` |
+| Build Windows, create installer and install over existing | `scripts\build-windows.cmd` (needs Inno Setup 6) |
+| Create the Android signing key (once) | `scripts\create-android-signing-key.cmd` |
+| Release for all 3 platforms | push tag `v1.2.3`; CI in `.github/workflows/build.yml` creates a GitHub Release |
 
-Số phiên bản hiện trong app lấy từ `--dart-define=APP_VERSION=...` (CI tự đặt theo tag). Build tay không đặt thì app ghi `dev`.
+The version shown in the app comes from `--dart-define=APP_VERSION=...` (CI sets it from the tag). A manual build without it shows `dev`.
 
-## Nơi lưu dữ liệu
+## Where data is stored
 
-- Windows: kho ở `%APPDATA%\com.vankey\vankey`, app cài ở `%LOCALAPPDATA%\Programs\VanKey`. Gỡ app không xóa kho.
-- Android: thư mục dữ liệu riêng của app. Gỡ app là mất kho, nên sao lưu trước.
+- Windows: the vault is at `%APPDATA%\com.vankey\vankey`; the app is installed at `%LOCALAPPDATA%\Programs\VanKey`. Uninstalling the app does not delete the vault.
+- Android: the app's own data folder. Uninstalling the app deletes the vault, so back up first.
 
-## Quy tắc khi sửa
+## Rules when editing
 
-- Chuỗi giao diện viết bằng tiếng Việt trong `tr('...')` và thêm bản tiếng Anh vào `i18n_en.dart` (test `i18n_test.dart` bắt chuỗi thiếu).
-- Không gọi Argon2id trực tiếp trong `VaultController`, đi qua `isolate_ops.dart`.
-- Đổi định dạng file kho thì cập nhật `docs/vault-format.md` và vector trong `test/vectors/`.
+- UI strings are written in Vietnamese inside `tr('...')`; add the English translation to `i18n_en.dart` (the `i18n_test.dart` test catches missing strings).
+- Do not call Argon2id directly from `VaultController`; go through `isolate_ops.dart`.
+- If you change the vault file format, update `docs/technical/vault-format.md` and the vectors in `test/vectors/`.

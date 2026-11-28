@@ -1,7 +1,5 @@
 # Sổ khôi phục khẩn cấp VanKey
 
-**Tiếng Việt** · [English](recovery-sheet.en.md)
-
 > **Đây là bản mẫu trống.** In ra giấy rồi điền bằng tay. **Không** điền vào file này, không lưu bản đã điền trong repo, máy tính, ảnh chụp hay đám mây.
 > Cất bản đã điền ở nơi an toàn ngoài nhà nếu được (két, người thân tin cậy). Có thể in 2 bản, cất 2 nơi.
 

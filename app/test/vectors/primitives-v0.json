@@ -1,5 +1,5 @@
 {
-  "_comment": "Test vector nguyên thủy (Argon2id + XChaCha20-Poly1305-IETF). Tạo bởi Dart package cryptography 2.9.0, đối chiếu khớp với libsodium-wrappers-sumo 0.8.4. Xem docs/spike-m0.md. Dữ liệu thử nghiệm, KHÔNG phải bí mật thật.",
+  "_comment": "Test vector nguyên thủy (Argon2id + XChaCha20-Poly1305-IETF). Tạo bởi Dart package cryptography 2.9.0, đối chiếu khớp với libsodium-wrappers-sumo 0.8.4. Xem docs/technical/spike-m0.md. Dữ liệu thử nghiệm, KHÔNG phải bí mật thật.",
   "argon2id": {
     "passphrase": "mật khẩu thử nghiệm Việt Nam 123!",
     "saltHex": "a0a1a2a3a4a5a6a7a8a9aaabacadaeaf",

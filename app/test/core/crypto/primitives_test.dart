@@ -13,7 +13,7 @@ import 'package:vankey/core/errors.dart';
 import '../../helpers/helpers.dart';
 
 void main() {
-  // Test vector nguyên thủy đã đối chiếu với libsodium (xem docs/spike-m0.md).
+  // Test vector nguyên thủy đã đối chiếu với libsodium (xem docs/technical/spike-m0.md).
   final vec = jsonDecode(File('test/vectors/primitives-v0.json').readAsStringSync()) as Map<String, dynamic>;
   final argonVec = vec['argon2id'] as Map<String, dynamic>;
   final aeadVec = vec['aead'] as Map<String, dynamic>;

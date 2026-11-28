@@ -4,7 +4,7 @@ import 'package:cryptography/cryptography.dart';
 
 import '../errors.dart';
 
-/// Tham số Argon2id, đặt tên theo libsodium (`crypto_pwhash`) để khớp đặc tả `docs/vault-format.md`.
+/// Tham số Argon2id, đặt tên theo libsodium (`crypto_pwhash`) để khớp đặc tả `docs/technical/vault-format.md`.
 ///
 /// Ánh xạ sang thư viện Dart: `iterations = opslimit`, `memory(KiB) = memlimitBytes / 1024`, song song hóa = 1.
 final class Argon2Params {
@@ -13,7 +13,7 @@ final class Argon2Params {
   final int opslimit;
   final int memlimitBytes;
 
-  /// Mặc định dự kiến (chốt sau khi đo trên Android, xem `docs/spike-m0.md`).
+  /// Mặc định dự kiến (chốt sau khi đo trên Android, xem `docs/technical/spike-m0.md`).
   static const standard = Argon2Params(opslimit: 3, memlimitBytes: 64 * 1024 * 1024);
 
   // Cận dưới và cận trên bắt buộc khi đọc từ file (chống hạ tham số và chống file độc).

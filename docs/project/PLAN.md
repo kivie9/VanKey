@@ -1,5 +1,3 @@
-**[Tiếng Việt](PLAN.md)** · English
-
 # VanKey — Implementation Plan
 
 > Updated: 2026-11-19 · Status: **UI design locked (prototype), no code yet**
@@ -7,7 +5,7 @@
 A password, API key, secure note and **2FA (TOTP) code** manager that runs on **Windows** and **Android**, syncs between devices, and uses end-to-end encryption. It replaces Google Authenticator (which does not sync between devices).
 
 - UI prototype (interactive): <https://claude.ai/artifact/Fv4VszCjKj7kUfG4cdwRdf> (private, only the owner can open it)
-- Copy stored in the project: [`docs/prototype/vankey-prototype.html`](docs/prototype/vankey-prototype.html) — open in a browser, no server needed
+- Copy stored in the project: [`docs/prototype/vankey-prototype.html`](../prototype/vankey-prototype.html) — open in a browser, no server needed
 
 ---
 
@@ -55,11 +53,10 @@ Autofill of passwords (Android Autofill), browser extension, server push notific
 
 ```
 keymanager/
-├─ PLAN.md
 ├─ docs/
 │  ├─ prototype/vankey-prototype.html     # UI design (exists)
-│  ├─ vault-format.md                         # file format specification (written in M1)
-│  └─ threat-model.md                         # threat model (written in M1)
+│  ├─ technical/vault-format.md                         # file format specification (written in M1)
+│  └─ technical/threat-model.md                         # threat model (written in M1)
 ├─ app/                                       # Flutter
 │  ├─ lib/
 │  │  ├─ core/
@@ -103,7 +100,7 @@ magic "VKV1" | version | keyslots[] | nonce(24) | ciphertext(JSON, XChaCha20-Pol
 ```
 - KDF: Argon2id, parameters stored in each key slot so they can be upgraded later.
 - A new nonce for every write. Files are written with "write to a temporary file, then rename".
-- The full specification is written in `docs/vault-format.md` **before** the encryption code is written, together with test vectors shared between Dart and TypeScript.
+- The full specification is written in `docs/technical/vault-format.md` **before** the encryption code is written, together with test vectors shared between Dart and TypeScript.
 
 ### 4.3 Data inside
 ```
@@ -120,7 +117,7 @@ Item {
 - Interface settings (theme, language, density) are stored **locally, not synced**.
 - Secondary lines in a list **only use non-secret fields** (lesson from the prototype: recovery phrases must never be shown outside).
 
-### 4.4 Threat model (summary, details in `docs/threat-model.md`)
+### 4.4 Threat model (summary, details in `docs/technical/threat-model.md`)
 | Protected against | **Not** protected against |
 |---|---|
 | Data leaks from Drive, the Cloudflare server, the network | Devices infected with malware or keyloggers |
@@ -205,7 +202,7 @@ Rough estimate for one person, not counting real-device testing.
 | **M6** | Import/export, QR, reminders | QR scanning, import from all sources, export, duplicate search, expiry notifications | Successfully move all data from Google Authenticator on a real device | 1–2 weeks |
 | **M7** | Packaging and release | MSIX for Windows, signed APK for Android, documentation, security review | Installer works on a clean machine | 1 week |
 
-**Detailed task list for each milestone** (step by step, with done criteria): [`docs/TASKS.md`](docs/TASKS.md).
+**Detailed task list for each milestone** (step by step, with done criteria): [`docs/project/TASKS.md`](TASKS.md).
 
 **Intentional order:** M1 (encryption core) comes **before the UI**, because mistakes there affect everything. M1 can start as soon as the Flutter SDK is installed; Visual Studio and Android are not needed yet.
 
@@ -302,5 +299,5 @@ flutter doctor
 
 1. Install the Flutter SDK (step 1 of section 10).
 2. M0: create the project in `app/`, run the crypto spike on Windows (and Android if available).
-3. Write `docs/vault-format.md` and `docs/threat-model.md`.
+3. Write `docs/technical/vault-format.md` and `docs/technical/threat-model.md`.
 4. M1: write and test the core.

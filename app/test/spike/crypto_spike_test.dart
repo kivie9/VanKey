@@ -1,7 +1,7 @@
 // M0 — spike mật mã (phương án thuần Dart: package `cryptography`).
 //
 // Mục đích: kiểm chứng XChaCha20-Poly1305 và Argon2id chạy đúng, và xuất kết quả
-// cố định để đối chiếu với libsodium độc lập (xem docs/spike-m0.md).
+// cố định để đối chiếu với libsodium độc lập (xem docs/technical/spike-m0.md).
 // Đây là mã THỬ NGHIỆM, không phải mã sản phẩm.
 import 'dart:convert';
 import 'dart:io';

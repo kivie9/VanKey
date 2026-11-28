@@ -1,174 +1,174 @@
-# Kế hoạch web giới thiệu VanKey
+# VanKey Introduction Website Plan
 
-Cập nhật: 2026-11-27. Giai đoạn 1 đến 4 đã code xong, còn vài điểm kiểm chưa đạt hoặc chưa thử (ghi ở từng giai đoạn). Chưa deploy. Cách chạy: [README.md](README.md).
+Updated: 2026-11-27. Phases 1 to 4 are coded; a few checks have not passed or have not been tried yet (noted in each phase). Not deployed yet. How to run: [README.md](README.md).
 
-Trang giới thiệu tĩnh cho VanKey, đặt ở `site/` trong repo này, deploy riêng lên Cloudflare Pages.
-Các trang tài liệu (hướng dẫn, bảo mật, quyền riêng tư, điều khoản...) có kế hoạch riêng ở [CONTENT-PLAN.md](CONTENT-PLAN.md).
-Giai đoạn đầu chỉ chạy trên máy. Khi nào muốn công khai thì mới kết nối Cloudflare (VanKey hiện chủ yếu để dùng cá nhân).
+A static introduction site for VanKey, located in `site/` in this repo and deployed separately to Cloudflare Pages.
+Documentation pages (guide, security, privacy, terms, etc.) have their own plan in [CONTENT-PLAN.md](CONTENT-PLAN.md).
+The first phase runs locally only. The site will only be connected to Cloudflare when it goes public (VanKey is currently mainly for personal use).
 
-## Quyết định đã chốt
+## Decisions made
 
-| Việc | Chọn | Lý do |
+| Item | Choice | Reason |
 |---|---|---|
-| Vị trí | `site/` cạnh `app/` và `server/` | Dùng chung logo, màu, ảnh chụp và phiên bản. Không dùng `app/web/` vì đó là thư mục Flutter dùng để chạy app trên trình duyệt |
-| Không dùng Flutter Web | Astro (HTML tĩnh) | Flutter Web nặng vài MB, mở lần đầu chậm, Google đọc kém |
-| Khung | **Astro** | Mặc định không kèm JavaScript, chỉ tải JS cho phần có hiệu ứng |
-| 3D | **Three.js** | Chỉ dùng cho hero, tải muộn |
-| Chuyển động | **GSAP + ScrollTrigger** | Miễn phí, ổn định. Không dùng Lenis (cuộn mượt giả) |
-| Ngôn ngữ | Việt (mặc định) + Anh | `/` và `/en/` |
-| Deploy | Cloudflare Pages, tách khỏi Worker của server | Sửa web không đụng tới server đang giữ kho |
+| Location | `site/` next to `app/` and `server/` | Shares the logo, colours, screenshots and version. Not `app/web/`, because that folder is used by Flutter to run the app in a browser |
+| Not Flutter Web | Astro (static HTML) | Flutter Web is several MB, slow to open the first time, and poorly read by Google |
+| Framework | **Astro** | No JavaScript by default; JS is only loaded for parts that have effects |
+| 3D | **Three.js** | Used only for the hero, loaded late |
+| Motion | **GSAP + ScrollTrigger** | Free, stable. Lenis (fake smooth scroll) is not used |
+| Languages | Vietnamese (default) + English | `/` and `/en/` |
+| Deploy | Cloudflare Pages, separate from the server Worker | Editing the website does not touch the server that holds the vaults |
 
-## Nguyên tắc thiết kế: không "AI slop"
+## Design principle: no "AI slop"
 
-**Không dùng:**
-- Gradient tím/hồng, thẻ kính mờ, emoji làm icon
-- Câu sáo rỗng kiểu "Unlock the power…", "Bảo mật tuyệt đối", "Mã hóa cấp quân sự"
-- Số liệu, lời khen hay logo đối tác bịa ra; ảnh mockup giả
+**Do not use:**
+- Purple/pink gradients, frosted-glass cards, emoji as icons
+- Empty slogans such as "Unlock the power…", "Absolute security", "Military-grade encryption"
+- Invented numbers, invented testimonials or partner logos; fake mockup images
 
-**Mọi thứ lấy từ chính VanKey:**
-- Màu lấy từ `app/lib/app/theme.dart`: nền `#0B0B0D`, thẻ `#141418`, đường kẻ `#26262C`, chữ `#C6C9CF`, nhấn teal `#3DB5A0`. Chế độ sáng dùng `#F4F5F7` / `#15171A`.
-- Logo: `docs/brand/vankey-logo.svg`, icon: `docs/branding/`
-- Thuật toán đúng như `docs/vault-format.md`: Argon2id, XChaCha20-Poly1305, HKDF-SHA256 cho mã khôi phục
-- Tính năng đúng như `docs/STATUS.md`. Phần nào chưa thử thật thì không quảng cáo
-- Ảnh chụp màn hình thật (Android + Windows)
+**Everything comes from VanKey itself:**
+- Colours from `app/lib/app/theme.dart`: background `#0B0B0D`, cards `#141418`, dividers `#26262C`, text `#C6C9CF`, teal accent `#3DB5A0`. The light mode uses `#F4F5F7` / `#15171A`.
+- Logo: `docs/brand/vankey-logo.svg`, icons: `docs/branding/`
+- Algorithms exactly as in `docs/technical/vault-format.md`: Argon2id, XChaCha20-Poly1305, HKDF-SHA256 for the recovery code
+- Features exactly as in `docs/project/STATUS.md`. Anything not really tested is not advertised
+- Real screenshots of the app (Android + Windows)
 
-**Phông chữ:** Geist (sans) + Geist Mono (mã 2FA, chuỗi mã hóa, nhãn kỹ thuật). Tự host bằng `@fontsource`, không tải từ Google Fonts.
+**Fonts:** Geist (sans) + Geist Mono (2FA codes, encrypted strings, technical labels). Self-hosted with `@fontsource`, not loaded from Google Fonts.
 
-**Chuyển động:** chuyển động phải có ý nghĩa (mã hóa → khóa, mã đếm ngược thật), không đặt chỉ để trang trí. Chỉ dùng `transform`/`opacity`. Tôn trọng `prefers-reduced-motion`.
+**Motion:** motion must have meaning (encryption → lock, real countdown codes), not be decoration. Only `transform`/`opacity` are animated. `prefers-reduced-motion` is respected.
 
-## Bố cục trang
+## Page layout
 
-1. **Thanh trên**: logo, Tính năng, Bảo mật, Tải về, VI/EN, GitHub
-2. **Hero**: cảnh Three.js. Đám hạt ký tự lộn xộn (bản mã) hút lại thành hình chìa khóa VanKey khi cuộn. Tiêu đề ngắn, hai nút (Tải về / Cách mã hóa)
-3. **Mã 2FA chạy thật**: một ô TOTP 6 số với vòng đếm ngược 30 giây, tính bằng secret mẫu (RFC 6238) ngay trên trình duyệt
-4. **Tính năng** (4–6 khối, không xếp lưới thẻ đều nhau):
-   - 2FA: TOTP, HOTP, Steam Guard, quét QR
-   - Nhập từ Google Authenticator, Aegis, 2FAS, Bitwarden, KeePass, 1Password, CSV
-   - Dùng offline, dữ liệu nằm trên máy
-   - Đồng bộ mã hóa đầu cuối (Cloudflare hoặc thư mục)
-   - Kiểm tra mật khẩu yếu/trùng và rò rỉ (HIBP k-anonymity)
-   - Tự khóa, chặn chụp màn hình, xóa clipboard
-5. **Dữ liệu của bạn đi đâu**: sơ đồ chạy theo cuộn
-   `mật khẩu → NFKC → Argon2id (64 MiB, 3 vòng) → KEK → mở khóa vault key → XChaCha20-Poly1305 → file .vkv → đồng bộ (server chỉ thấy bản mã)`
-6. **Nói thẳng về bảo mật**: mất mật khẩu và mã khôi phục thì không ai mở được kho; mật mã chưa được rà soát độc lập; link tới `docs/threat-model.md`
-7. **Tải về**: Android (APK), Windows (bộ cài). Lúc chưa phát hành thì ghi "sắp có"
-8. **Footer**: giấy phép, GitHub, ghi công Simple Icons (CC0)
+1. **Top bar**: logo, Features, Security, Download, VI/EN, GitHub
+2. **Hero**: a Three.js scene. A cloud of scrambled characters (ciphertext) is pulled into the VanKey key shape as the user scrolls. Short headline, two buttons (Download / How it is encrypted)
+3. **Live 2FA code**: a 6-digit TOTP box with a 30-second countdown, calculated in the browser from a sample secret (RFC 6238)
+4. **Features** (4–6 blocks, not an evenly spaced grid of cards):
+   - 2FA: TOTP, HOTP, Steam Guard, QR scanning
+   - Import from Google Authenticator, Aegis, 2FAS, Bitwarden, KeePass, 1Password, CSV
+   - Works offline, data stays on the device
+   - End-to-end encrypted sync (Cloudflare or a folder)
+   - Weak and reused password check, and breach check (HIBP k-anonymity)
+   - Auto-lock, screenshot blocking, clipboard clearing
+5. **Where your data goes**: a diagram that plays as you scroll
+   `password → NFKC → Argon2id (64 MiB, 3 passes) → KEK → unlock vault key → XChaCha20-Poly1305 → .vkv file → sync (the server only sees ciphertext)`
+6. **Plain talk about security**: if you lose the password and the recovery code, nobody can open the vault; the cryptography has not been independently reviewed; link to `docs/technical/threat-model.md`
+7. **Download**: Android (APK), Windows (installer). Before release, it says "coming soon"
+8. **Footer**: licence, GitHub, credit to Simple Icons (CC0)
 
-## Cấu trúc thư mục
+## Folder structure
 
 ```
 site/
-  PLAN.md               file này
+  PLAN.md               this file
   package.json
   astro.config.mjs
-  public/               favicon, og-image, ảnh chụp đã tối ưu
+  public/               favicon, og-image, optimised screenshots
   src/
-    styles/tokens.css   biến màu, khoảng cách, phông (sáng/tối)
-    i18n/vi.ts, en.ts   chuỗi chữ
+    styles/tokens.css   colour, spacing, font variables (light/dark)
+    i18n/vi.ts, en.ts   text strings
     layouts/Base.astro
     components/
       Nav.astro, Footer.astro
-      Hero.astro        khung + ảnh tĩnh dự phòng
-      TotpDemo.astro    mã 2FA chạy thật
+      Hero.astro        frame + static fallback image
+      TotpDemo.astro    live 2FA code
       Features.astro
-      CryptoFlow.astro  sơ đồ mã hóa theo cuộn
+      CryptoFlow.astro  scroll-driven encryption diagram
       Honesty.astro
       Download.astro
     scripts/
-      hero-scene.ts     Three.js (tải muộn)
+      hero-scene.ts     Three.js (loaded late)
       scroll.ts         GSAP ScrollTrigger
-      totp.ts           TOTP bằng Web Crypto (HMAC-SHA1)
+      totp.ts           TOTP with Web Crypto (HMAC-SHA1)
     pages/
-      index.astro       tiếng Việt
-      en/index.astro    tiếng Anh
+      index.astro       Vietnamese
+      en/index.astro    English
 ```
 
-## Các bước
+## Steps
 
-### Giai đoạn 1: khung tĩnh
+### Phase 1: static frame
 
-- [x] 1.1 Tạo dự án Astro trong `site/` (TypeScript strict), thêm `.gitignore` (`node_modules`, `dist`, `.astro`)
-- [x] 1.2 `tokens.css`: màu từ `theme.dart`, thang chữ, khoảng cách, chế độ sáng/tối theo hệ thống
-- [x] 1.3 Cài phông Geist + Geist Mono qua `@fontsource`
-- [x] 1.4 `Base.astro`: thẻ meta, `lang`, favicon từ `docs/branding`
-- [x] 1.5 Dựng đủ các phần (chưa có hiệu ứng), chữ tiếng Việt viết thật, không dùng lorem
-- [x] 1.6 i18n: `vi.ts` / `en.ts`, trang `/en/`, nút đổi ngôn ngữ
-- [x] 1.7 Responsive: kiểm tra ở 360, 768, 1280, 1920 px; không cuộn ngang
-- [x] 1.8 Thêm `paths-ignore: ['site/**']` vào `.github/workflows/build.yml` để sửa web không kích hoạt build app
+- [x] 1.1 Create the Astro project in `site/` (TypeScript strict), add `.gitignore` (`node_modules`, `dist`, `.astro`)
+- [x] 1.2 `tokens.css`: colours from `theme.dart`, text scale, spacing, light/dark mode following the system
+- [x] 1.3 Install Geist + Geist Mono via `@fontsource`
+- [x] 1.4 `Base.astro`: meta tags, `lang`, favicon from `docs/branding`
+- [x] 1.5 Build all sections (no effects yet), with real Vietnamese text, no lorem ipsum
+- [x] 1.6 i18n: `vi.ts` / `en.ts`, the `/en/` page, a language switch button
+- [x] 1.7 Responsive: checked at 360, 768, 1280, 1920 px; no horizontal scrolling
+- [x] 1.8 Add `paths-ignore: ['site/**']` to `.github/workflows/build.yml` so website edits do not trigger the app build
 
-**Xong khi:** `npm run dev` mở được trang đầy đủ nội dung, đẹp khi chưa có JS, Lighthouse ≥ 95.
+**Done when:** `npm run dev` shows the full page, it looks right without JS, and Lighthouse ≥ 95.
 
-Kết quả (Lighthouse 13, máy dev, bản build có header CSP):
-- Desktop: cả 4 mục đạt 100.
-- Mobile: Accessibility, Best Practices, SEO đạt 100. LCP 0,8 đến 0,9 s, CLS 0.
-- **Chưa đạt ổn định:** Performance mobile dao động 78 đến 100, do TBT. Đo 5 lượt trang tiếng Việt: trung vị khoảng 85 khi bật hero 3D, 98 khi tắt.
+Result (Lighthouse 13, dev machine, build with CSP header):
+- Desktop: all 4 categories score 100.
+- Mobile: Accessibility, Best Practices, SEO score 100. LCP 0.8 to 0.9 s, CLS 0.
+- **Not yet stable:** mobile Performance varies between 78 and 100, because of TBT. Over 5 runs of the Vietnamese page: median about 85 with the 3D hero on, 98 with it off.
 
-### Giai đoạn 2: hero Three.js
+### Phase 2: Three.js hero
 
-- [x] 2.1 Lấy đường viền chìa khóa từ `vankey-logo.svg` rồi lấy mẫu thành khoảng 3–6k điểm (làm một lần lúc build, lưu thành file JSON nhỏ)
-- [x] 2.2 Shader cho hạt: mỗi hạt có vị trí "lộn xộn" và vị trí "chìa khóa", trộn theo `uProgress`
-- [x] 2.3 Hạt vẽ như ký tự mono mờ (texture atlas hex/base64), màu teal nhạt dần vào nền
-- [x] 2.4 Gắn `uProgress` với cuộn (ScrollTrigger); chuột di chuyển thì cảnh nghiêng nhẹ
-- [x] 2.5 Hiệu năng: chỉ tải `hero-scene.ts` khi hero hiện ra; giới hạn `devicePixelRatio ≤ 2`; điện thoại dùng ít hạt hơn; dừng render khi tab ẩn hoặc hero ra khỏi màn hình
-- [x] 2.6 Dự phòng: không có WebGL hoặc bật `prefers-reduced-motion` thì hiện ảnh tĩnh SVG
+- [x] 2.1 Take the outline of the key from `vankey-logo.svg` and sample it into about 3–6k points (done once at build time, saved as a small JSON file)
+- [x] 2.2 Particle shader: each particle has a "scrambled" position and a "key" position, blended by `uProgress`
+- [x] 2.3 Particles drawn as faint mono characters (texture atlas of hex/base64), colour fading into the background
+- [x] 2.4 Bind `uProgress` to scrolling (ScrollTrigger); the scene tilts slightly with mouse movement
+- [x] 2.5 Performance: `hero-scene.ts` loaded only when the hero appears; `devicePixelRatio ≤ 2`; phones use fewer particles; rendering stops when the tab is hidden or the hero is off screen
+- [x] 2.6 Fallback: without WebGL or with `prefers-reduced-motion`, a static SVG image is shown
 
-**Xong khi:** đạt 60 fps trên laptop thường, không giật trên điện thoại tầm trung, phần JS của hero ≤ 150 KB gzip.
+**Done when:** 60 fps on an ordinary laptop, no stutter on a mid-range phone, hero JS ≤ 150 KB gzip.
 
-Kết quả: 60 fps khi cuộn trên Intel Iris Xe (95% khung hình ≤ 16,9 ms); JS của hero 144,1 KB; JS tổng 189,9 KB. **Chưa thử trên điện thoại thật.**
+Result: 60 fps while scrolling on Intel Iris Xe (95% of frames ≤ 16.9 ms); hero JS 144.1 KB; total JS 189.9 KB. **Not yet tested on a real phone.**
 
-### Giai đoạn 3: chuyển động theo cuộn
+### Phase 3: scroll motion
 
-- [x] 3.1 `totp.ts`: TOTP bằng Web Crypto, đối chiếu với vector trong RFC 6238; vòng đếm ngược SVG
-- [x] 3.2 `CryptoFlow`: các bước sáng dần khi cuộn, chuỗi chữ biến thành bản mã (hiệu ứng "scramble")
-- [x] 3.3 Các phần hiện dần nhẹ (chỉ dùng opacity/translate, không bật nảy)
-- [x] 3.4 Kiểm tra `prefers-reduced-motion`: mọi nội dung vẫn đọc được khi không có hiệu ứng
+- [x] 3.1 `totp.ts`: TOTP with Web Crypto, checked against the RFC 6238 vectors; SVG countdown ring
+- [x] 3.2 `CryptoFlow`: steps brighten as you scroll; text turns into ciphertext (a "scramble" effect)
+- [x] 3.3 Sections fade in gently (opacity/translate only, no bounce)
+- [x] 3.4 `prefers-reduced-motion` check: all content is still readable without effects
 
-### Giai đoạn 4: hoàn thiện
+### Phase 4: finishing
 
-- [x] 4.1 Chụp màn hình thật của app (Android + Windows), xuất WebP/AVIF qua `astro:assets`
-- [x] 4.2 SEO: title/description từng ngôn ngữ, `hreflang`, `sitemap`, `robots.txt`
-- [x] 4.3 Ảnh xem trước khi chia sẻ link (`og-image` 1200×630)
-- [x] 4.4 Trợ năng: tương phản ≥ 4.5:1, điều hướng bằng bàn phím, `alt` cho ảnh, canvas đặt `aria-hidden`
-- [ ] 4.5 Kiểm tra trên Chrome, Firefox, Edge, Safari iOS (nếu có máy). Đã thử Chrome và Edge (thường, giảm chuyển động, tắt JS, không WebGL). **Chưa thử Firefox (máy chưa cài) và Safari iOS**
+- [x] 4.1 Real screenshots of the app (Android + Windows), exported to WebP/AVIF via `astro:assets`
+- [x] 4.2 SEO: title/description per language, `hreflang`, `sitemap`, `robots.txt`
+- [x] 4.3 Share preview image (`og-image` 1200×630)
+- [x] 4.4 Accessibility: contrast ≥ 4.5:1, keyboard navigation, `alt` on images, canvas marked `aria-hidden`
+- [ ] 4.5 Test on Chrome, Firefox, Edge, Safari iOS (if a device is available). Chrome and Edge tested (normal, reduced motion, JS off, no WebGL). **Firefox not tested (not installed on the machine) and Safari iOS not tested**
 
-### Giai đoạn 5: deploy (khi muốn công khai)
+### Phase 5: deploy (when going public)
 
-Chưa deploy. Các bước còn lại ghi ở [README.md](README.md). Với 5.3, nút tải về đã viết sẵn, chỉ cần đổi `RELEASED` trong `src/config.ts` (chưa có Release nào).
+Not deployed yet. The remaining steps are in [README.md](README.md). For 5.3, the download button is already written; you only need to change `RELEASED` in `src/config.ts` (no Release exists yet).
 
 - [ ] 5.1 Cloudflare Pages → Connect to Git → repo `VanKey`
   - Root directory: `site`
   - Build command: `npm run build`, output: `dist`
   - Build watch paths: `site/**`
-- [ ] 5.2 (Tùy chọn) gắn tên miền riêng
-- [ ] 5.3 Nút tải về trỏ tới GitHub Releases mới nhất
-- [x] 5.4 Header bảo mật qua `public/_headers` (CSP, `X-Content-Type-Options`, `Referrer-Policy`)
+- [ ] 5.2 (Optional) attach a custom domain
+- [ ] 5.3 Download button points to the latest GitHub Releases
+- [x] 5.4 Security headers via `public/_headers` (CSP, `X-Content-Type-Options`, `Referrer-Policy`)
 
-Cách khác nếu không muốn kết nối repo: `npx wrangler pages deploy site/dist`.
+Alternative if you do not want to connect the repo: `npx wrangler pages deploy site/dist`.
 
-## Ngân sách hiệu năng
+## Performance budget
 
-| Chỉ số | Mục tiêu |
+| Metric | Target |
 |---|---|
-| HTML + CSS trang đầu | ≤ 60 KB gzip |
-| JS tổng (gồm Three.js) | ≤ 200 KB gzip, tải sau khi trang hiện |
-| LCP | < 1,5 giây (4G nhanh) |
+| HTML + CSS of the first page | ≤ 60 KB gzip |
+| Total JS (including Three.js) | ≤ 200 KB gzip, loaded after the page shows |
+| LCP | < 1.5 seconds (fast 4G) |
 | CLS | 0 |
-| Lighthouse | ≥ 95 cả 4 mục |
+| Lighthouse | ≥ 95 in all 4 categories |
 
-## Khác với kế hoạch ban đầu
+## Differences from the original plan
 
-- **Hình hero là khiên chữ V**, không phải chìa khóa: `vankey-logo.svg` và app đã đổi sang logo này. Favicon cũng lấy từ `docs/brand`, không lấy biểu tượng chìa khóa cũ trong `docs/branding`.
-- **Ảnh màn hình** được dựng từ mã giao diện thật với dữ liệu mẫu (`app/tool/site_screenshots_test.dart`), không chụp trên thiết bị, để không đụng tới kho thật.
-- Thêm `Page.astro` (bố cục chung hai ngôn ngữ), `Screens.astro`, `scripts/totp-demo.ts`.
-- Footer chưa ghi giấy phép vì repo chưa có file LICENSE.
-- Màu chữ phụ ở chế độ sáng đậm hơn app một chút để đạt tương phản 4.5:1.
-- Astro ghim 7.4.1 vì bản mới hơn cần Node 22.23.4. `npm audit` còn cảnh báo mức vừa về tên thẻ động và adapter Node, trang tĩnh này không dùng cả hai.
+- **The hero shape is the V-shield**, not the key: `vankey-logo.svg` and the app have switched to this logo. The favicon also comes from `docs/brand`, not the old key icon in `docs/branding`.
+- **Screenshots** are built from the app's real UI code with sample data (`app/tool/site_screenshots_test.dart`), not captured on a device, so the real vault is never touched.
+- Added `Page.astro` (shared layout for both languages), `Screens.astro`, `scripts/totp-demo.ts`.
+- The footer does not show a licence yet because the repo has no LICENSE file.
+- Secondary text colour in light mode is slightly darker than in the app, to reach 4.5:1 contrast.
+- Astro is pinned to 7.4.1 because newer versions need Node 22.23.4. `npm audit` still reports a moderate warning about dynamic route names and the Node adapter; this static site uses neither.
 
-## Đã quyết định
+## Decisions taken
 
-- 28/11/2026: **giữ hero 3D trên điện thoại**. Chấp nhận Performance mobile có thể dưới mục tiêu 95 (đo được 78 đến 100). Xem lại nếu thử trên điện thoại thật thấy giật.
+- 28/11/2026: **keep the 3D hero on phones**. Accepting that mobile Performance may fall below the target of 95 (measured between 78 and 100). Review if it stutters on a real phone.
 
-## Câu hỏi còn mở
+## Open questions
 
-- Tên miền: chưa có thì tạm dùng `*.pages.dev`
-- Có công khai link tải APK/bộ cài khi chưa ký phát hành chính thức không
+- Domain: until one exists, use `*.pages.dev`
+- Whether to publish links to the APK/installer before the official signed release

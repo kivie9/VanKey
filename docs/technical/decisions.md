@@ -1,5 +1,3 @@
-**[Tiếng Việt](decisions.md)** · English
-
 # Decision Log
 
 Each line: **decision, reason, date, status.** Status: `locked` (decided), `proposed` (not yet confirmed), `waiting for M0` (waiting for a measurement or test).

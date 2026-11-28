@@ -1,5 +1,3 @@
-**[Tiếng Việt](van-hanh.md)** · English
-
 # Operations Notes
 
 For the people who hold the signing keys and the Cloudflare and Google Cloud accounts. Contains no secrets: all real values are stored only in their separate, secure locations.
@@ -36,12 +34,12 @@ Follow [google-drive-setup.md](google-drive-setup.md). Key points:
 
 - **Android:** run `app/scripts/create-android-signing-key.cmd` once, then build according to `app/README.md`. Without `key.properties`, the build is signed with the debug key and shows a warning; CI stops completely.
 - **Windows:** `app/scripts/build-windows.cmd` creates the zip and the installer from `app/installer/vankey.iss` (Inno Setup). The installer has not yet been tested on a clean Windows machine.
-- **CI:** `.github/workflows/build.yml` builds Android, Windows and iOS. Pushing a `vX.Y.Z` tag creates a GitHub Release. Before tagging, change "Unreleased" in [CHANGELOG.en.md](../CHANGELOG.en.md) to the version number and date.
+- **CI:** `.github/workflows/build.yml` builds Android, Windows and iOS. Pushing a `vX.Y.Z` tag creates a GitHub Release. Before tagging, change "Unreleased" in [CHANGELOG.md](../project/CHANGELOG.md) to the version number and date.
 - The "Check for updates" button in the app reads GitHub Releases, so the Release must be named correctly for the app to recognise it.
 
 ## 5. Not done yet
 
-See [STATUS.en.md](STATUS.en.md). Public release tasks (privacy policy, terms, LICENSE, SECURITY.md, the Data safety declaration, store listing) are not done yet because the decision to release widely has not been made.
+See [STATUS.md](../project/STATUS.md). Public release tasks (privacy policy, terms, LICENSE, SECURITY.md, the Data safety declaration, store listing) are not done yet because the decision to release widely has not been made.
 
 ## 6. Opening registration to others
 
@@ -57,12 +55,12 @@ When public registration is opened, the operator holds other people's data. Comp
 ### 6.2 Requests from users
 - **Account deletion:** users do it themselves in the app. If no device can still sign in, verify ownership as described on the Delete account page, then delete through Cloudflare D1 (delete the `users` row; the `devices` and `vaults` tables follow through ON DELETE CASCADE). Record the date and the username handled, not the vault contents.
 - **Access to data:** the server only holds encrypted data. Tell the user that the server cannot read the content, and list what the server stores (see section 2 of the Privacy page).
-- **Response time:** state it on the Privacy page and fill it in here: `[điền: số ngày]` (fill in: number of days).
+- **Response time:** stated on the Privacy page as `5 working days`.
 
 ### 6.3 Data breach
 1. Define the scope: which data, how many accounts, since when. The server only keeps encrypted data, but usernames and IP addresses are not encrypted.
 2. Revoke the exposed access (change `TOKEN_SECRET` if you suspect the token-signing key was exposed; every device must sign in again).
-3. Notify the affected users by their registered email or a public channel, within `[điền: số giờ]` (fill in: number of hours).
+3. Notify the affected users by their registered email or a public channel, within `72 hours`.
 4. Record the incident, its cause and the measures taken in the CHANGELOG.
 
 ### 6.4 Changing content later

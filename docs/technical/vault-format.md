@@ -1,8 +1,6 @@
-**[Tiếng Việt](vault-format.md)** · English
-
 # Vault File Format Specification (`.vkv`) — draft v0.1
 
-> Status: **draft v0.2, with a reference Dart implementation (M1)**. This specification matches the code in `app/lib/core/`. Not yet reviewed by outsiders: **do not use for real data until it has been reviewed (see `TASKS.md` M7)**.
+> Status: **draft v0.2, with a reference Dart implementation (M1)**. This specification matches the code in `app/lib/core/`. Not yet reviewed by outsiders: **do not use for real data until it has been reviewed (see `docs/project/TASKS.md` M7)**.
 > Every implementation (Dart, and TypeScript for future extensions/server) must read and write **byte-for-byte identically** according to this document.
 
 ---
@@ -110,7 +108,7 @@ offset      size         field
 
 - Binary values inside the JSON use **standard base64 with padding**.
 - `revision` increases by 1 on each write (for diagnostics; **not** used as the sync mechanism, the sync version is managed by the storage location).
-- `opslimit`/`memlimit` default to **[M0]**: expected `opslimit=3`, `memlimit=64 MiB`, adjusted after real measurements (see TASKS.md M0). They are stored in each slot, so they can be upgraded later.
+- `opslimit`/`memlimit` default to **[M0]**: expected `opslimit=3`, `memlimit=64 MiB`, adjusted after real measurements (see docs/project/TASKS.md M0). They are stored in each slot, so they can be upgraded later.
 - **Mandatory lower bounds when reading:** reject `memlimit < 32 MiB` or `opslimit < 2` (protects against parameter downgrade). The parameters are part of the AAD of `wrap`, so changing them makes unlocking fail.
 - The header contains **no** item names, item counts, or any other information about the data.
 
@@ -239,7 +237,7 @@ Test vectors shared with TypeScript later are in `app/test/vectors/`. Existing t
 - [x] Copying a slot into another vault (different `vaultId`) → cannot open
 - [x] Unknown slot and unknown header fields are preserved when opened and written back
 - [x] Size padding: the encrypted part is always a multiple of 4096 (+ 16-byte tag)
-- [ ] **A fixed complete `.vkv` file** (with passphrase and recovery key) for **cross-reading by TypeScript**. Not created yet; needed when the extension/server is built. Cross-checking Dart ↔ libsodium for the primitives has been done (see `docs/spike-m0.md`), but **there is no cross-check yet for the whole file format**.
+- [ ] **A fixed complete `.vkv` file** (with passphrase and recovery key) for **cross-reading by TypeScript**. Not created yet; needed when the extension/server is built. Cross-checking Dart ↔ libsodium for the primitives has been done (see `docs/technical/spike-m0.md`), but **there is no cross-check yet for the whole file format**.
 
 ---
 

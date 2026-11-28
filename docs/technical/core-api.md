@@ -1,9 +1,7 @@
-**[Tiếng Việt](core-api.md)** · English
-
 # `lib/core/` — Overview for UI developers (M2)
 
 Everything is **pure Dart, does not import Flutter**. The UI only calls into this layer and never implements cryptography itself.
-Format specification: [`vault-format.md`](vault-format.en.md). Task list: [`TASKS.md`](TASKS.md).
+Format specification: [`vault-format.md`](vault-format.md). Task list: [`TASKS.md`](../project/TASKS.md).
 
 ## Main flow
 

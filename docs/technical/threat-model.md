@@ -1,5 +1,3 @@
-**[Tiếng Việt](threat-model.md)** · English
-
 # Threat Model — draft v0.1
 
 > Status: **DRAFT**, written before the code existed, as a yardstick for security decisions. Must be reviewed after M3 (device security) and before release.
@@ -82,7 +80,7 @@
 
 ---
 
-## 6. Action items (linked to TASKS.md)
+## 6. Action items (linked to docs/project/TASKS.md)
 
 - [ ] Vault format specification and test vectors (`vault-format.md`, M1)
 - [ ] Measure passphrase strength when set; reject passphrases that are too weak (M2/M3)
@@ -96,7 +94,7 @@
 
 ## 7. Review again when
 
-- An browser extension or Autofill is added (new surface: malicious websites, fake apps).
+- A browser extension or Autofill is added (new surface: malicious websites, fake apps).
 - Sharing between users or emergency access is added (the key model changes significantly).
 - Server push is added (more metadata disclosed through Google FCM / Microsoft WNS).
 - Registration is opened to many users (more abuse, more storage responsibility).

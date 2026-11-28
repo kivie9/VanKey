@@ -1,5 +1,3 @@
-**[Tiếng Việt](SECURITY.md)** · English
-
 # Security Policy
 
 VanKey stores passwords, keys and 2FA codes. If you find a security vulnerability, please report it privately and do not make it public before a fix is available.
@@ -13,9 +11,9 @@ Please include: steps to reproduce, the app or server version, and the impact yo
 
 ## Scope
 
-- The VanKey app (`app/`), the server (`server/`), and the vault format (`docs/vault-format.md`).
-- No independent audit has been done yet. Known gaps are listed in the [Security](https://github.com/kivie9/VanKey/blob/main/docs/STATUS.md) section and in `docs/STATUS.md`.
+- The VanKey app (`app/`), the server (`server/`), and the vault format (`docs/technical/vault-format.md`).
+- No independent audit has been done yet. Known gaps are listed in the [Security](https://github.com/kivie9/VanKey/blob/main/docs/project/STATUS.md) section and in `docs/project/STATUS.md`.
 
 ## Response time
 
-`3 working days`. Fixed vulnerabilities are recorded in [CHANGELOG.md](CHANGELOG.md).
+`3 working days`. Fixed vulnerabilities are recorded in [CHANGELOG.md](project/CHANGELOG.md).

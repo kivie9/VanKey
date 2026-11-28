@@ -1,40 +1,38 @@
 # VanKey
 
-**Tiếng Việt** · [English](README.en.md)
+Manage passwords, keys and 2FA (TOTP) codes with end-to-end encryption. Works offline and syncs between devices.
+A replacement for Google Authenticator that can import directly from it.
 
-Quản lý mật khẩu, khóa và mã 2FA (TOTP), mã hóa đầu cuối, dùng được khi không có mạng, đồng bộ giữa các thiết bị.
-Thay cho Google Authenticator và có thể nhập thẳng từ đó.
+- Plan: [PLAN.md](docs/project/PLAN.md) · Tasks: [docs/project/TASKS.md](docs/project/TASKS.md) · Status: [docs/project/STATUS.md](docs/project/STATUS.md)
+- Vault file format: [docs/technical/vault-format.md](docs/technical/vault-format.md) · Threat model: [docs/technical/threat-model.md](docs/technical/threat-model.md)
+- Core library for UI developers: [docs/technical/core-api.md](docs/technical/core-api.md)
+- Quick user guide: [docs/guide/huong-dan-nguoi-dung.md](docs/guide/huong-dan-nguoi-dung.md) · Operations notes: [docs/operations/van-hanh.md](docs/operations/van-hanh.md)
+- Changelog: [CHANGELOG.md](docs/project/CHANGELOG.md) · Printable recovery sheet: [docs/guide/recovery-sheet.md](docs/guide/recovery-sheet.md) · Website: [site/PLAN.md](site/PLAN.md)
 
-- Kế hoạch: [PLAN.md](PLAN.md) · Việc cần làm: [docs/TASKS.md](docs/TASKS.md) · Tình trạng: [docs/STATUS.md](docs/STATUS.md)
-- Định dạng file kho: [docs/vault-format.md](docs/vault-format.md) · Mô hình đe dọa: [docs/threat-model.md](docs/threat-model.md)
-- Lõi cho người viết giao diện: [docs/core-api.md](docs/core-api.md)
-- Hướng dẫn nhanh cho người dùng: [docs/huong-dan-nguoi-dung.md](docs/huong-dan-nguoi-dung.md) · Ghi chú vận hành: [docs/van-hanh.md](docs/van-hanh.md)
-- Thay đổi: [CHANGELOG.md](CHANGELOG.md) · Sổ khôi phục để in: [docs/recovery-sheet.md](docs/recovery-sheet.md) · Web: [site/PLAN.md](site/PLAN.md)
-
-## Cấu trúc
+## Structure
 
 ```
-app/lib/core/   lõi Dart thuần (mật mã, kho, TOTP, nhập/xuất, bảo mật, đồng bộ), không phụ thuộc Flutter
-app/lib/app/    giao diện và trạng thái (VaultController, màn hình, đa ngôn ngữ vi/en)
-app/test/       test lõi, đồng bộ, giao diện, chuỗi dịch
-app/tool/       công cụ dòng lệnh (import_check: thử bộ nhập với file thật; interop: đối chiếu libsodium)
-server/         máy chủ Cloudflare Worker + D1 (tùy chọn): xem server/README.md
-docs/           tài liệu
+app/lib/core/   pure Dart core (crypto, vault, TOTP, import/export, security, sync), no Flutter dependency
+app/lib/app/    UI and state (VaultController, screens, Vietnamese/English localization)
+app/test/       tests for core, sync, UI and translation strings
+app/tool/       command-line tools (import_check: test the importer with real files; interop: cross-check against libsodium)
+server/         optional Cloudflare Worker + D1 server: see server/README.md
+docs/           documentation
 ```
 
-## Build và chạy
+## Build and run
 
-Cần Flutter (đường dẫn dự án: `E:\code\libs\flutter`), Android SDK, và **Chế độ nhà phát triển** của Windows (cho symlink plugin).
+You need Flutter (project path: `E:\code\libs\flutter`), the Android SDK, and Windows **Developer Mode** (for plugin symlinks).
 
 ```powershell
 cd app
-flutter test                                   # toàn bộ test
-flutter analyze                                # phải sạch
-# test đầu cuối cần Node 22.6+ (tự chạy server/dev/serve.ts); không có Node thì tự bỏ qua
-flutter run --release -d <mã thiết bị>         # cài lên điện thoại (dùng release, bản debug chậm rất nhiều với Argon2id)
-dart run tool/import_check.dart <file> --titles --codes   # thử nhập file xuất thật, in mã 2FA để so với app cũ
+flutter test                                   # all tests
+flutter analyze                                # must be clean
+# end-to-end tests need Node 22.6+ (they start server/dev/serve.ts automatically); without Node they are skipped
+flutter run --release -d <device id>           # install on a phone (use release: debug is much slower with Argon2id)
+dart run tool/import_check.dart <file> --titles --codes   # test the importer with a real export file, print 2FA codes to compare with the old app
 ```
 
-**Ký bản phát hành Android:** chạy `app/scripts/create-android-signing-key.cmd` một lần để tạo khóa (nằm ở `%USERPROFILE%\vankey-signing`) và `app/android/key.properties`. Chưa có khóa thì bản build trên máy ký bằng khóa debug (có cảnh báo), còn CI dừng hẳn. Cất file `.jks` và mật khẩu ở nơi an toàn: mất là không cập nhật đè được bản đã cài nữa.
+**Signing an Android release:** run `app/scripts/create-android-signing-key.cmd` once to create the key (stored in `%USERPROFILE%\vankey-signing`) and `app/android/key.properties`. Without a key, local builds are signed with the debug key (with a warning), and CI stops completely. Keep the `.jks` file and its password somewhere safe: if you lose them, you can no longer publish updates over an installed release.
 
-Lưu ý: dự án ở ổ khác với pub cache nên `android/gradle.properties` đặt `kotlin.incremental=false`.
+Note: the project lives on a different drive from the pub cache, so `android/gradle.properties` sets `kotlin.incremental=false`.

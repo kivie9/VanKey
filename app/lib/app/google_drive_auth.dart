@@ -8,7 +8,7 @@ import 'i18n.dart';
 
 /// Cấu hình đăng nhập Google, đưa vào lúc build (không ghi cứng trong code):
 /// `flutter build apk --release --dart-define=GOOGLE_SERVER_CLIENT_ID=<Web client ID>.apps.googleusercontent.com`
-/// Hướng dẫn tạo project và OAuth client: docs/google-drive-setup.md.
+/// Hướng dẫn tạo project và OAuth client: docs/operations/google-drive-setup.md.
 abstract final class GoogleConfig {
   static const serverClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
 
@@ -46,7 +46,7 @@ final class GoogleDriveAuth implements DriveAccountAuth {
 
   @override
   Future<String?> signIn() async {
-    if (!GoogleConfig.configured) return tr('Bản này chưa được cấu hình đăng nhập Google (thiếu GOOGLE_SERVER_CLIENT_ID khi build). Xem docs/google-drive-setup.md.');
+    if (!GoogleConfig.configured) return tr('Bản này chưa được cấu hình đăng nhập Google (thiếu GOOGLE_SERVER_CLIENT_ID khi build). Xem docs/operations/google-drive-setup.md.');
     try {
       await _ensureInit();
       final account = await GoogleSignIn.instance.authenticate(scopeHint: [DriveSync.scope]);
@@ -58,7 +58,7 @@ final class GoogleDriveAuth implements DriveAccountAuth {
     } on GoogleSignInException catch (e) {
       return switch (e.code) {
         GoogleSignInExceptionCode.canceled => tr('Đã hủy đăng nhập Google, hoặc cấu hình đăng nhập chưa đúng (kiểm tra SHA-1 và tên gói trong Google Cloud).'),
-        GoogleSignInExceptionCode.clientConfigurationError => tr('Cấu hình đăng nhập Google chưa đúng. Xem docs/google-drive-setup.md.'),
+        GoogleSignInExceptionCode.clientConfigurationError => tr('Cấu hình đăng nhập Google chưa đúng. Xem docs/operations/google-drive-setup.md.'),
         GoogleSignInExceptionCode.uiUnavailable => tr('Không mở được màn đăng nhập Google. Hãy thử lại khi app đang ở phía trước.'),
         _ => tr('Không đăng nhập được Google: {p0}', {'p0': e.description ?? e.code.name}),
       };

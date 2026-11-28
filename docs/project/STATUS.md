@@ -1,5 +1,3 @@
-**[Tiếng Việt](STATUS.md)** · English
-
 # Current Status
 
 Updated: 2026-11-27. The Windows Hello part with the hardware key is not yet committed (see `git status`).

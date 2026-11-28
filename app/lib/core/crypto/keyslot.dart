@@ -27,7 +27,7 @@ enum KeySlotType { passphrase, recovery }
 /// Một "khe khóa": bọc (wrap) vault key bằng một khóa dẫn xuất từ passphrase hoặc recovery key.
 ///
 /// Khe `device` (khóa nằm trong Keystore/Credential Manager) **không** nằm trong file đồng bộ,
-/// xem `docs/vault-format.md` mục 3.2.
+/// xem `docs/technical/vault-format.md` mục 3.2.
 final class KeySlot {
   const KeySlot({
     required this.id,

@@ -1,10 +1,10 @@
-# Web giới thiệu VanKey
+# VanKey Introduction Website
 
-Trang tĩnh viết bằng Astro, tiếng Việt ở `/`, tiếng Anh ở `/en/`. Kế hoạch và tiến độ: [PLAN.md](PLAN.md).
+A static site written in Astro: Vietnamese at `/`, English at `/en/`. Plan and progress: [PLAN.md](PLAN.md).
 
-## Chạy trên máy
+## Running on your machine
 
-Cần Node 22.22 trở lên.
+Requires Node 22.22 or newer.
 
 ```powershell
 npm install
@@ -14,44 +14,44 @@ npm install
 npm run dev
 ```
 
-| Lệnh | Việc |
+| Command | Purpose |
 |---|---|
-| `npm run build` | Kiểm kiểu (`astro check`) rồi build ra `dist/` |
-| `npm run preview` | Xem bản đã build |
-| `npm test` | TOTP đối chiếu vector RFC 6238 |
-| `npm run budget` | Kiểm ngân sách dung lượng gzip (chạy sau build) |
-| `npm run gen` | Sinh lại điểm cho hero, favicon, ảnh chia sẻ link (khi logo hoặc tiêu đề đổi) |
+| `npm run build` | Type-check (`astro check`), then build into `dist/` |
+| `npm run preview` | Preview the built site |
+| `npm test` | TOTP checked against the RFC 6238 vectors |
+| `npm run budget` | Check the gzip size budget (run after build) |
+| `npm run gen` | Regenerate the points for the hero, favicon and share image (when the logo or title changes) |
 
-Kết quả của `npm run gen` được commit, nên lúc build không cần chạy lại. Hình hero lấy từ hai đường nét trong `docs/brand/vankey-logo.svg`.
+The output of `npm run gen` is committed, so the build does not need to run it again. The hero shape comes from two strokes in `docs/brand/vankey-logo.svg`.
 
-## Ảnh chụp màn hình
+## Screenshots
 
-Ảnh được dựng từ mã giao diện thật của app với dữ liệu mẫu (giao diện tối, màu xanh ngọc), không đụng tới kho thật. Chạy trong `app/`:
+The images are built from the app's real UI code with sample data (dark mode, teal accent), so the real vault is never touched. Run inside `app/`:
 
 ```powershell
 flutter test tool/site_screenshots_test.dart
 ```
 
-## Sửa nội dung
+## Editing content
 
-- Chữ ở trang chủ: `src/i18n/vi.ts` và `src/i18n/en.ts` (thiếu khóa thì `astro check` báo lỗi).
-- Chỉ quảng cáo tính năng theo `docs/STATUS.md`. Phần chưa thử thật phải có ghi chú. Khi đã thử xong thì bỏ ghi chú ở khối tính năng **và** ở mục "Đã viết nhưng chưa thử thật".
-- Trang mới có hai ngôn ngữ: thêm cặp đường dẫn vào `PAGE_PAIRS` trong `src/config.ts` để canonical, hreflang và nút đổi ngôn ngữ đúng.
-- Phiên bản hiển thị lấy từ `app/pubspec.yaml`.
+- Text on the homepage: `src/i18n/vi.ts` and `src/i18n/en.ts` (a missing key makes `astro check` report an error).
+- Only advertise features that are in `docs/project/STATUS.md`. Features not yet really tested must carry a note. Once tested, remove the note both in the feature block **and** in the "Written but not yet tested" item.
+- New pages have two languages: add the path pair to `PAGE_PAIRS` in `src/config.ts` so the canonical link, hreflang and language switch are correct.
+- The displayed version comes from `app/pubspec.yaml`.
 
-## Deploy (khi muốn công khai)
+## Deploy (when going public)
 
-Trước khi công khai: điền hết chỗ `[điền: ...]` / `[fill: ...]` trong các trang pháp lý.
+Before going public: fill in every `[điền: ...]` / `[fill: ...]` placeholder in the legal pages.
 
-1. Cloudflare → Workers & Pages → tạo dự án Pages → Connect to Git → repo `VanKey`.
+1. Cloudflare → Workers & Pages → create a Pages project → Connect to Git → repo `VanKey`.
 2. Root directory `site`, build command `npm run build`, output `dist`.
-3. Build watch paths: `site/**`. Web còn đọc `docs/brand/vankey-logo.svg` và `app/pubspec.yaml`, nên đổi logo hoặc phiên bản thì bấm build lại, hoặc thêm hai đường dẫn đó.
-4. Biến môi trường:
-   - `SITE_URL`: địa chỉ thật, ví dụ địa chỉ `*.pages.dev` được cấp hoặc tên miền riêng. Dùng cho canonical, sitemap và ảnh chia sẻ. Thiếu biến này thì web dùng `CF_PAGES_URL`, là địa chỉ riêng của từng lần deploy.
+3. Build watch paths: `site/**`. The site also reads `docs/brand/vankey-logo.svg` and `app/pubspec.yaml`, so rebuild when the logo or version changes, or add those two paths to the watch list.
+4. Environment variables:
+   - `SITE_URL`: the real address, for example the `*.pages.dev` address assigned or a custom domain. Used for the canonical link, the sitemap and share images. Without it, the site uses `CF_PAGES_URL`, the per-deployment address.
    - `NODE_VERSION`: `22`.
-5. (Tùy chọn) Custom domains → gắn tên miền riêng, rồi cập nhật `SITE_URL`.
-6. Khi đã có GitHub Release: đổi `RELEASED` thành `true` trong `src/config.ts` và sửa câu mô tả nếu cần. Nút tải về sẽ trỏ tới `releases/latest`.
+5. (Optional) Custom domains → attach a custom domain, then update `SITE_URL`.
+6. Once a GitHub Release exists: change `RELEASED` to `true` in `src/config.ts` and adjust the description if needed. The download button will then point to `releases/latest`.
 
-Không muốn nối repo: build trên máy rồi chạy `npx wrangler pages deploy dist` trong `site/`.
+If you do not want to connect the repo: build locally and run `npx wrangler pages deploy dist` inside `site/`.
 
-Header bảo mật (CSP...) nằm ở `public/_headers`. CSP không cho script hay style viết thẳng trong HTML, nên đừng thêm thuộc tính `style="..."` hoặc `<script is:inline>`.
+Security headers (CSP, etc.) are in `public/_headers`. The CSP does not allow scripts or styles written inline in HTML, so do not add `style="..."` attributes or `<script is:inline>`.

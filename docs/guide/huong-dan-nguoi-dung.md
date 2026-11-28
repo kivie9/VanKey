@@ -1,7 +1,5 @@
 # Hướng dẫn nhanh VanKey
 
-**Tiếng Việt** · [English](huong-dan-nguoi-dung.en.md)
-
 Đọc một lần trước khi bắt đầu. Các mục ở dưới đi theo thứ tự quan trọng nhất trước.
 
 ## 1. Ba điều phải nhớ

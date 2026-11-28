@@ -657,9 +657,9 @@ const Map<String, String> enStrings = {
   'Dùng tài khoản Google của bạn, không cần máy chủ':
       'Use your Google account, no server needed',
   'Đã bật đồng bộ Google Drive': 'Google Drive sync turned on',
-  'Bản này chưa được cấu hình đăng nhập Google (thiếu GOOGLE_SERVER_CLIENT_ID khi build). Xem docs/google-drive-setup.md.': 'This build has no Google sign-in configured (GOOGLE_SERVER_CLIENT_ID missing at build time). See docs/google-drive-setup.md.',
+  'Bản này chưa được cấu hình đăng nhập Google (thiếu GOOGLE_SERVER_CLIENT_ID khi build). Xem docs/operations/google-drive-setup.md.': 'This build has no Google sign-in configured (GOOGLE_SERVER_CLIENT_ID missing at build time). See docs/operations/google-drive-setup.md.',
   'Đã hủy đăng nhập Google, hoặc cấu hình đăng nhập chưa đúng (kiểm tra SHA-1 và tên gói trong Google Cloud).': 'Google sign-in was cancelled, or the setup is wrong (check the SHA-1 and package name in Google Cloud).',
-  'Cấu hình đăng nhập Google chưa đúng. Xem docs/google-drive-setup.md.': 'Google sign-in is not configured correctly. See docs/google-drive-setup.md.',
+  'Cấu hình đăng nhập Google chưa đúng. Xem docs/operations/google-drive-setup.md.': 'Google sign-in is not configured correctly. See docs/operations/google-drive-setup.md.',
   'Không mở được màn đăng nhập Google. Hãy thử lại khi app đang ở phía trước.': 'Could not open Google sign-in. Try again while the app is in the foreground.',
   'Không đăng nhập được Google: {p0}': 'Could not sign in to Google: {p0}',
   'Cần đăng nhập lại Google.': 'You need to sign in to Google again.',
