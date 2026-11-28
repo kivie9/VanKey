@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../widgets/terms_consent.dart';
 import '../constants.dart';
 import '../../core/sync/cloudflare_sync.dart';
 import '../i18n.dart';
@@ -33,6 +34,7 @@ class _CloudflareLoginScreenState extends State<CloudflareLoginScreen> {
   final _vault = TextEditingController();
   final _registerCode = TextEditingController();
   bool _register = false;
+  bool _agreed = false;
   bool _useRecovery = false;
   bool _busy = false;
   String? _error;
@@ -60,6 +62,7 @@ class _CloudflareLoginScreenState extends State<CloudflareLoginScreen> {
       (_register && !widget.join
           ? AccountPolicy.checkNewPassword(_password.text) == null
           : _password.text.isNotEmpty) &&
+      (!_register || widget.join || _agreed) &&
       (!widget.join || _vault.text.isNotEmpty);
 
   Future<void> _submit() async {
@@ -203,6 +206,8 @@ class _CloudflareLoginScreenState extends State<CloudflareLoginScreen> {
             secret: true,
             helper: tr('Chủ máy chủ đặt mã này. Bỏ trống nếu không có.'),
           ),
+          const SizedBox(height: Gap.md),
+          TermsConsent(value: _agreed, onChanged: (v) => setState(() => _agreed = v)),
         ],
         if (_error != null)
           Padding(

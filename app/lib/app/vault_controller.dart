@@ -86,9 +86,8 @@ class VaultController extends ChangeNotifier {
 
   /// Vân tay vừa bị tắt vì bản cũ cất mật khẩu không an toàn: nhắc người dùng bật lại (Cài đặt > Tài khoản).
   bool bioNeedsReenable = false;
-  static const _bioKey =
-      'vault.bio.passphrase'; // bản cũ / Windows: mật khẩu kho
-  static const _bioBlobKey = 'vault.bio.key.v1'; // Android: vault key đã mã hóa bằng khóa Keystore cần vân tay
+  static const _bioKey = 'vault.bio.passphrase'; // bản cũ (Android, Windows) / iOS, macOS: mật khẩu kho
+  static const _bioBlobKey = 'vault.bio.key.v1'; // Android, Windows: vault key đã mã hóa bằng khóa cần sinh trắc
   final _localAuth = LocalAuthentication();
   DateTime? _pausedAt;
   bool _external = false;
@@ -637,10 +636,16 @@ class VaultController extends ChangeNotifier {
   //
   // Android: vault key được mã hóa bằng khóa AES trong Keystore, chỉ dùng được sau khi BiometricPrompt xác thực
   // (BiometricVault.kt). Không cất mật khẩu; vá app hay root máy cũng không lấy được vault key nếu không có vân tay.
-  // Nền tảng khác (Windows Hello): chưa gắn được với khóa, vẫn cất mật khẩu trong kho khóa của hệ điều hành và
-  // dùng xác thực sinh trắc như một lớp chặn của app.
+  // Windows: tương tự, vault key được mã hóa bằng khóa suy ra từ chữ ký của khóa Windows Hello (nằm trong TPM), chỉ ký
+  // được sau khi người dùng xác thực bằng khuôn mặt, vân tay hoặc PIN (hello_vault.cpp).
+  // Nền tảng khác (iOS, macOS): chưa gắn được với khóa, vẫn cất mật khẩu trong kho khóa của hệ điều hành và dùng xác
+  // thực sinh trắc như một lớp chặn của app.
 
-  bool get _bioBound => Platform.isAndroid;
+  bool get _bioBound => PlatformBridge.bioBound;
+
+  /// Tên cách mở khóa sinh trắc để hiện cho người dùng: "Windows Hello" trên Windows, "vân tay" ở nơi khác.
+  static String get bioName =>
+      Platform.isWindows ? 'Windows Hello' : tr('vân tay');
 
   Future<String?> _readBio() => _readStored(_bioBound ? _bioBlobKey : _bioKey);
 
@@ -697,12 +702,15 @@ class VaultController extends ChangeNotifier {
             biometricOnly: true,
           ),
         );
-        if (!ok) return tr('Chưa xác thực được vân tay');
+        if (!ok)
+          return tr('Chưa xác thực được bằng {p0}', {
+            'p0': VaultController.bioName,
+          });
         await _secure.write(key: _bioKey, value: passphrase);
       }
     } on BioException catch (e) {
       return e.code == 'canceled'
-          ? tr('Chưa xác thực được vân tay')
+          ? tr('Chưa xác thực được bằng {p0}', {'p0': VaultController.bioName})
           : tr('Không bật được: {p0}', {'p0': e.message ?? e.code});
     } on Object catch (e) {
       return tr('Không bật được: {p0}', {'p0': e});
@@ -765,7 +773,8 @@ class VaultController extends ChangeNotifier {
       if (e.code == 'invalidated' || e.code == 'corrupt') {
         await disableBiometric();
         error = tr(
-          'Vân tay trên máy đã thay đổi. Hãy nhập mật khẩu rồi bật lại mở khóa bằng vân tay.',
+          'Khóa {p0} trên máy đã thay đổi. Hãy nhập mật khẩu rồi bật lại mở khóa bằng {p0}.',
+          {'p0': VaultController.bioName},
         );
         notifyListeners();
       }

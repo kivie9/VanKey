@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { createHandler, ACCESS_TTL, MAX_VAULT_BYTES, REFRESH_REUSE_GRACE } from '../src/handler.ts';
+import { createHandler, ACCESS_TTL, MAX_VAULT_BYTES, REFRESH_REUSE_GRACE, TERMS_VERSION } from '../src/handler.ts';
 import type { Config } from '../src/handler.ts';
 import { MemoryStore } from '../src/memory_store.ts';
 import { toBase64, randomBytes } from '../src/util.ts';
@@ -37,7 +37,7 @@ const authKey = (seed = 1) => toBase64(new Uint8Array(32).fill(seed));
 const vaultBytes = (n = 100, fill = 7) => new Uint8Array(n).fill(fill);
 
 async function register(s: ReturnType<typeof setup>, username = USER, key = authKey()) {
-  const r = await s.call('POST', '/auth/register', { body: { username, authKey: key, deviceName: 'Điện thoại' } });
+  const r = await s.call('POST', '/auth/register', { body: { termsVersion: TERMS_VERSION, username, authKey: key, deviceName: 'Điện thoại' } });
   return { res: r, body: r.status === 200 ? ((await r.json()) as any) : null };
 }
 
@@ -176,7 +176,7 @@ test('refresh không gia hạn mãi: sau 90 ngày kể từ lúc đăng nhập t
 test('không có cf-connecting-ip thì từ chối đăng ký, đăng nhập, đổi mật khẩu; không gom mọi người vào một khóa chung', async () => {
   const s = setup();
   const noIp = { 'cf-connecting-ip': '' };
-  const reg0 = await s.call('POST', '/auth/register', { body: { username: USER, authKey: authKey() }, headers: noIp });
+  const reg0 = await s.call('POST', '/auth/register', { body: { termsVersion: TERMS_VERSION, username: USER, authKey: authKey() }, headers: noIp });
   assert.equal(reg0.status, 500);
   assert.equal(((await reg0.json()) as any).error, 'misconfigured');
   assert.equal(s.store.users.size, 0);
@@ -322,9 +322,9 @@ test('đầu vào rác không làm sập: JSON hỏng, thiếu trường, authKe
   const s = setup();
   const bad = await s.call('POST', '/auth/register', { raw: new TextEncoder().encode('{không phải json'), headers: { 'content-type': 'application/json' } });
   assert.equal(bad.status, 400);
-  assert.equal((await s.call('POST', '/auth/register', { body: { username: USER } })).status, 400);
-  assert.equal((await s.call('POST', '/auth/register', { body: { username: USER, authKey: 'abc' } })).status, 400);
-  assert.equal((await s.call('POST', '/auth/register', { body: { username: USER, authKey: '***không-phải-base64***' } })).status, 400);
+  assert.equal((await s.call('POST', '/auth/register', { body: { termsVersion: TERMS_VERSION, username: USER } })).status, 400);
+  assert.equal((await s.call('POST', '/auth/register', { body: { termsVersion: TERMS_VERSION, username: USER, authKey: 'abc' } })).status, 400);
+  assert.equal((await s.call('POST', '/auth/register', { body: { termsVersion: TERMS_VERSION, username: USER, authKey: '***không-phải-base64***' } })).status, 400);
   assert.equal((await s.call('POST', '/auth/login', { body: { username: 123, authKey: [] } })).status, 400);
   assert.equal((await s.call('GET', '/khong-co')).status, 404);
   assert.equal((await s.call('GET', '/')).status, 200);
@@ -351,7 +351,7 @@ test('MemoryStore nguyên tử: tạo kho đồng thời chỉ một bên thành
 // ---------------- Đăng ký mở, có giới hạn ----------------
 
 const reg = (s: ReturnType<typeof setup>, body: Record<string, unknown>, ip = '203.0.113.1') =>
-  s.call('POST', '/auth/register', { body: { authKey: authKey(), ...body }, headers: { 'cf-connecting-ip': ip } });
+  s.call('POST', '/auth/register', { body: { termsVersion: TERMS_VERSION, authKey: authKey(), ...body }, headers: { 'cf-connecting-ip': ip } });
 
 test('ai cũng đăng ký được khi không đặt mã mời; tên đăng nhập được chuẩn hóa', async () => {
   const s = setup();
@@ -553,4 +553,18 @@ test('thân JSON khai báo quá lớn bị từ chối mà không đọc', async
   const s = setup();
   const r = await s.call('POST', '/auth/login', { body: { username: USER, authKey: authKey() }, headers: { 'content-length': '999999' } });
   assert.equal(r.status, 400);
+});
+
+test('đăng ký bắt buộc gửi đúng phiên bản điều khoản; tài khoản lưu phiên bản và thời điểm đồng ý', async () => {
+  const s = setup();
+  const noTerms = await s.call('POST', '/auth/register', { body: { username: USER, authKey: authKey(), deviceName: 'A' } });
+  assert.equal(noTerms.status, 400);
+  assert.equal(((await noTerms.json()) as any).error, 'terms_required');
+  const oldTerms = await s.call('POST', '/auth/register', { body: { termsVersion: '2000-01-01', username: USER, authKey: authKey(), deviceName: 'A' } });
+  assert.equal(oldTerms.status, 400);
+  const ok = await register(s);
+  assert.equal(ok.res.status, 200);
+  const u = await s.store.userByUsername(USER);
+  assert.equal(u?.termsVersion, TERMS_VERSION);
+  assert.ok((u?.termsAt ?? 0) > 0);
 });

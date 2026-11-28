@@ -12,9 +12,12 @@ final class BioException implements Exception {
   String toString() => 'BioException($code: $message)';
 }
 
-/// Cầu nối nhỏ tới Android (xem MainActivity.kt). Trên nền tảng khác thì không làm gì.
+/// Cầu nối nhỏ tới Android (MainActivity.kt) và Windows (windows/runner/flutter_window.cpp). Nền tảng khác thì không làm gì.
 abstract final class PlatformBridge {
   static const _ch = MethodChannel('vankey/platform');
+
+  /// Có khóa sinh trắc gắn với phần cứng: Android Keystore (BiometricVault.kt) hoặc Windows Hello (hello_vault.cpp).
+  static bool get bioBound => Platform.isAndroid || Platform.isWindows;
 
   /// Chặn chụp màn hình và che nội dung trong danh sách ứng dụng gần đây.
   static Future<void> setSecure({required bool on}) async {
@@ -26,11 +29,11 @@ abstract final class PlatformBridge {
     }
   }
 
-  // ---- Vân tay gắn khóa Keystore (BiometricVault.kt) ----
+  // ---- Vân tay gắn khóa Keystore (BiometricVault.kt) / Windows Hello (hello_vault.cpp) ----
 
   /// Máy có sinh trắc mạnh đã đăng ký và dùng được cho khóa Keystore.
   static Future<bool> bioAvailable() async {
-    if (!Platform.isAndroid) return false;
+    if (!bioBound) return false;
     try {
       return await _ch.invokeMethod<bool>('bioAvailable') ?? false;
     } on Object {
@@ -48,7 +51,7 @@ abstract final class PlatformBridge {
 
   /// Xóa khóa Keystore của vân tay (dữ liệu đã mã hóa bằng nó không mở được nữa).
   static Future<void> bioDelete() async {
-    if (!Platform.isAndroid) return;
+    if (!bioBound) return;
     try {
       await _ch.invokeMethod<void>('bioDelete');
     } on Object {
@@ -57,7 +60,7 @@ abstract final class PlatformBridge {
   }
 
   static Future<Uint8List> _bioCall(String method, Uint8List data, String title, String cancel) async {
-    if (!Platform.isAndroid) throw const BioException('unavailable');
+    if (!bioBound) throw const BioException('unavailable');
     try {
       final out = await _ch.invokeMethod<Uint8List>(method, {'data': data, 'title': title, 'cancel': cancel});
       if (out == null) throw const BioException('failed');

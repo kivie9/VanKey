@@ -9,6 +9,10 @@ export interface User {
   /** Số vòng PBKDF2 đã dùng để tạo pwHash (tài khoản cũ: 100000; tự băm lại khi đăng nhập). */
   kdfIter: number;
   createdAt: number;
+  /** Phiên bản Điều khoản đã đồng ý khi đăng ký ("" với tài khoản cũ). */
+  termsVersion?: string;
+  /** Thời điểm đồng ý (giây, 0 nếu không có). */
+  termsAt?: number;
 }
 
 export interface Device {

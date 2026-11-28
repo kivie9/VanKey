@@ -30,6 +30,8 @@ export const REFRESH_TTL = 90 * 24 * 3600;
  */
 export const REFRESH_REUSE_GRACE = 60;
 export const MAX_VAULT_BYTES = 1_500_000; // dưới giới hạn ~2 MB mỗi dòng của D1
+/** Phiên bản Điều khoản và Chính sách quyền riêng tư hiện hành. Đổi khi nội dung thay đổi; app phải gửi đúng số này khi đăng ký. */
+export const TERMS_VERSION = '2026-11-27';
 export const DEFAULT_MAX_USERS = 200;
 export const MIN_REGISTER_CODE = 12;
 export const MAX_DEVICES = 20; // mỗi tài khoản; vượt thì thiết bị lâu không dùng nhất bị gỡ
@@ -231,6 +233,7 @@ export function createHandler(deps: Deps): (req: Request) => Promise<Response> {
     if (!username) return err(400, 'bad_username', 'Tên đăng nhập gồm 3 đến 32 ký tự: chữ thường, số, dấu chấm, gạch dưới hoặc gạch ngang');
     const key = parseKey(authKey);
     if (!key) return err(400, 'bad_request', 'authKey phải là base64 của 32 byte');
+    if (str(body?.termsVersion, 20) !== TERMS_VERSION) return err(400, 'terms_required', 'Cần đồng ý Điều khoản và Chính sách quyền riêng tư (phiên bản hiện hành)');
 
     const ip = ipKey(rawIp);
     // Mỗi IP chỉ được đăng ký một số lần: chặn người lạ tạo hàng loạt tài khoản.
@@ -260,7 +263,7 @@ export function createHandler(deps: Deps): (req: Request) => Promise<Response> {
     if ((await store.countUsers()) >= maxUsers) return err(403, 'full', 'Máy chủ đã đủ số tài khoản cho phép');
 
     const salt = randomBytes(16);
-    const user: User = { id: randomId(), username, salt, pwHash: await pbkdf2(key, salt, KDF_ITERATIONS), kdfIter: KDF_ITERATIONS, createdAt: now() };
+    const user: User = { id: randomId(), username, salt, pwHash: await pbkdf2(key, salt, KDF_ITERATIONS), kdfIter: KDF_ITERATIONS, createdAt: now(), termsVersion: TERMS_VERSION, termsAt: now() };
     if (!(await store.createUser(user))) return err(409, 'exists', 'Tên đăng nhập đã được dùng');
     return issueSession(user, str(body?.deviceName, 80) ?? 'Thiết bị');
   }

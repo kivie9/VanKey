@@ -68,6 +68,9 @@ final class CloudflareDevice {
   final bool current;
 }
 
+/// Phiên bản Điều khoản đang hiện hành. Phải khớp TERMS_VERSION của máy chủ (server/src/handler.ts).
+const cloudflareTermsVersion = '2026-11-27';
+
 /// Lỗi có thông điệp hiển thị được từ máy chủ (sai mật khẩu, tên đăng nhập đã dùng, bị khóa tạm...).
 final class CloudflareApiException implements Exception {
   const CloudflareApiException(this.status, this.code, this.message, {this.retryAfter});
@@ -194,8 +197,8 @@ final class CloudflareApi {
   }
 
   /// [registerCode]: mã mời, chỉ cần khi chủ máy chủ có đặt secret `REGISTER_CODE`.
-  Future<CloudflareSession> register(String baseUrl, String username, String authKey, String deviceName, {String registerCode = ''}) =>
-      _auth(baseUrl, '/auth/register', {'username': username, 'authKey': authKey, 'deviceName': deviceName, 'registerCode': registerCode});
+  Future<CloudflareSession> register(String baseUrl, String username, String authKey, String deviceName, {String registerCode = '', String termsVersion = cloudflareTermsVersion}) =>
+      _auth(baseUrl, '/auth/register', {'username': username, 'authKey': authKey, 'deviceName': deviceName, 'registerCode': registerCode, 'termsVersion': termsVersion});
 
   Future<CloudflareSession> login(String baseUrl, String username, String authKey, String deviceName) =>
       _auth(baseUrl, '/auth/login', {'username': username, 'authKey': authKey, 'deviceName': deviceName});

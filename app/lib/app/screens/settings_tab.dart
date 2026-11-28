@@ -429,12 +429,22 @@ class SettingsTab extends StatelessWidget {
   }
 
   Future<void> _enableBio(BuildContext context) async {
-    final pw = await _askPassword(context, tr('Nhập mật khẩu để bật vân tay'));
+    final pw = await _askPassword(
+      context,
+      tr('Nhập mật khẩu để bật mở khóa bằng {p0}', {
+        'p0': VaultController.bioName,
+      }),
+    );
     if (pw == null || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     final err = await controller.enableBiometric(pw);
     messenger.showSnackBar(
-      SnackBar(content: Text(err ?? tr('Đã bật mở khóa bằng vân tay'))),
+      SnackBar(
+        content: Text(
+          err ??
+              tr('Đã bật mở khóa bằng {p0}', {'p0': VaultController.bioName}),
+        ),
+      ),
     );
   }
 
@@ -747,9 +757,13 @@ class SettingsTab extends StatelessWidget {
           if (bio)
             SwitchListTile(
               secondary: const Icon(Icons.fingerprint),
-              title: Text(tr('Mở khóa bằng vân tay')),
+              title: Text(
+                tr('Mở khóa bằng {p0}', {'p0': VaultController.bioName}),
+              ),
               subtitle: Text(
-                tr('Vẫn dùng được mật khẩu khi vân tay không nhận'),
+                tr('Vẫn dùng được mật khẩu khi {p0} không nhận', {
+                  'p0': VaultController.bioName,
+                }),
               ),
               value: controller.biometricEnabled,
               onChanged: (v) =>

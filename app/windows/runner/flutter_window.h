@@ -25,6 +25,11 @@ class FlutterWindow : public Win32Window {
                          LPARAM const lparam) noexcept override;
 
  private:
+  // Handles "vankey/platform": copySensitive and the Windows Hello calls (bio*, see hello_vault.h).
+  void HandlePlatformCall(const flutter::MethodCall<flutter::EncodableValue>& call,
+                          std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+
+ private:
   // The project to run.
   flutter::DartProject project_;
 

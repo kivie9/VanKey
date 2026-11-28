@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'app/screens/home_screen.dart';
@@ -13,7 +15,18 @@ void main() {
   final cache = PaintingBinding.instance.imageCache;
   cache.maximumSize = 100;
   cache.maximumSizeBytes = 32 << 20; // 32 MB
+  _registerFontLicenses();
   runApp(const VanKeyApp());
+}
+
+/// Phông chữ đóng gói trong assets không tự có trong trang giấy phép (chỉ gói pub mới có), nên thêm tay.
+void _registerFontLicenses() {
+  const fonts = {'Inter': 'OFL-Inter.txt', 'Space Grotesk': 'OFL-SpaceGrotesk.txt', 'JetBrains Mono': 'OFL-JetBrainsMono.txt'};
+  LicenseRegistry.addLicense(() async* {
+    for (final e in fonts.entries) {
+      yield LicenseEntryWithLineBreaks([e.key], await rootBundle.loadString('assets/fonts/${e.value}'));
+    }
+  });
 }
 
 class VanKeyApp extends StatefulWidget {

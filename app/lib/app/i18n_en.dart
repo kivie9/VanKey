@@ -140,8 +140,7 @@ const Map<String, String> enStrings = {
   'Bắt đầu dùng': 'Get started',
   'Mở khóa': 'Unlock',
   'Mở khóa VanKey': 'Unlock VanKey',
-  'Mở bằng vân tay': 'Unlock with fingerprint',
-  'Mã khôi phục': 'Recovery key',
+    'Mã khôi phục': 'Recovery key',
   'Dùng mật khẩu': 'Use password',
   'Quên mật khẩu? Dùng mã khôi phục': 'Forgot password? Use recovery key',
   'Xóa kho và bắt đầu lại': 'Delete vault and start over',
@@ -158,8 +157,7 @@ const Map<String, String> enStrings = {
   'Không mở được kho: {p0}': 'Could not open the vault: {p0}',
   'Không tạo được kho: {p0}': 'Could not create the vault: {p0}',
   'Mật khẩu không đúng': 'Incorrect password',
-  'Chưa xác thực được vân tay': 'Fingerprint was not verified',
-  'Không bật được: {p0}': 'Could not turn on: {p0}',
+    'Không bật được: {p0}': 'Could not turn on: {p0}',
 
   // ---- Cài đặt ----
   'Khóa ngay': 'Lock now',
@@ -201,22 +199,15 @@ const Map<String, String> enStrings = {
   'Chặn chụp màn hình': 'Block screenshots',
   'Cũng che nội dung khi xem danh sách ứng dụng gần đây':
       'Also hides content in the recent apps list',
-  'Mở khóa bằng vân tay': 'Unlock with fingerprint',
-  'Vân tay trên máy đã thay đổi. Hãy nhập mật khẩu rồi bật lại mở khóa bằng vân tay.': 'The fingerprints on this device have changed. Enter your password, then turn fingerprint unlock on again.',
-  'Mở khóa bằng vân tay đã được nâng cấp để an toàn hơn. Sau khi mở bằng mật khẩu, hãy bật lại trong Cài đặt > Tài khoản.': 'Fingerprint unlock has been upgraded to be more secure. After unlocking with your password, turn it on again in Settings > Account.',
-  'Tắt tự khóa?': 'Turn off auto-lock?',
+        'Tắt tự khóa?': 'Turn off auto-lock?',
   'Mật khẩu quá dễ đoán. Hãy dài hơn, hoặc ghép vài từ không liên quan.': 'This password is too easy to guess. Make it longer, or combine a few unrelated words.',
   'Khóa mở kho sẽ được cất trên máy này để mở app là vào thẳng, không hỏi mật khẩu. Ai cầm được điện thoại đang mở khóa màn hình là xem được toàn bộ mật khẩu và mã 2FA của bạn. Chỉ nên chọn nếu điện thoại luôn có khóa màn hình và không ai khác dùng.': 'The vault key will be kept on this device so the app opens straight into your vault without asking for a password. Anyone holding your unlocked phone can see all your passwords and 2FA codes. Only choose this if your phone always has a screen lock and nobody else uses it.',
   'Giữ tự khóa': 'Keep auto-lock',
   'Vẫn tắt': 'Turn off anyway',
   'Đang không tự khóa: ai cầm điện thoại đang mở là vào được kho. Nên chọn một mức tự khóa, nhất là khi đã bật mở bằng vân tay.': 'Auto-lock is off: anyone holding your unlocked phone can open the vault. Pick an auto-lock time, especially if fingerprint unlock is on.',
-  'Vẫn dùng được mật khẩu khi vân tay không nhận':
-      'You can still use your password if the fingerprint fails',
-  'Nhập mật khẩu để bật vân tay': 'Enter your password to enable fingerprint',
-  'Xác nhận để bật mở khóa bằng vân tay':
+      'Xác nhận để bật mở khóa bằng vân tay':
       'Confirm to enable fingerprint unlock',
-  'Đã bật mở khóa bằng vân tay': 'Fingerprint unlock enabled',
-  'Tạo mã mới (mã cũ sẽ hết hiệu lực)':
+    'Tạo mã mới (mã cũ sẽ hết hiệu lực)':
       'Create a new key (the old one stops working)',
   'Tạo mã khôi phục mới?': 'Create a new recovery key?',
   'Mã cũ (nếu có) sẽ không dùng được nữa. Mã mới chỉ hiện một lần.':
@@ -578,15 +569,35 @@ const Map<String, String> enStrings = {
   'Toàn bộ kho': 'The whole vault',
 
   // ---- Hỗ trợ, Giới thiệu ----
+  'Đồng bộ hoạt động thế nào?': 'How does sync work?',
+  'Bật trong Cài đặt → Dữ liệu → Đồng bộ, rồi chọn máy chủ VanKey, Google Drive hoặc một thư mục. Mỗi lần lưu, app gộp thay đổi của các máy rồi gửi bản đã mã hóa đi. Khi mất mạng app vẫn dùng bình thường và đồng bộ lại sau.': 'Turn it on in Settings → Data → Sync, then choose the VanKey server, Google Drive or a folder. Each save merges changes from your devices and sends the encrypted copy. Without a connection the app keeps working and syncs later.',
+  'Mất điện thoại thì làm sao?': 'What if I lose my phone?',
+  'Trên máy còn lại, vào Cài đặt → Dữ liệu → Đồng bộ → Thiết bị đã đăng nhập rồi gỡ máy bị mất. Máy đó mất quyền truy cập ngay. Nếu nghi bị lộ, hãy đổi mật khẩu kho.': 'On another device, go to Settings → Data → Sync → Signed-in devices and remove the lost one. It loses access immediately. If you suspect a leak, change the vault password.',
+  'Xóa tài khoản máy chủ thế nào?': 'How do I delete my server account?',
+  'Cài đặt → Dữ liệu → Đồng bộ → Xóa tài khoản. Thao tác này xóa kho trên máy chủ và trên máy này, không hoàn tác được. Hãy xuất bản sao lưu mã hóa trước nếu còn cần dữ liệu.': 'Settings → Data → Sync → Delete account. This deletes the vault on the server and on this device, and cannot be undone. Export an encrypted backup first if you still need the data.',
+  'Kho đồng bộ được bao nhiêu mục?': 'How many items can a synced vault hold?',
+  'Máy chủ VanKey nhận kho tối đa khoảng 1,5 MB, tức vài nghìn mục. Khi vượt giới hạn, việc đồng bộ lên máy chủ sẽ báo lỗi, còn dữ liệu trên máy vẫn an toàn.': 'The VanKey server accepts a vault of up to about 1.5 MB, roughly a few thousand items. Above that, syncing to the server reports an error, but your data on this device stays safe.',
+  'Chỉ khi bạn bật đồng bộ: bản đã mã hóa được gửi tới máy chủ VanKey, Google Drive hoặc thư mục bạn chọn.': 'Only when sync is on: the encrypted copy is sent to the VanKey server, Google Drive or the folder you choose.',
+  'Kiểm tra mật khẩu rò rỉ: chỉ gửi 5 ký tự đầu của mã băm SHA-1 tới HaveIBeenPwned. Mật khẩu không rời máy.': 'Leaked-password check: only the first 5 characters of the SHA-1 hash are sent to HaveIBeenPwned. Your password never leaves the device.',
+  'Kiểm tra bản mới: chỉ khi bạn bấm nút, app hỏi GitHub.': 'Update check: the app asks GitHub only when you tap the button.',
+  'Không có phân tích hay báo lỗi tự động.': 'No analytics or automatic crash reporting.',
+  'Dữ liệu rời khỏi máy khi nào': 'When data leaves your device',
+  'Tôi đã đọc và đồng ý Điều khoản sử dụng và Chính sách quyền riêng tư': 'I have read and agree to the Terms of use and the Privacy policy',
+  'Đọc Điều khoản sử dụng': 'Read the Terms of use',
+  'Đọc Chính sách quyền riêng tư': 'Read the Privacy policy',
+  'Điều khoản sử dụng': 'Terms of use',
+  'Chính sách quyền riêng tư': 'Privacy policy',
+  'Xóa tài khoản và dữ liệu': 'Delete account and data',
+  'Bảo mật và báo lỗ hổng': 'Security and vulnerability reports',
   'Quên mật khẩu kho thì sao?': 'What if I forget the vault password?',
   'Dùng mã khôi phục ở màn mở khóa. Nếu mất cả mật khẩu lẫn mã khôi phục thì không ai mở lại được kho, kể cả nhà phát triển, vì dữ liệu mã hóa ngay trên máy.': 'Use the recovery key on the unlock screen. If you lose both the password and the recovery key, nobody can reopen the vault, not even the developer, because the data is encrypted on your device.',
   'Chuyển từ Google Authenticator thế nào?':
       'How do I move from Google Authenticator?',
   'Trong Google Authenticator chọn Xuất tài khoản, rồi trong VanKey bấm + → Quét QR. Có thể chụp màn hình mã QR và chọn ảnh. Sau khi xong hãy so vài mã với app cũ trước khi xóa app cũ.': 'In Google Authenticator choose Export accounts, then in VanKey tap + → Scan QR. You can also screenshot the QR code and choose the image. Compare a few codes with the old app before deleting it.',
   'Dữ liệu của tôi nằm ở đâu?': 'Where is my data stored?',
-  'Chỉ trên máy này, đã mã hóa. Chưa có máy chủ nào giữ dữ liệu. Khi bật đồng bộ, nơi lưu chỉ thấy bản mã hóa không đọc được.': 'Only on this device, encrypted. No server holds your data. When sync is on, the storage only sees an unreadable encrypted copy.',
-  'Chế độ "không mật khẩu" có an toàn không?': 'Is "no password" mode safe?',
-  'Kho vẫn mã hóa bằng khóa riêng giữ trong Keystore của điện thoại, nhưng ai mở được khóa màn hình của bạn thì mở được app. Hãy đặt mật khẩu nếu cần chắc chắn hơn.': 'The vault is still encrypted with a key kept in the phone Keystore, but anyone who can unlock your screen can open the app. Set a password if you need more certainty.',
+  'Trên máy này, đã mã hóa. Khi bật đồng bộ (máy chủ VanKey hoặc Google Drive), nơi lưu chỉ giữ bản mã hóa, không đọc được nếu thiếu mật khẩu hoặc mã khôi phục của bạn.': 'On this device, encrypted. When sync is on (VanKey server or Google Drive), the storage only keeps an encrypted copy that cannot be read without your password or recovery code.',
+  'Mở bằng vân tay hoặc Windows Hello có an toàn không?': 'Is fingerprint or Windows Hello unlock safe?',
+  'App không cất mật khẩu. Khóa kho được bọc bằng một khóa phần cứng (Android Keystore hoặc Windows Hello trong TPM), chỉ dùng được sau khi bạn xác thực. Ai có vân tay hoặc PIN đã đăng ký trên máy này vẫn mở được, nên hãy bật tự khóa. Đổi vân tay trên máy thì phải nhập lại mật khẩu kho, nên hãy nhớ nó.': 'The app does not store your password. The vault key is wrapped with a hardware key (Android Keystore, or Windows Hello in the TPM) that only works after you verify. Anyone whose fingerprint or PIN is enrolled on this device can still open it, so turn on auto-lock. If the fingerprints on the device change you must enter the vault password again, so remember it.',
   'Sao lưu thế nào?': 'How do I back up?',
   'Cài đặt → Dữ liệu → Xuất và sao lưu → Sao lưu mã hóa. File chỉ mở lại được bằng mật khẩu hoặc mã khôi phục.': 'Settings → Data → Export and backup → Encrypted backup. The file can only be reopened with the password or recovery key.',
   'Vì sao mật khẩu cũ vẫn còn trong lịch sử?':
@@ -662,4 +673,13 @@ const Map<String, String> enStrings = {
   'Không thấy kho trên Google Drive.': 'No vault found on Google Drive.',
   'Sai mật khẩu kho.': 'Wrong vault password.',
   'Google Drive này đã có một kho khác (khóa khác). Để dùng kho đó, hãy cài lại app và chọn đăng nhập Google ở màn đầu.': 'This Google Drive already holds a different vault (different key). To use that vault, reinstall the app and choose Google sign-in on the first screen.',
+  'Mở bằng {p0}': 'Unlock with {p0}',
+  'Mở khóa bằng {p0}': 'Unlock with {p0}',
+  'Nhập mật khẩu để bật mở khóa bằng {p0}': 'Enter your password to turn on unlock with {p0}',
+  'Đã bật mở khóa bằng {p0}': 'Unlock with {p0} is on',
+  'Chưa xác thực được bằng {p0}': 'Could not verify with {p0}',
+  'Vẫn dùng được mật khẩu khi {p0} không nhận': 'You can still use your password if {p0} fails',
+  'Khóa {p0} trên máy đã thay đổi. Hãy nhập mật khẩu rồi bật lại mở khóa bằng {p0}.': 'The {p0} key on this device has changed. Enter your password, then turn unlock with {p0} on again.',
+  'Mở khóa bằng {p0} đã được nâng cấp để an toàn hơn. Sau khi mở bằng mật khẩu, hãy bật lại trong Cài đặt > Tài khoản.': 'Unlock with {p0} has been upgraded to be more secure. After unlocking with your password, turn it on again in Settings > Account.',
+  'vân tay': 'fingerprint',
 };

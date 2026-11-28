@@ -72,6 +72,9 @@ void main() {
 
     await tester.enterText(find.widgetWithText(TextField, 'Nhập lại mật khẩu'), 'mat-khau-du-dai-1');
     await tester.pump();
+    expect(_enabled(tester), isFalse, reason: 'chưa đồng ý Điều khoản và Chính sách quyền riêng tư');
+    await tester.tap(find.byType(Checkbox));
+    await tester.pump();
     expect(_enabled(tester), isTrue, reason: 'mã mời không bắt buộc');
   });
 

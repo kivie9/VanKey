@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../widgets/terms_consent.dart';
 import '../constants.dart';
 import '../google_drive_auth.dart';
 import '../theme.dart';
@@ -39,6 +40,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _register = false;
   bool _show = false;
   bool _saved = false;
+  bool _agreed = false;
   String? _error;
   bool _vaultMismatch = false;
   bool? _driveHasVault; // null: chưa đăng nhập Google; true: Drive đã có kho (mở); false: chưa có (tạo)
@@ -142,6 +144,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (c.busy) return false;
     if (_selfHost && !VaultController.isAllowedServerUrl(_url.text)) return false;
     if (AccountPolicy.normalizeUsername(_user.text) == null) return false;
+    if (_register && !_agreed) return false;
     if (_register) return _passLongEnough && _passMatch;
     return _pass.text.isNotEmpty;
   }
@@ -275,6 +278,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           decoration: InputDecoration(labelText: tr('Mã mời (nếu máy chủ yêu cầu)'), helperText: tr('Chủ máy chủ đặt mã này. Bỏ trống nếu không có.')),
           onChanged: (_) => setState(() {}),
         ),
+      ],
+      if (_register) ...[
+        const SizedBox(height: Gap.md),
+        TermsConsent(value: _agreed, onChanged: (v) => setState(() => _agreed = v)),
       ],
       if (_error != null || c.error != null)
         Padding(padding: const EdgeInsets.only(top: Gap.md), child: Notice((_error ?? c.error)!, tone: NoticeTone.error, icon: Icons.error_outline)),

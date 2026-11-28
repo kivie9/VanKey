@@ -33,6 +33,8 @@ function toUser(r: Row): User {
     pwHash: bytes(r.pw_hash) ?? new Uint8Array(0),
     kdfIter: Number(r.kdf_iter ?? 100000),
     createdAt: r.created_at as number,
+    termsVersion: (r.terms_version as string | null) ?? '',
+    termsAt: Number(r.terms_at ?? 0),
   };
 }
 
@@ -76,8 +78,8 @@ export class D1Store implements Store {
 
   async createUser(u: User): Promise<boolean> {
     const res = await this.db
-      .prepare('INSERT OR IGNORE INTO users (id, username, salt, pw_hash, kdf_iter, created_at) VALUES (?, ?, ?, ?, ?, ?)')
-      .bind(u.id, u.username, u.salt, u.pwHash, u.kdfIter, u.createdAt)
+      .prepare('INSERT OR IGNORE INTO users (id, username, salt, pw_hash, kdf_iter, created_at, terms_version, terms_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind(u.id, u.username, u.salt, u.pwHash, u.kdfIter, u.createdAt, u.termsVersion ?? '', u.termsAt ?? 0)
       .run();
     return (res.meta?.changes ?? 0) > 0;
   }

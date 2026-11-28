@@ -95,6 +95,9 @@ void main() {
     expect(find.text('Mật khẩu quá dễ đoán. Hãy dài hơn, hoặc ghép vài từ không liên quan.'), findsOneWidget);
     await tester.enterText(field, 'mat-khau-du-dai-1');
     await tester.pump();
+    expect(enabled(), isFalse, reason: 'chưa đồng ý Điều khoản và Chính sách quyền riêng tư');
+    await tester.tap(find.byType(Checkbox));
+    await tester.pump();
     expect(enabled(), isTrue);
   });
 }

@@ -5,13 +5,13 @@ import { DatabaseSync } from 'node:sqlite';
 import { test } from 'node:test';
 import { D1Store } from '../src/d1_store.ts';
 import type { D1Like } from '../src/d1_store.ts';
-import { createHandler, KDF_ITERATIONS, REFRESH_REUSE_GRACE } from '../src/handler.ts';
+import { createHandler, KDF_ITERATIONS, REFRESH_REUSE_GRACE, TERMS_VERSION } from '../src/handler.ts';
 import { pbkdf2, toBase64 } from '../src/util.ts';
 
 function sqliteD1(): D1Like {
   const db = new DatabaseSync(':memory:');
   db.exec('PRAGMA foreign_keys = ON');
-  for (const f of ['0001_init.sql', '0002_attempts_updated_at.sql', '0003_users_username.sql', '0004_users_kdf_iter.sql', '0005_devices_prev_refresh.sql', '0006_devices_rotated_at.sql']) db.exec(readFileSync(new URL(`../migrations/${f}`, import.meta.url), 'utf8'));
+  for (const f of ['0001_init.sql', '0002_attempts_updated_at.sql', '0003_users_username.sql', '0004_users_kdf_iter.sql', '0005_devices_prev_refresh.sql', '0006_devices_rotated_at.sql', '0007_users_terms.sql']) db.exec(readFileSync(new URL(`../migrations/${f}`, import.meta.url), 'utf8'));
   return {
     prepare(sql: string) {
       const stmt = db.prepare(sql);
@@ -57,9 +57,9 @@ function setup() {
 
 test('D1: đăng ký, đăng nhập, refresh xoay vòng, thu hồi thiết bị', async () => {
   const s = setup();
-  const a = (await (await s.call('POST', '/auth/register', { body: { username: USER, authKey: key(), deviceName: 'A' } })).json()) as any;
+  const a = (await (await s.call('POST', '/auth/register', { body: { termsVersion: TERMS_VERSION, username: USER, authKey: key(), deviceName: 'A' } })).json()) as any;
   assert.ok(a.accessToken);
-  assert.equal((await s.call('POST', '/auth/register', { body: { username: USER, authKey: key() } })).status, 409);
+  assert.equal((await s.call('POST', '/auth/register', { body: { termsVersion: TERMS_VERSION, username: USER, authKey: key() } })).status, 409);
 
   const b = (await (await s.call('POST', '/auth/login', { body: { username: USER, authKey: key(), deviceName: 'B' } })).json()) as any;
   assert.equal((await s.call('POST', '/auth/login', { body: { username: USER, authKey: key(9) } })).status, 401);
@@ -79,7 +79,7 @@ test('D1: đăng ký, đăng nhập, refresh xoay vòng, thu hồi thiết bị'
 
 test('D1: kho với If-Match/If-None-Match, 409 khi lệch, byte nhị phân nguyên vẹn', async () => {
   const s = setup();
-  const a = (await (await s.call('POST', '/auth/register', { body: { username: USER, authKey: key() } })).json()) as any;
+  const a = (await (await s.call('POST', '/auth/register', { body: { termsVersion: TERMS_VERSION, username: USER, authKey: key() } })).json()) as any;
   const blob = new Uint8Array(300).map((_, i) => i % 256); // có đủ các giá trị byte, kể cả 0
   assert.equal((await s.call('PUT', '/vault', { token: a.accessToken, headers: { 'if-none-match': '*' }, raw: blob })).status, 200);
   assert.equal((await s.call('PUT', '/vault', { token: a.accessToken, headers: { 'if-none-match': '*' }, raw: blob })).status, 409);
@@ -99,7 +99,7 @@ test('D1: kho với If-Match/If-None-Match, 409 khi lệch, byte nhị phân ngu
 
 test('D1: khóa đăng nhập sai lưu bền trong bảng attempts và hết hạn đúng giờ', async () => {
   const s = setup();
-  await s.call('POST', '/auth/register', { body: { username: USER, authKey: key() } });
+  await s.call('POST', '/auth/register', { body: { termsVersion: TERMS_VERSION, username: USER, authKey: key() } });
   for (let i = 0; i < 5; i++) await s.call('POST', '/auth/login', { body: { username: USER, authKey: key(9) } });
   assert.equal((await s.call('POST', '/auth/login', { body: { username: USER, authKey: key() } })).status, 429);
   const row = await s.store.getAttempt(`login:${USER}`);
@@ -111,7 +111,7 @@ test('D1: khóa đăng nhập sai lưu bền trong bảng attempts và hết h�
 
 test('D1: xóa người dùng kéo theo thiết bị và kho (ON DELETE CASCADE)', async () => {
   const s = setup();
-  const a = (await (await s.call('POST', '/auth/register', { body: { username: USER, authKey: key() } })).json()) as any;
+  const a = (await (await s.call('POST', '/auth/register', { body: { termsVersion: TERMS_VERSION, username: USER, authKey: key() } })).json()) as any;
   await s.call('PUT', '/vault', { token: a.accessToken, headers: { 'if-none-match': '*' }, raw: new Uint8Array(64) });
   const db = (s.store as any).db as D1Like;
   await db.prepare('DELETE FROM users WHERE id = ?').bind(a.accountId).run();
@@ -158,7 +158,7 @@ test('D1: migration 0003 đổi tên cột email thành username và giữ nguy�
 
 test('D1: đổi mật khẩu, băm lại tài khoản cũ, xóa tài khoản xóa sạch các bảng', async () => {
   const s = setup();
-  const a = (await (await s.call('POST', '/auth/register', { body: { username: USER, authKey: key(), deviceName: 'A' } })).json()) as any;
+  const a = (await (await s.call('POST', '/auth/register', { body: { termsVersion: TERMS_VERSION, username: USER, authKey: key(), deviceName: 'A' } })).json()) as any;
   const b = (await (await s.call('POST', '/auth/login', { body: { username: USER, authKey: key(), deviceName: 'B' } })).json()) as any;
 
   assert.equal((await s.call('POST', '/auth/password', { token: a.accessToken, body: { authKey: key(), newAuthKey: key(2) } })).status, 204);
@@ -181,7 +181,7 @@ test('D1: đổi mật khẩu, băm lại tài khoản cũ, xóa tài khoản x�
 
 test('D1: dùng lại refresh token cũ (migration 0005, 0006): ân hạn ngắn, quá hạn thì gỡ thiết bị', async () => {
   const s = setup();
-  const a = (await (await s.call('POST', '/auth/register', { body: { username: USER, authKey: key(), deviceName: 'A' } })).json()) as any;
+  const a = (await (await s.call('POST', '/auth/register', { body: { termsVersion: TERMS_VERSION, username: USER, authKey: key(), deviceName: 'A' } })).json()) as any;
   const r1 = (await (await s.call('POST', '/auth/refresh', { body: { refreshToken: a.refreshToken } })).json()) as any;
   assert.equal(r1.refreshToken === undefined, false);
   // Trong khoảng ân hạn (cột rotated_at, migration 0006): gửi lại token vừa bị thay vẫn được cấp tiếp.
