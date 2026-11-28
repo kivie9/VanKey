@@ -1,5 +1,9 @@
 # VanKey Server (Cloudflare Worker + D1)
 
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/kivie9/VanKey/tree/main/server)
+
+Bấm nút trên để tạo Worker và D1 trong tài khoản Cloudflare của bạn. Nút sẽ hỏi `TOKEN_SECRET` và `REGISTER_CODE` (xem `.dev.vars.example`). Sau khi deploy, chạy `npx wrangler d1 migrations apply vankey --remote` để tạo bảng.
+
 The server **only stores the encrypted vault** and sign-in information. It can never read your passwords, 2FA codes or vault content.
 Runs for free on Cloudflare's free plan. One server can serve many users (200 accounts by default).
 
