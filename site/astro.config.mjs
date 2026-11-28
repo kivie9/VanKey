@@ -2,8 +2,9 @@ import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 
 // Địa chỉ công khai của web (canonical, hreflang, sitemap, og:image).
-// Khi deploy thì đặt biến SITE_URL trong Cloudflare Pages; chạy trên máy thì dùng localhost.
-const site = process.env.SITE_URL || process.env.CF_PAGES_URL || 'http://localhost:4321';
+// Mặc định là domain thật, kể cả khi build trên máy hay bản preview của Cloudflare Pages.
+// Đặt biến SITE_URL nếu cần đổi sang địa chỉ khác.
+const site = process.env.SITE_URL || 'https://vankey.onigix.com';
 
 export default defineConfig({
   site,

@@ -47,9 +47,9 @@ Before going public, check that the legal pages are current.
 2. Root directory `site`, build command `npm run build`, output `dist`.
 3. Build watch paths: `site/**`. The site also reads `docs/brand/vankey-logo.svg` and `app/pubspec.yaml`, so rebuild when the logo or version changes, or add those two paths to the watch list.
 4. Environment variables:
-   - `SITE_URL`: the real address, here `https://vankey.onigix.com`. Used for the canonical link, the sitemap and share images. Without it, the site uses `CF_PAGES_URL`, the per-deployment address.
+   - `SITE_URL` (optional): the public address used for the canonical link, the sitemap and share images. It defaults to `https://vankey.onigix.com`, so set it only to use a different address.
    - `NODE_VERSION`: `22`.
-5. Custom domain: `vankey.onigix.com`. Attach it under Custom domains, and set `SITE_URL` to `https://vankey.onigix.com`.
+5. Custom domain: `vankey.onigix.com`. Attach it under Custom domains.
 6. Once a GitHub Release exists: change `RELEASED` to `true` in `src/config.ts` and adjust the description if needed. The download button will then point to `releases/latest`.
 
 If you do not want to connect the repo: build locally and run `npx wrangler pages deploy dist` inside `site/`.
