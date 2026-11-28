@@ -37,9 +37,9 @@ jobs:
     if: github.event_name != 'workflow_dispatch' || inputs.platforms == 'android' || inputs.platforms == 'all'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           # Android lint in the current Gradle plugin calls Java 21 APIs (List.removeLast) and crashes on 17.
@@ -90,7 +90,7 @@ jobs:
 
       - run: flutter build apk --release --build-name=${{ steps.ver.outputs.name }} --build-number=${{ github.run_number }} --dart-define=APP_VERSION=${{ steps.ver.outputs.name }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: vankey-android
           path: app/build/app/outputs/flutter-apk/app-release.apk
@@ -100,7 +100,7 @@ jobs:
     if: github.event_name != 'workflow_dispatch' || inputs.platforms == 'windows' || inputs.platforms == 'all'
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: subosito/flutter-action@v2
         with:
@@ -145,7 +145,7 @@ jobs:
         shell: pwsh
         run: Compress-Archive -Path "build\windows\x64\runner\Release\*" -DestinationPath "build\installer\vankey-windows-portable.zip"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: vankey-windows
           path: app/build/installer/
@@ -155,7 +155,7 @@ jobs:
     if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && (inputs.platforms == 'ios' || inputs.platforms == 'all'))
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: subosito/flutter-action@v2
         with:
@@ -173,7 +173,7 @@ jobs:
           cp -r Runner.app Payload/
           zip -qr vankey-ios-unsigned.zip Payload
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: vankey-ios-unsigned
           path: app/build/ios/iphoneos/vankey-ios-unsigned.zip
@@ -189,9 +189,9 @@ jobs:
       run:
         working-directory: .
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: release-files
 
