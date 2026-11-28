@@ -9,7 +9,7 @@ const DOC_PATHS: Record<string, string> = {
 export const doc = (name: string) => `${REPO}/blob/main/docs/${DOC_PATHS[name] ?? name}`;
 
 /** Đổi thành true khi đã có GitHub Release: nút tải về sẽ trỏ tới bản mới nhất. */
-export const RELEASED: boolean = false;
+export const RELEASED: boolean = true;
 export const LATEST_RELEASE = `${REPO}/releases/latest`;
 
 /** Phiên bản lấy thẳng từ app/pubspec.yaml để không phải sửa hai nơi. */
