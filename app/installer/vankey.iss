@@ -54,7 +54,13 @@ RestartApplications=no
 Name: "en"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+; Các lựa chọn hiện ở trang "Select Additional Tasks" khi cài. Inno nhớ lựa chọn cũ khi cài đè bản mới.
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
+Name: "autostart"; Description: "Start {#AppName} when Windows starts"; GroupDescription: "Other options:"; Flags: unchecked
+
+[Registry]
+; Tự chạy cùng Windows (chỉ người dùng hiện tại). Gỡ app thì xóa luôn mục này.
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "{#AppName}"; ValueData: """{app}\{#AppExe}"""; Flags: uninsdeletevalue; Tasks: autostart
 
 [InstallDelete]
 ; Tài nguyên của bản cũ: xóa trước để không sót tệp thừa khi cài đè.
