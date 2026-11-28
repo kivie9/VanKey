@@ -4,7 +4,9 @@
   "type": "module",
   "version": "0.1.0",
   "scripts": {
-    "test": "node --test test/server.test.ts test/d1.test.ts",
+    "test": "node --test test/server.test.ts test/d1.test.ts web/test/core.test.ts",
+    "build:web": "node web/build.mjs",
+    "check:web": "tsc -p web",
     "dev:local": "node dev/serve.ts",
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
@@ -12,6 +14,11 @@
     "db:migrate:local": "wrangler d1 migrations apply vankey --local"
   },
   "devDependencies": {
+    "@noble/ciphers": "2.4.0",
+    "esbuild": "0.28.2",
+    "hash-wasm": "4.12.0",
+    "preact": "10.29.8",
+    "typescript": "5.9.3",
     "wrangler": "^4.0.0"
   }
 }

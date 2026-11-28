@@ -19,14 +19,26 @@ Runs for free on Cloudflare's free plan. One server can serve many users (200 ac
 - **A real IP is required:** the server takes the IP from the `cf-connecting-ip` header. If the header is missing, registration, sign-in and password change return a 500 `misconfigured` error instead of putting everyone into one shared lock. On Cloudflare this header is always present. If you run the server behind another proxy, that proxy must set this header (and only from the outside, so clients cannot send it themselves). The local test server `dev/serve.ts` takes the IP from the socket.
 - Vault writes use `If-Match`: if another device has written first, the server returns 409 and the app merges and retries automatically.
 
+## Web app (read-only)
+
+The same Worker serves a small web app at **`/app/`** (opening the server address in a browser redirects there). Sign in with the same username and password as the app; the vault is downloaded and decrypted in the browser. It can search, show and copy passwords and 2FA codes, and works offline after the first visit (service worker). It **never uploads** a vault: add and edit items in the app.
+
+- Source: `web/` (TypeScript + Preact, about 35 KB gzip in total). `wrangler deploy` and `wrangler dev` build it into `public/` automatically (`npm run build:web`).
+- Crypto: Argon2id from `hash-wasm` in a Web Worker (about 0.3 s on a PC), XChaCha20-Poly1305 from `@noble/ciphers`, HKDF/HMAC from WebCrypto. Checked against vectors produced by the Dart core (`app/test/vectors/web-v1.json`, made by `app/tool/make_web_vectors.dart`).
+- Security headers (strict CSP, no third-party code, `frame-ancestors 'none'`) are written to `public/_headers` by `web/build.mjs`. Scripts carry Subresource Integrity hashes.
+- Updates: a new version waits until you press **Update** in the page, so the code running in your browser only changes when you agree.
+- Locks after 5 minutes without use or 1 minute in the background.
+- Type check: `npm run check:web`. Tests: `npm test`.
+
 ## Local testing (no Cloudflare needed)
 
-You only need Node 22.6+ (no packages to install):
+You only need Node 22.6+ (no packages to install) for the API. The web app needs `npm install` once:
 
 ```powershell
 cd server
+npm run build:web              # optional: build the web app so the local server also serves /app/
 node dev/serve.ts 8787          # stored in memory, lost when stopped
-node --test test/server.test.ts test/d1.test.ts    # 40 tests, including real SQL on SQLite
+npm test                        # server tests (including real SQL on SQLite) and web crypto tests
 ```
 
 The app points to `http://127.0.0.1:8787` (or `http://10.0.2.2:8787` from the Android emulator). The `http://` address is only accepted for local machines.

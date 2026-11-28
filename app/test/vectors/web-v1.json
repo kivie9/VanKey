@@ -1,0 +1,199 @@
+{
+  "_comment": "Test vector cho bản web (server/web). Tạo bởi app/tool/make_web_vectors.dart. Dữ liệu thử nghiệm, KHÔNG phải bí mật thật.",
+  "vault": {
+    "passphraseNfd": "Kho thử nghiệm Việt Nam 2026!",
+    "recoveryKey": "FC3D-ZW4R-XK36-GZBD-A8VV-XQ4N",
+    "vaultId": "9709dcc3-1188-4382-8a40-6fee8276971d",
+    "fileB64": "VktWMQABAAAAAALKeyJ2YXVsdElkIjoiOTcwOWRjYzMtMTE4OC00MzgyLThhNDAtNmZlZTgyNzY5NzFkIiwicmV2aXNpb24iOjEsInVwZGF0ZWRBdCI6IjIwMjYtMTEtMjhUMDU6NTU6MjYuMDgzMzk4WiIsImNpcGhlciI6InhjaGFjaGEyMHBvbHkxMzA1LWlldGYiLCJrZXlzbG90cyI6W3siaWQiOiI0MDg5MjVkZi1kYjkwLTQ3ZTMtYWM5Yi1kNTgzODY3ZmU5ZTkiLCJ0eXBlIjoicGFzc3BocmFzZSIsImtkZiI6eyJhbGciOiJhcmdvbjJpZDEzIiwib3BzbGltaXQiOjMsIm1lbWxpbWl0Ijo2NzEwODg2NCwic2FsdCI6IjJtSzVaOU9NUkJDSVZqZmJzNG13NXc9PSJ9LCJ3cmFwIjp7Im5vbmNlIjoiSExtSjB5TzRFZVVNT3ROWDZoKzdKS3ozUUJLajQwSlkiLCJjdCI6InBqTTk5TFBLeDBtKzIwaFlQMHNyUGp0ZmowSVNqL0ZqV0g0NmRhN2tjdlR2VUFkdStHaW8rdi9QbXhyTlhmQTcifX0seyJpZCI6IjM0YWMyMWY3LTA3MzItNGNlNi1iZWIwLTJlZDdkMjM5OTU1YyIsInR5cGUiOiJyZWNvdmVyeSIsImtkZiI6eyJhbGciOiJoa2RmLXNoYTI1NiIsInNhbHQiOiJya1ljSkxjMHZZWDE4KzNwNVZzZGNnPT0iLCJpbmZvIjoidmFua2V5L3JlY292ZXJ5L3YxIn0sIndyYXAiOnsibm9uY2UiOiJsZmZlbXRmMzIrTFB6M2NpdUlGN01EdGljSFZFRktSeCIsImN0IjoieEducXp5ZkZQcnUybmRFcHNhVmE4TXpBZDhkT3ZBbFB2aGZuOVBMVTJEUFRhbkthMjhGc0JFY2ZSaGNtYjBObSJ9fV19V99LqWL8g4ldHe5IbFxdFrFHs1aSxdC5u+yRIjc37uKAwNg3ynCH65zK5sFQPA0IMY108/3SMuPTwLtvDssr9DNwcB4sN/j9IsvmXtuSrgFNSuVdkZygJ3y3eqs1mFBNfI7TjaatANQRCDU+4E+w0EhHCgSM679vFCFPu2bVc2ikRwYVB2ktIwDT86blhvBRiRMm5IlUgzU/NBaAypilP2K3ZkAa/Cl+68BoL5T+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",
+    "payload": {
+      "schema": 1,
+      "groups": [
+        "Cá nhân",
+        "Công việc"
+      ],
+      "items": [
+        {
+          "id": "11111111-1111-4111-8111-111111111111",
+          "type": "login",
+          "title": "GitHub",
+          "fields": [
+            {
+              "key": "username",
+              "value": "vankey-test",
+              "secret": false,
+              "kind": "text"
+            },
+            {
+              "key": "password",
+              "value": "mật-khẩu-giả-123",
+              "secret": true,
+              "kind": "text"
+            },
+            {
+              "key": "url",
+              "value": "https://github.com",
+              "secret": false,
+              "kind": "url"
+            },
+            {
+              "label": "Câu hỏi bảo mật",
+              "value": "Con mèo",
+              "secret": true,
+              "kind": "text"
+            }
+          ],
+          "totp": {
+            "secret": "JBSWY3DPEHPK3PXP",
+            "algo": "SHA1",
+            "digits": 6,
+            "period": 30
+          },
+          "group": "Công việc",
+          "favorite": true,
+          "createdAt": "2026-11-01T08:00:00.000Z",
+          "updatedAt": "2026-11-02T09:30:00.000Z",
+          "deletedAt": null,
+          "hlc": "1793000000000:0:devA",
+          "futureField": {
+            "x": 1
+          }
+        },
+        {
+          "id": "22222222-2222-4222-8222-222222222222",
+          "type": "note",
+          "title": "Ghi chú",
+          "fields": [
+            {
+              "key": "content",
+              "value": "Dòng 1\nDòng 2",
+              "secret": true,
+              "kind": "multiline"
+            }
+          ],
+          "group": "",
+          "favorite": false,
+          "createdAt": "2026-11-03T08:00:00.000Z",
+          "updatedAt": "2026-11-03T08:00:00.000Z",
+          "deletedAt": "2026-11-20T08:00:00.000Z",
+          "hlc": "1793000000001:2:devB"
+        }
+      ],
+      "tombstones": [
+        {
+          "id": "33333333-3333-4333-8333-333333333333",
+          "deletedAt": "2026-11-10T00:00:00.000Z",
+          "hlc": "1793000000002:0:devA"
+        }
+      ]
+    }
+  },
+  "auth": {
+    "username": "Van.Test",
+    "passwordNfd": "Mật khẩu đăng nhập 1",
+    "authKey": "sIskuSfYG7eXejRhcpUp5yXsWiuwM476nZn/Tug2NXc=",
+    "legacyAuthKey": "fIREkeUnVSb4a0dI83ASNa108NAP4j4xvUZuY9nQjcU="
+  },
+  "otp": [
+    {
+      "secret": "JBSWY3DPEHPK3PXP",
+      "algo": "SHA1",
+      "digits": 6,
+      "period": 30,
+      "time": 59,
+      "code": "996554"
+    },
+    {
+      "secret": "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZA",
+      "algo": "SHA256",
+      "digits": 8,
+      "period": 60,
+      "time": 59,
+      "code": "18920136"
+    },
+    {
+      "secret": "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZA",
+      "algo": "SHA512",
+      "digits": 7,
+      "period": 30,
+      "time": 59,
+      "code": "3754366"
+    },
+    {
+      "kind": "steam",
+      "secret": "JBSWY3DPEHPK3PXP",
+      "period": 30,
+      "time": 59,
+      "code": "2YXGV"
+    },
+    {
+      "secret": "JBSWY3DPEHPK3PXP",
+      "algo": "SHA1",
+      "digits": 6,
+      "period": 30,
+      "time": 1111111109,
+      "code": "071271"
+    },
+    {
+      "secret": "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZA",
+      "algo": "SHA256",
+      "digits": 8,
+      "period": 60,
+      "time": 1111111109,
+      "code": "40857319"
+    },
+    {
+      "secret": "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZA",
+      "algo": "SHA512",
+      "digits": 7,
+      "period": 30,
+      "time": 1111111109,
+      "code": "1199770"
+    },
+    {
+      "kind": "steam",
+      "secret": "JBSWY3DPEHPK3PXP",
+      "period": 30,
+      "time": 1111111109,
+      "code": "CWDGV"
+    },
+    {
+      "secret": "JBSWY3DPEHPK3PXP",
+      "algo": "SHA1",
+      "digits": 6,
+      "period": 30,
+      "time": 1793000000,
+      "code": "219934"
+    },
+    {
+      "secret": "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZA",
+      "algo": "SHA256",
+      "digits": 8,
+      "period": 60,
+      "time": 1793000000,
+      "code": "48842023"
+    },
+    {
+      "secret": "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZA",
+      "algo": "SHA512",
+      "digits": 7,
+      "period": 30,
+      "time": 1793000000,
+      "code": "8511094"
+    },
+    {
+      "kind": "steam",
+      "secret": "JBSWY3DPEHPK3PXP",
+      "period": 30,
+      "time": 1793000000,
+      "code": "48G8X"
+    },
+    {
+      "kind": "hotp",
+      "secret": "JBSWY3DPEHPK3PXP",
+      "algo": "SHA1",
+      "digits": 6,
+      "counter": 7,
+      "code": "449891"
+    }
+  ]
+}

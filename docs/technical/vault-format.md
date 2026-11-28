@@ -237,7 +237,7 @@ Test vectors shared with TypeScript later are in `app/test/vectors/`. Existing t
 - [x] Copying a slot into another vault (different `vaultId`) → cannot open
 - [x] Unknown slot and unknown header fields are preserved when opened and written back
 - [x] Size padding: the encrypted part is always a multiple of 4096 (+ 16-byte tag)
-- [ ] **A fixed complete `.vkv` file** (with passphrase and recovery key) for **cross-reading by TypeScript**. Not created yet; needed when the extension/server is built. Cross-checking Dart ↔ libsodium for the primitives has been done (see `docs/technical/spike-m0.md`), but **there is no cross-check yet for the whole file format**.
+- [x] **A fixed complete `.vkv` file** (with passphrase and recovery key) for **cross-reading by TypeScript**: `app/test/vectors/web-v1.json`, created by `app/tool/make_web_vectors.dart`. It also holds the Cloudflare sign-in key and TOTP/HOTP/Steam codes. The web app (`server/web`) reads it in `server/web/test/core.test.ts`. Only reading is cross-checked; the web app does not write vaults yet.
 
 ---
 

@@ -3,6 +3,15 @@ main = "src/index.ts"
 compatibility_date = "2025-01-01"
 
 # Số tài khoản tối đa (bảo vệ hạn mức miễn phí). Đăng ký là mở; muốn đóng hoặc mời riêng thì đặt secret REGISTER_CODE.
+# Bản web (server/web) được build vào public/ và phục vụ cùng Worker này tại /app/ (cùng origin với API, không cần CORS).
+# `wrangler deploy` và `wrangler dev` tự build trước. File tĩnh được phục vụ trực tiếp; đường dẫn không có file thì vào Worker (API).
+[build]
+command = "npm run build:web"
+watch_dir = "web/src"
+
+[assets]
+directory = "./public"
+
 [vars]
 MAX_USERS = "200"
 

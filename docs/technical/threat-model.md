@@ -31,7 +31,8 @@
 | A9 | **Clipboard read by another app** | Reduced | Cleared automatically after 30 seconds; marked sensitive (Android) |
 | A10 | **Notifications or logs leak secrets** | Yes | Notifications only show service name and due date; no sensitive data logged |
 | A11 | **Malware in a third-party library** (supply chain) | Reduced | Pinned versions, few dependencies, review on update, prefer widely used libraries |
-| A12 | **Phishing / social engineering** (fake page asking for the passphrase) | Partly | The app never asks for the passphrase on the web; it is only entered inside the app |
+| A12 | **Phishing / social engineering** (fake page asking for the passphrase) | Partly | The passphrase is only entered in the app and in the read-only web app served by your own server at `/app/`. Check the address before typing it |
+| A14 | **Server or deploy pipeline (Cloudflare, GitHub) compromised and serves malicious web code** | Partly (web app only) | The installed apps are not affected. The web app: the service worker keeps the installed version until you press "Update"; Subresource Integrity on scripts; strict CSP (`connect-src 'self'`, no third-party code). A fresh browser with no service worker yet trusts whatever the server sends. Protect the Cloudflare and GitHub accounts with strong 2FA |
 | A13 | **User loses both the passphrase and the recovery key** | **No** | Cannot be recovered. This must be stated clearly and the recovery key must be saved when created |
 
 ---
@@ -70,6 +71,7 @@
 | Component | Main risk | Mitigation |
 |---|---|---|
 | App (Dart) | Data still in RAM after locking; the GC cannot erase it immediately | Erase/overwrite key buffers on lock; keep plaintext lifetime as short as possible (**known limit**: Dart does not guarantee complete erasure) |
+| Web app (`server/web`, read-only) | Malicious code served by a compromised server; browser extensions read the page; keys left in browser memory; the browser deletes stored data | Read-only (never uploads a vault); Argon2id in a Web Worker; vault key only in memory, wiped on lock (auto-lock after 5 minutes idle or 1 minute hidden); IndexedDB holds only the encrypted vault and a refresh token sealed with a key derived from the vault key; clipboard cleared after 30 seconds when the page has focus; only http(s) links are opened. Extensions with page access are out of scope (like malware) |
 | Local storage | Files read directly | Files are always encrypted; device key in Keystore/Credential Manager |
 | Drive sync | OAuth token stolen | Token stored in the OS secure store; minimum scope `drive.appdata` |
 | Cloudflare server | Sign-in attacks, spam, filling storage slots | Rate limits per IP and per account, limits on number of accounts, registrations per IP and devices, optional invite code, two-layer password hashing, refresh tokens stored hashed and revocable |

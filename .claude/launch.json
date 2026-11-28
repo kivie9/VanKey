@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "site", "run", "dev", "--", "--port", "4321"],
       "port": 4321
+    },
+    {
+      "name": "server-web",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["server/dev/serve.ts", "8787"],
+      "port": 8787
     }
   ]
 }

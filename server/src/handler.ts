@@ -331,7 +331,11 @@ export function createHandler(deps: Deps): (req: Request) => Promise<Response> {
     const path = url.pathname.replace(/\/+$/, '') || '/';
     const m = req.method.toUpperCase();
     try {
-      if (path === '/' && m === 'GET') return json(200, { ok: true, service: 'vankey' });
+      if (path === '/' && m === 'GET') {
+        // Mở bằng trình duyệt thì chuyển tới bản web; app gọi kiểm tra máy chủ vẫn nhận JSON.
+        if ((req.headers.get('accept') ?? '').includes('text/html')) return new Response(null, { status: 302, headers: { location: '/app/' } });
+        return json(200, { ok: true, service: 'vankey' });
+      }
 
       if (path === '/auth/register' && m === 'POST') return await register(req);
       if (path === '/auth/login' && m === 'POST') return await login(req);

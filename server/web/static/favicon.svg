@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="512" height="512">
+  <title>VanKey</title>
+  <rect width="180" height="180" rx="44" fill="#4F6BED"/>
+  <path d="M90 48 L123 60.5 V90 C123 110.5 109 124 90 134 C71 124 57 110.5 57 90 V60.5 Z" fill="#FFFFFF" stroke="#0E1330" stroke-width="4" stroke-linejoin="round" paint-order="stroke"/>
+  <path d="M77 82 L90 108 L103 82" fill="none" stroke="#4F6BED" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
