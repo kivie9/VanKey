@@ -11,16 +11,16 @@ const { t } = Astro.props;
 <section class="section" id="security" aria-labelledby="security-title">
   <div class="wrap layout">
     <div data-reveal>
-      <h2 id="security-title">{t.honesty.title}</h2>
+      <h2 id="security-title"><span class="sec" data-rule><span data-decode>{t.honesty.section}</span></span>{t.honesty.title}</h2>
       <p class="links">
         <a href={doc('threat-model.md')}>{t.honesty.threat}</a>
         <a href={doc('vault-format.md')}>{t.honesty.format}</a>
       </p>
     </div>
     <dl>
-      {t.honesty.items.map((item) => (
-        <div data-reveal>
-          <dt>{item.title}</dt>
+      {t.honesty.items.map((item, i) => (
+        <div data-reveal data-rule>
+          <dt><span class="num" data-decode>6.{i + 1}</span>{item.title}</dt>
           <dd>{item.body}</dd>
         </div>
       ))}
@@ -33,7 +33,10 @@ const { t } = Astro.props;
   .links { display: grid; justify-items: start; margin-top: var(--space-6); }
   .links a { display: inline-block; padding-block: var(--space-2); }
   dl { margin: 0; }
-  dl div { padding-block: var(--space-6); }
+  /* Mỗi giới hạn là một mục đánh số, ngăn bằng đường kẻ tự vẽ. */
+  dl div { position: relative; padding-block: var(--space-6); }
+  dl div::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: var(--line); transform-origin: left; }
+  .num { display: block; margin-bottom: var(--space-2); font: 500 var(--text-xs) / 1 var(--font-mono); color: var(--muted); }
   dt { font-size: var(--text-xl); font-weight: 600; line-height: 1.25; }
   dd { margin: var(--space-2) 0 0; color: var(--muted); max-width: 60ch; }
   @media (min-width: 900px) {

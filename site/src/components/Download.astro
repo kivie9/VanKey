@@ -16,7 +16,7 @@ const platforms = [
 <section class="section" id="download" aria-labelledby="download-title">
   <div class="wrap">
     <div data-reveal>
-      <h2 id="download-title">{d.title}</h2>
+      <h2 id="download-title"><span class="sec" data-rule><span data-decode>{t.download.section}</span></span>{d.title}</h2>
       <p class="lead">{RELEASED ? d.leadReleased : d.lead}</p>
     </div>
     <ul data-reveal>
@@ -24,7 +24,7 @@ const platforms = [
         <li>
           <div>
             <h3>{p.name}</h3>
-            <p class="label">{p.kind}</p>
+            <p class="label" data-decode>{p.kind}</p>
           </div>
           {RELEASED
             ? <a class="button button-primary" href={LATEST_RELEASE}>{d.get}<span class="visually-hidden"> ({p.name})</span></a>
@@ -34,15 +34,15 @@ const platforms = [
     </ul>
     <p class="meta">
       <a href={`${REPO}#readme`}>{d.source}</a>
-      <span class="label">{d.version}: {APP_VERSION}</span>
+      <span class="label" data-decode>{d.version}: {APP_VERSION}</span>
     </p>
   </div>
 </section>
 
 <style>
   ul { margin: var(--space-12) 0 0; padding: 0; list-style: none; display: grid; gap: var(--space-4); }
-  li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-6); background: var(--card); border-radius: var(--radius-lg); }
-  .soon { padding: var(--space-2) var(--space-4); background: var(--page); border-radius: var(--radius-md); color: var(--muted); font: 500 var(--text-sm) / 1.4 var(--font-mono); }
+  li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-6); background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-lg); }
+  .soon { padding: var(--space-2) var(--space-4); background: var(--page); border: 1px dashed var(--line); text-transform: uppercase; letter-spacing: 0.06em; border-radius: var(--radius-md); color: var(--muted); font: 500 var(--text-sm) / 1.4 var(--font-mono); }
   .meta a { display: inline-block; padding-block: var(--space-2); }
   .meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-6); }
 </style>

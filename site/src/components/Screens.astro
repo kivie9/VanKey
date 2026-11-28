@@ -18,13 +18,13 @@ const phones = [
 <section class="section" aria-labelledby="screens-title">
   <div class="wrap">
     <div data-reveal>
-      <h2 id="screens-title">{t.screens.title}</h2>
+      <h2 id="screens-title"><span class="sec" data-rule><span data-decode>{t.screens.section}</span></span>{t.screens.title}</h2>
       <p class="lead">{t.screens.lead}</p>
     </div>
 
     <figure class="desktop" data-reveal>
       <Picture src={desktop} alt={t.screens.desktop} formats={['avif', 'webp']} widths={[480, 800, 1160, 1600, 2320]} sizes="(min-width: 1240px) 1160px, 92vw" />
-      <figcaption class="label">{t.screens.captionDesktop}</figcaption>
+      <figcaption class="label" data-decode>{t.screens.captionDesktop}</figcaption>
     </figure>
 
     <figure class="phones" data-reveal>
@@ -33,15 +33,15 @@ const phones = [
           <Picture src={p.src} alt={p.alt} formats={['avif', 'webp']} widths={[240, 360, 480, 720]} sizes="(min-width: 700px) 300px, 44vw" />
         ))}
       </div>
-      <figcaption class="label">{t.screens.captionPhone}</figcaption>
+      <figcaption class="label" data-decode>{t.screens.captionPhone}</figcaption>
     </figure>
   </div>
 </section>
 
 <style>
   figure { margin: var(--space-12) 0 0; }
-  figure :global(img) { width: 100%; border-radius: var(--radius-md); }
-  figcaption { margin-top: var(--space-3); text-align: center; }
+  figure :global(img) { width: 100%; border-radius: var(--radius-md); border: 1px solid var(--line); }
+  figcaption { margin-top: var(--space-3); text-align: center; text-transform: uppercase; letter-spacing: 0.06em; }
   .phones div { display: grid; grid-template-columns: repeat(2, minmax(0, 300px)); justify-content: center; gap: clamp(12px, 4vw, 48px); }
   .phones :global(img) { border-radius: var(--radius-lg); }
 </style>

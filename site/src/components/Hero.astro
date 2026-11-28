@@ -15,7 +15,7 @@ const [shield, v] = [...logo.matchAll(/<path d="([^"]+)"/g)].map((m) => m[1]);
 <section class="hero" data-hero aria-labelledby="hero-title">
   <div class="stage wrap">
     <div class="copy">
-      <p class="sheet" aria-hidden="true"><span>VanKey</span><span>{t.hero.sheet} · §1</span><span>Rev {rev}</span></p>
+      <p class="sheet" aria-hidden="true" data-rule><span data-decode>VanKey</span><span data-decode>{t.hero.sheet} · §1</span><span data-decode>Rev {rev}</span></p>
       <h1 id="hero-title">{t.hero.title}</h1>
       <p class="lead">{t.hero.lead}</p>
       <p class="actions">
@@ -26,7 +26,7 @@ const [shield, v] = [...logo.matchAll(/<path d="([^"]+)"/g)].map((m) => m[1]);
         {t.hero.spec.map((row) => (
           <div>
             <dt>{row.k}</dt>
-            <dd>{row.v}</dd>
+            <dd data-decode>{row.v}</dd>
           </div>
         ))}
       </dl>
@@ -38,7 +38,6 @@ const [shield, v] = [...logo.matchAll(/<path d="([^"]+)"/g)].map((m) => m[1]);
           <path d={v} class="vee"></path>
         </svg>
       </div>
-      <p class="figure">{t.hero.figure}</p>
     </div>
   </div>
 </section>
@@ -57,10 +56,11 @@ const [shield, v] = [...logo.matchAll(/<path d="([^"]+)"/g)].map((m) => m[1]);
   .sheet {
     display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-2) var(--space-4);
     padding-bottom: var(--space-2); margin-bottom: var(--space-8);
-    border-bottom: 1.5px solid var(--fg);
+    position: relative;
     font: 600 var(--text-xs) / 1.4 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
   }
   .sheet span:nth-child(2) { color: var(--accent); }
+  .sheet::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1.5px; background: var(--fg); transform-origin: left; }
 
   /* Bảng thông số thay cho dòng ghi chú. */
   .spec { margin: var(--space-8) 0 0; max-width: 460px; font: 400 var(--text-xs) / 1.4 var(--font-mono); }
@@ -70,14 +70,13 @@ const [shield, v] = [...logo.matchAll(/<path d="([^"]+)"/g)].map((m) => m[1]);
   .spec dd { margin: 0; color: var(--fg); text-align: right; }
 
   /* Khung hình có dấu góc như ảnh dán vào sổ. */
-  .plate { position: relative; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: var(--space-3); min-height: 0; padding: var(--space-3); }
+  .plate { position: relative; display: grid; grid-template-rows: minmax(0, 1fr); min-height: 0; padding: var(--space-3); }
   .plate::before, .plate::after {
     content: ''; position: absolute; z-index: 1; width: 18px; height: 18px; pointer-events: none;
     border-color: var(--muted); border-style: solid;
   }
   .plate::before { top: 0; left: 0; border-width: 1.5px 0 0 1.5px; }
   .plate::after { right: 0; bottom: 0; border-width: 0 1.5px 1.5px 0; }
-  .figure { font: italic 400 var(--text-xs) / 1.4 var(--font-mono); color: var(--muted); }
   .visual { position: relative; width: 100%; height: 320px; min-height: 0; }
   .fallback { position: absolute; inset: 6% 0; width: 100%; height: 88%; }
   .shield { fill: var(--accent); opacity: 0.9; }

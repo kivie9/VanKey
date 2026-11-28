@@ -33,6 +33,15 @@ function scramble(el: HTMLElement) {
   });
 }
 
+/** Chữ mono hiện ra như đang giải mã: ký tự ngẫu nhiên dừng dần thành chữ thật. */
+function decode(el: HTMLElement, delay = 0) {
+  const text = el.dataset.to ?? el.textContent ?? '';
+  el.dataset.from = text;
+  el.dataset.to = text;
+  const tween = scramble(el);
+  tween.delay(delay).duration(Math.min(0.9, 0.25 + text.length * 0.03));
+}
+
 export function initScroll() {
   const media = gsap.matchMedia();
 
@@ -49,8 +58,29 @@ export function initScroll() {
       });
     }
 
+    // Giải mã chữ mono và vẽ đường kẻ. Phần đang trên màn hình chạy ngay, so le một chút.
+    const decodes = [...document.querySelectorAll<HTMLElement>('[data-decode]')];
+    const rules = [...document.querySelectorAll<HTMLElement>('[data-rule]')];
+    let first = 0;
+    for (const el of decodes) {
+      if (el.getBoundingClientRect().top < window.innerHeight) decode(el, first++ * 0.06);
+      else ScrollTrigger.create({ trigger: el, start: 'top 90%', once: true, onEnter: () => decode(el) });
+    }
+    for (const el of rules) {
+      el.classList.add('rule-wait');
+      void el.offsetWidth;
+      if (el.getBoundingClientRect().top < window.innerHeight) {
+        requestAnimationFrame(() => el.classList.remove('rule-wait'));
+      } else {
+        ScrollTrigger.create({ trigger: el, start: 'top 90%', once: true, onEnter: () => el.classList.remove('rule-wait') });
+      }
+    }
+
     const flow = document.querySelector<HTMLElement>('[data-flow]');
-    if (!flow) return;
+    if (!flow) return () => {
+      for (const el of rules) el.classList.remove('rule-wait');
+      for (const el of decodes) if (el.dataset.to) el.textContent = el.dataset.to;
+    };
 
     const fill = flow.querySelector('[data-flow-fill]');
     if (fill) {
@@ -79,6 +109,8 @@ export function initScroll() {
 
     // Người xem bật giảm chuyển động giữa chừng: trả mọi thứ về trạng thái cuối.
     return () => {
+      for (const el of rules) el.classList.remove('rule-wait');
+      for (const el of decodes) if (el.dataset.to) el.textContent = el.dataset.to;
       for (const step of steps) {
         step.classList.remove('is-waiting');
         const target = step.querySelector<HTMLElement>('[data-scramble]');

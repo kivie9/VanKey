@@ -11,7 +11,7 @@ const SECRET = 'GEZD GNBV GY3T QOJQ GEZD GNBV GY3T QOJQ';
 <section class="section" aria-labelledby="totp-title">
   <div class="wrap layout">
     <div data-reveal>
-      <h2 id="totp-title">{t.totp.title}</h2>
+      <h2 id="totp-title"><span class="sec" data-rule><span data-decode>{t.totp.section}</span></span>{t.totp.title}</h2>
       <p class="lead">{t.totp.lead}</p>
       <p class="check">{t.totp.check}</p>
     </div>
@@ -20,7 +20,7 @@ const SECRET = 'GEZD GNBV GY3T QOJQ GEZD GNBV GY3T QOJQ';
       <div class="row">
         <div class="meta">
           <p class="account">{t.totp.account}</p>
-          <p class="label">TOTP · SHA1 · 6 · 30s</p>
+          <p class="label" data-decode>TOTP · SHA1 · 6 · 30s</p>
         </div>
         <!-- Hình tròn đếm ngược giống vòng trong app: một hình quạt, không có vạch. -->
         <svg class="ring" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -48,6 +48,7 @@ const SECRET = 'GEZD GNBV GY3T QOJQ GEZD GNBV GY3T QOJQ';
 
   .device {
     background: var(--card);
+    border: 1px solid var(--line);
     border-radius: var(--radius-lg);
     padding: clamp(20px, 4vw, 32px);
     --ring: var(--accent);
@@ -76,6 +77,6 @@ const SECRET = 'GEZD GNBV GY3T QOJQ GEZD GNBV GY3T QOJQ';
   .note:empty { display: none; }
   .note { margin-top: var(--space-4); font-size: var(--text-sm); color: var(--muted); }
 
-  .secret { margin-top: var(--space-8); }
+  .secret { margin-top: var(--space-8); padding-top: var(--space-4); border-top: 1px dashed var(--line); }
   .secret code { display: block; margin-top: var(--space-2); font-size: var(--text-sm); overflow-wrap: anywhere; color: var(--muted); }
 </style>

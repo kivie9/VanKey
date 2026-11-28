@@ -24,7 +24,6 @@ export const vi = {
     download: 'Tải về',
     how: 'Cách mã hóa',
     sheet: 'Sổ kỹ thuật',
-    figure: 'Hình 1. Bản mã ráp lại thành logo khi bạn cuộn.',
     spec: [
       { k: 'Nền tảng', v: 'Android, Windows' },
       { k: 'Giao diện', v: 'Tiếng Việt, English' },
@@ -32,6 +31,7 @@ export const vi = {
     ],
   },
   totp: {
+    section: '§2 · Thử trực tiếp',
     title: 'Mã 2FA đang chạy ngay trong trang này',
     lead: 'Đây không phải ảnh động. Trình duyệt của bạn tự tính mã theo chuẩn TOTP (RFC 6238) từ một khóa mẫu công khai, cùng phép tính mà các ứng dụng xác thực theo chuẩn này dùng.',
     account: 'Tài khoản mẫu',
@@ -44,19 +44,14 @@ export const vi = {
   },
   features: {
     title: 'Những gì VanKey làm',
-    section: '§2 · Tính năng',
-    tested: 'Đã qua test',
-    partial: 'Chưa thử hết',
-    noteLabel: 'Ghi chú',
+    section: '§3 · Tính năng',
     twofa: {
       title: 'Thay được ứng dụng xác thực',
       body: 'TOTP có đếm ngược, HOTP với nút lấy mã kế tiếp, và Steam Guard. Thêm mục bằng cách quét QR, dán link otpauth hoặc nhập khóa.',
-      note: 'Quét QR chưa được thử trên máy thật. Steam Guard đã đối chiếu với một bản cài đặt độc lập, chưa thử với dịch vụ thật.',
     },
     import: {
       title: 'Mang dữ liệu cũ sang',
       body: 'Có bộ nhập cho các nguồn sau:',
-      note: 'Các bộ nhập mới được kiểm bằng dữ liệu mẫu, chưa thử với file xuất thật. Giữ nguồn cũ cho đến khi bạn đã so lại.',
     },
     offline: {
       title: 'Không có mạng vẫn dùng được',
@@ -65,20 +60,18 @@ export const vi = {
     sync: {
       title: 'Đồng bộ mà nơi lưu không đọc được',
       body: 'Qua máy chủ Cloudflare do bạn tự dựng, hoặc qua một thư mục trên máy tính. Hai máy cùng sửa một mục thì app hỏi bạn giữ bản nào.',
-      note: 'Máy chủ đã qua test trên máy phát triển, chưa chạy trên Cloudflare thật. Đồng bộ qua thư mục chỉ dùng được trên máy tính.',
     },
     audit: {
       title: 'Soát mật khẩu yếu, trùng và đã lộ',
       body: 'App chỉ ra mật khẩu yếu hoặc dùng lại. Khi kiểm tra rò rỉ qua Have I Been Pwned, chỉ 5 ký tự đầu của mã băm SHA-1 được gửi đi, mật khẩu thì không.',
-      note: 'Phần kiểm tra rò rỉ chưa được thử qua mạng thật.',
     },
     guard: {
       title: 'Đóng kho khi bạn rời tay',
       body: 'Tự khóa sau một lúc không dùng, tự xóa clipboard, làm chậm khi nhập sai nhiều lần, chặn chụp màn hình trên Android và mở bằng vân tay.',
-      note: 'Chặn chụp màn hình và mở bằng vân tay chưa được thử tay.',
     },
   },
   screens: {
+    section: '§4 · Giao diện',
     title: 'Giao diện thật',
     lead: 'Các ảnh này được dựng thẳng từ mã giao diện của app, với dữ liệu mẫu. Không có tài khoản thật nào trong đó.',
     phoneList: 'VanKey ở bố cục điện thoại: danh sách các mục trong kho mẫu',
@@ -88,6 +81,7 @@ export const vi = {
     captionDesktop: 'Bố cục máy tính',
   },
   flow: {
+    section: '§5 · Mã hóa',
     title: 'Dữ liệu của bạn đi đâu',
     lead: 'Từ lúc bạn gõ mật khẩu đến lúc một bản sao nằm ở nơi khác. Các chuỗi ký tự bên dưới chỉ để minh họa.',
     onDevice: 'Trên máy bạn',
@@ -104,16 +98,18 @@ export const vi = {
     ],
   },
   honesty: {
+    section: '§6 · Bảo mật',
     title: 'Giới hạn bảo mật',
     items: [
       { title: 'Mất mật khẩu và mã khôi phục', body: 'Nếu mất cả mật khẩu kho và mã khôi phục, không ai mở lại được kho, kể cả người phát triển.' },
       { title: 'Máy đã bị nhiễm mã độc', body: 'VanKey không bảo vệ được dữ liệu khi có mã độc, keylogger, hoặc người đang cầm máy đã mở khóa.' },
       { title: 'Bảo vệ khi máy đang mở khóa', body: 'Vân tay hoặc Windows Hello chỉ là lối mở nhanh. Ai có vân tay hoặc PIN đã đăng ký trên máy vẫn mở được kho, nên bật tự khóa. Kho mới tự khóa sau 5 phút không dùng.' },
     ],
-    threat: 'Đọc mô hình đe dọa (tiếng Anh)',
-    format: 'Đọc đặc tả định dạng kho (tiếng Anh)',
+    threat: 'Đọc mô hình đe dọa',
+    format: 'Đọc đặc tả định dạng kho',
   },
   download: {
+    section: '§7 · Tải về',
     title: 'Tải về',
     lead: 'VanKey hiện chủ yếu được dùng cá nhân và chưa có bản phát hành công khai.',
     leadReleased: 'Lấy bản mới nhất từ GitHub Releases.',

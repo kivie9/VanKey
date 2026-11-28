@@ -11,51 +11,46 @@ const sources = ['Google Authenticator', 'Aegis', '2FAS', 'Bitwarden', 'KeePass 
 
 <section class="section" id="features" aria-labelledby="features-title">
   <div class="wrap">
-    <h2 id="features-title" data-reveal><span class="sec">{f.section}</span>{f.title}</h2>
+    <h2 id="features-title" data-reveal><span class="sec" data-rule><span data-decode>{f.section}</span></span>{f.title}</h2>
     <div class="grid">
       <article class="twofa" data-reveal>
-        <p class="head"><span class="num">2.1</span><span class="stamp">{f.partial}</span></p>
+        <p class="head" data-rule><span class="num" data-decode>3.1</span></p>
         <h3>{f.twofa.title}</h3>
         <p>{f.twofa.body}</p>
         <p class="types" aria-hidden="true"><span>TOTP</span><span>HOTP</span><span>Steam</span></p>
-        <p class="note"><span class="note-label">{f.noteLabel}:</span> {f.twofa.note}</p>
       </article>
 
       <article class="import" data-reveal>
-        <p class="head"><span class="num">2.2</span><span class="stamp">{f.partial}</span></p>
+        <p class="head" data-rule><span class="num" data-decode>3.2</span></p>
         <h3>{f.import.title}</h3>
         <p>{f.import.body}</p>
         <ul class="sources">{sources.map((name) => <li>{name}</li>)}</ul>
-        <p class="note"><span class="note-label">{f.noteLabel}:</span> {f.import.note}</p>
       </article>
 
       <article class="offline" data-reveal>
-        <p class="head"><span class="num">2.3</span><span class="stamp stamp-ok">{f.tested}</span></p>
+        <p class="head" data-rule><span class="num" data-decode>3.3</span></p>
         <h3>{f.offline.title}</h3>
         <p>{f.offline.body}</p>
       </article>
 
       <article class="sync" data-reveal>
-        <p class="head"><span class="num">2.4</span><span class="stamp">{f.partial}</span></p>
+        <p class="head" data-rule><span class="num" data-decode>3.4</span></p>
         <h3>{f.sync.title}</h3>
         <p>{f.sync.body}</p>
-        <p class="note"><span class="note-label">{f.noteLabel}:</span> {f.sync.note}</p>
       </article>
 
       <article class="audit" data-reveal>
-        <p class="head"><span class="num">2.5</span><span class="stamp">{f.partial}</span></p>
+        <p class="head" data-rule><span class="num" data-decode>3.5</span></p>
         <h3>{f.audit.title}</h3>
         <p>{f.audit.body}</p>
         <p class="hash" aria-hidden="true"><mark>5BAA6</mark><span>1E4C9B93F3F0682250B6CF8331B7EE68FD8</span></p>
-        <p class="note"><span class="note-label">{f.noteLabel}:</span> {f.audit.note}</p>
       </article>
 
       <article class="guard" data-reveal>
-        <p class="head"><span class="num">2.6</span><span class="stamp">{f.partial}</span></p>
+        <p class="head" data-rule><span class="num" data-decode>3.6</span></p>
         <h3>{f.guard.title}</h3>
         <div>
           <p>{f.guard.body}</p>
-          <p class="note"><span class="note-label">{f.noteLabel}:</span> {f.guard.note}</p>
         </div>
       </article>
     </div>
@@ -67,12 +62,10 @@ const sources = ['Google Authenticator', 'Aegis', '2FAS', 'Bitwarden', 'KeePass 
   .grid { display: grid; grid-template-columns: minmax(0, 1fr); margin-top: var(--space-12); row-gap: var(--space-12); }
   article p { margin-top: var(--space-3); color: var(--muted); max-width: 56ch; }
   article h3 + div p:first-child { margin-top: 0; }
-  /* Đầu mỗi mục: số mục bên trái, con dấu trạng thái bên phải. */
-  article p.head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin: 0 0 var(--space-4); padding-bottom: var(--space-2); border-bottom: 1px solid var(--line); max-width: none; }
+  /* Đầu mỗi mục: số mục và một đường kẻ. */
+  article p.head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin: 0 0 var(--space-4); padding-bottom: var(--space-2); max-width: none; position: relative; }
+  article p.head::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--line); transform-origin: left; }
   .num { font: 500 var(--text-xs) / 1 var(--font-mono); color: var(--muted); }
-  /* Ghi chú như lời viết bên lề, cùng màu với con dấu. */
-  .note { font-size: var(--text-sm); margin-top: var(--space-4); padding-left: var(--space-3); border-left: 2px solid var(--warn); }
-  .note-label { font: 700 var(--text-xs) / 1 var(--font-mono); color: var(--warn); text-transform: uppercase; letter-spacing: 0.06em; }
 
   .types { display: flex; flex-wrap: wrap; gap: var(--space-6); font: 500 clamp(1.75rem, 6vw, 3rem) / 1.2 var(--font-mono); }
   .types span { color: var(--fg); }

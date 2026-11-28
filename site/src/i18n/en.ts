@@ -26,7 +26,6 @@ export const en: Dict = {
     download: 'Download',
     how: 'How it encrypts',
     sheet: 'Lab notebook',
-    figure: 'Fig. 1. Ciphertext assembling into the logo as you scroll.',
     spec: [
       { k: 'Platforms', v: 'Android, Windows' },
       { k: 'Interface', v: 'Tiếng Việt, English' },
@@ -34,6 +33,7 @@ export const en: Dict = {
     ],
   },
   totp: {
+    section: '§2 · Live demo',
     title: 'A 2FA code running inside this page',
     lead: 'This is not an animation. Your browser computes the code with standard TOTP (RFC 6238) from a public sample key, the same calculation used by authenticator apps that follow the standard.',
     account: 'Sample account',
@@ -46,19 +46,14 @@ export const en: Dict = {
   },
   features: {
     title: 'What VanKey does',
-    section: '§2 · Features',
-    tested: 'Tested',
-    partial: 'Partly untested',
-    noteLabel: 'Note',
+    section: '§3 · Features',
     twofa: {
       title: 'Can replace your authenticator app',
       body: 'TOTP with a countdown, HOTP with a next-code button, and Steam Guard. Add entries by scanning a QR code, pasting an otpauth link or typing the key.',
-      note: 'QR scanning has not been tried on a real device. Steam Guard was checked against an independent implementation, not against the live service.',
     },
     import: {
       title: 'Bring your old data',
       body: 'There are importers for these sources:',
-      note: 'The importers have only been tested with sample data, not with real export files. Keep your old source until you have compared the results.',
     },
     offline: {
       title: 'Works without a network',
@@ -67,20 +62,18 @@ export const en: Dict = {
     sync: {
       title: 'Sync the storage cannot read',
       body: 'Through a Cloudflare server you deploy yourself, or through a folder on a computer. When two devices edit the same entry, the app asks which version to keep.',
-      note: 'The server passes tests on a development machine and has not run on real Cloudflare. Folder sync works on computers only.',
     },
     audit: {
       title: 'Finds weak, reused and leaked passwords',
       body: 'The app points out weak or reused passwords. Its Have I Been Pwned breach check sends only the first 5 characters of a SHA-1 hash, never the password.',
-      note: 'The breach check has not been tried over a real network.',
     },
     guard: {
       title: 'Closes when you walk away',
       body: 'Auto-lock after inactivity, automatic clipboard clearing, delays after repeated wrong attempts, screenshot blocking on Android and fingerprint unlock.',
-      note: 'Screenshot blocking and fingerprint unlock have not been tested by hand.',
     },
   },
   screens: {
+    section: '§4 · Interface',
     title: 'The real interface',
     lead: 'These images are rendered straight from the app’s interface code with sample data. No real accounts appear in them.',
     phoneList: 'VanKey in the phone layout: the list of entries in a sample vault',
@@ -90,6 +83,7 @@ export const en: Dict = {
     captionDesktop: 'Desktop layout',
   },
   flow: {
+    section: '§5 · Encryption',
     title: 'Where your data goes',
     lead: 'From the moment you type your password until a copy sits somewhere else. The character strings below are illustrations only.',
     onDevice: 'On your device',
@@ -106,6 +100,7 @@ export const en: Dict = {
     ],
   },
   honesty: {
+    section: '§6 · Security',
     title: 'Security limits',
     items: [
       { title: 'Losing both the password and the recovery key', body: 'If both the vault password and the recovery key are lost, nobody can open the vault, including its developer.' },
@@ -116,6 +111,7 @@ export const en: Dict = {
     format: 'Read the vault format specification',
   },
   download: {
+    section: '§7 · Download',
     title: 'Download',
     lead: 'VanKey is mainly for personal use right now and has no public release yet.',
     leadReleased: 'Get the latest build from GitHub Releases.',

@@ -13,17 +13,17 @@ const last = steps.length - 1;
 <section class="section" id="flow" aria-labelledby="flow-title">
   <div class="wrap">
     <div data-reveal>
-      <h2 id="flow-title">{t.flow.title}</h2>
+      <h2 id="flow-title"><span class="sec" data-rule><span data-decode>{t.flow.section}</span></span>{t.flow.title}</h2>
       <p class="lead">{t.flow.lead}</p>
     </div>
 
-    <p class="zone label">{t.flow.onDevice}</p>
+    <p class="zone label" data-decode>{t.flow.onDevice}</p>
     <div class="track" data-flow>
       <span class="rail" aria-hidden="true"><span data-flow-fill></span></span>
       <ol>
         {steps.map((step, i) => (
           <li data-flow-step class:list={{ leaving: i === last }}>
-            {i === last && <p class="zone label boundary">{t.flow.leaves}</p>}
+            {i === last && <p class="zone label boundary" data-decode>{t.flow.leaves}</p>}
             <div class="row">
               <div>
                 <h3>{step.name}</h3>
@@ -43,7 +43,7 @@ const last = steps.length - 1;
 </section>
 
 <style>
-  .zone { margin-top: var(--space-12); }
+  .zone { margin-top: var(--space-12); text-transform: uppercase; letter-spacing: 0.06em; }
   .track { position: relative; margin-top: var(--space-4); }
   .rail { position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px; background: var(--line); }
   .rail span { position: absolute; inset: 0; background: var(--accent); transform-origin: top; }
@@ -63,7 +63,7 @@ const last = steps.length - 1;
   .row .token {
     margin: 0; align-self: start; min-width: 0;
     padding: var(--space-3) var(--space-4);
-    background: var(--card); border-radius: var(--radius-md);
+    background: var(--card); border: 1px dashed var(--line); border-radius: var(--radius-md);
     font: 400 var(--text-sm) / 1.5 var(--font-mono);
   }
   .token span { display: block; min-height: 1.5em; white-space: pre; overflow: hidden; text-overflow: ellipsis; }
