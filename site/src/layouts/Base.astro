@@ -1,10 +1,13 @@
 ---
 import '@fontsource-variable/geist/wght.css';
-import '@fontsource-variable/geist-mono/wght.css';
+import '@fontsource-variable/space-grotesk/wght.css';
+import '@fontsource-variable/jetbrains-mono/wght.css';
 import '../styles/tokens.css';
 import '../styles/global.css';
 import geistLatin from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url';
 import geistVietnamese from '@fontsource-variable/geist/files/geist-vietnamese-wght-normal.woff2?url';
+import groteskLatin from '@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url';
+import groteskVietnamese from '@fontsource-variable/space-grotesk/files/space-grotesk-vietnamese-wght-normal.woff2?url';
 import { pagePair } from '../config';
 import type { Dict } from '../i18n/vi';
 
@@ -17,7 +20,7 @@ const url = (path: string) => new URL(path, Astro.site).href;
 const pair = pagePair(Astro.url.pathname);
 const canonical = url(isVi ? pair.vi : pair.en);
 const ogImage = url(`/og-${t.lang}.png`);
-const fonts = isVi ? [geistLatin, geistVietnamese] : [geistLatin];
+const fonts = isVi ? [geistLatin, geistVietnamese, groteskLatin, groteskVietnamese] : [geistLatin, groteskLatin];
 ---
 
 <!doctype html>

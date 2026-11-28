@@ -11,9 +11,12 @@
   --accent: #0b7a6b;
   --on-accent: #ffffff;
   --warn: #9a4a07;
+  /* Đường kẻ ô của nền giấy, chỉ đủ thấy. */
+  --grid: rgb(21 23 26 / 0.045);
 
   --font-sans: 'Geist Variable', system-ui, sans-serif;
-  --font-mono: 'Geist Mono Variable', ui-monospace, Consolas, monospace;
+  --font-head: 'Space Grotesk Variable', 'Geist Variable', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, Consolas, monospace;
 
   --text-xs: 0.8125rem;
   --text-sm: 0.9375rem;
@@ -51,5 +54,6 @@
     --accent: #3db5a0;
     --on-accent: #05201b;
     --warn: #dda050;
+    --grid: rgb(255 255 255 / 0.035);
   }
 }

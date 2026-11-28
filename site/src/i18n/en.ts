@@ -25,7 +25,13 @@ export const en: Dict = {
     lead: 'VanKey puts passwords, API keys and authenticator codes in one encrypted vault. It opens without a network. When it syncs, the vault leaves your device as ciphertext.',
     download: 'Download',
     how: 'How it encrypts',
-    note: 'Android and Windows. Interface in Vietnamese and English.',
+    sheet: 'Lab notebook',
+    figure: 'Fig. 1. Ciphertext assembling into the logo as you scroll.',
+    spec: [
+      { k: 'Platforms', v: 'Android, Windows' },
+      { k: 'Interface', v: 'Tiếng Việt, English' },
+      { k: 'Network to open', v: 'None' },
+    ],
   },
   totp: {
     title: 'A 2FA code running inside this page',
@@ -40,6 +46,10 @@ export const en: Dict = {
   },
   features: {
     title: 'What VanKey does',
+    section: '§2 · Features',
+    tested: 'Tested',
+    partial: 'Partly untested',
+    noteLabel: 'Note',
     twofa: {
       title: 'Can replace your authenticator app',
       body: 'TOTP with a countdown, HOTP with a next-code button, and Steam Guard. Add entries by scanning a QR code, pasting an otpauth link or typing the key.',

@@ -25,7 +25,7 @@ const FOV = 35;
 const DISTANCE = 4.2;
 
 async function glyphAtlas() {
-  const font = `600 ${CELL * 0.8}px 'Geist Mono Variable', monospace`;
+  const font = `600 ${CELL * 0.8}px 'JetBrains Mono Variable', monospace`;
   await document.fonts.load(font, CHARS).catch(() => []);
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = GRID * CELL;

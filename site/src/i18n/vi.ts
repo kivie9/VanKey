@@ -23,7 +23,13 @@ export const vi = {
     lead: 'VanKey gom mật khẩu, khóa API và mã xác thực vào một kho đã mã hóa. Không cần mạng để mở. Khi đồng bộ, kho rời khỏi máy dưới dạng bản mã.',
     download: 'Tải về',
     how: 'Cách mã hóa',
-    note: 'Android và Windows. Giao diện tiếng Việt và tiếng Anh.',
+    sheet: 'Sổ kỹ thuật',
+    figure: 'Hình 1. Bản mã ráp lại thành logo khi bạn cuộn.',
+    spec: [
+      { k: 'Nền tảng', v: 'Android, Windows' },
+      { k: 'Giao diện', v: 'Tiếng Việt, English' },
+      { k: 'Cần mạng để mở', v: 'Không' },
+    ],
   },
   totp: {
     title: 'Mã 2FA đang chạy ngay trong trang này',
@@ -38,6 +44,10 @@ export const vi = {
   },
   features: {
     title: 'Những gì VanKey làm',
+    section: '§2 · Tính năng',
+    tested: 'Đã qua test',
+    partial: 'Chưa thử hết',
+    noteLabel: 'Ghi chú',
     twofa: {
       title: 'Thay được ứng dụng xác thực',
       body: 'TOTP có đếm ngược, HOTP với nút lấy mã kế tiếp, và Steam Guard. Thêm mục bằng cách quét QR, dán link otpauth hoặc nhập khóa.',
