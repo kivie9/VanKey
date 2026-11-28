@@ -10,8 +10,9 @@ on:
   push:
     branches: [main]
     tags: ["v*"]
-    # Changes to the intro site alone don't build the app. GitHub ignores path filters on tag pushes, so tags still release.
-    paths-ignore: ["site/**"]
+    # Only changes to the app (or this workflow) build on main; site/, server/ and docs don't.
+    # GitHub ignores path filters on tag pushes, so tags still release.
+    paths: ["app/**", ".github/workflows/build.yml"]
   workflow_dispatch:
     inputs:
       platforms:
