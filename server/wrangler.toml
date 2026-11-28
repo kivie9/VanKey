@@ -15,3 +15,24 @@ migrations_dir = "migrations"
 
 # Bí mật KHÔNG đặt ở đây. Dùng:  npx wrangler secret put TOKEN_SECRET   (chuỗi ngẫu nhiên ≥ 32 ký tự)
 # Tùy chọn: npx wrangler secret put REGISTER_CODE   (mã mời ≥ 12 ký tự; đã đặt thì tạo tài khoản phải nhập mã)
+
+# Observability: log, trace và Issues (cảnh báo lỗi thời gian thực) trên dashboard Cloudflare.
+# redact_query_string = true: bỏ query string khỏi URL trong log và trace.
+# Log và trace có thể chứa metadata yêu cầu (kể cả IP). Xem lại trang Quyền riêng tư trước khi mở đăng ký.
+[observability]
+enabled = true
+head_sampling_rate = 1
+redact_query_string = true
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+persist = true
+head_sampling_rate = 1
+
+[observability.traces]
+enabled = true
+persist = true
+
+[observability.issues]
+enabled = true
