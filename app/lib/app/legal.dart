@@ -4,7 +4,7 @@ import 'i18n.dart';
 
 /// Các trang pháp lý công khai (Điều khoản, Quyền riêng tư, Xóa tài khoản, Bảo mật).
 ///
-/// Địa chỉ trang đặt lúc build: `--dart-define=SITE_URL=https://ten-mien-cua-ban`.
+/// Địa chỉ trang đặt lúc build: `--dart-define=SITE_URL=https://vankey.onigix.com`.
 /// Không đặt thì các link ẩn đi và app vẫn chạy bình thường.
 abstract final class Legal {
   static const siteUrl = String.fromEnvironment('SITE_URL');

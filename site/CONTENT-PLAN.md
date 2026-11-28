@@ -142,4 +142,4 @@ A dedicated email, optional PGP key, response time commitment, scope (app, serve
 - **Source licence:** GPL-3.0 (others who modify it must publish their code, like Bitwarden/Aegis), MIT/Apache-2.0 (more freedom), or keep it private and not open source
 - **Public repo or not:** affects links to the specification and threat model, "edit on GitHub", and the update-check button (with a private repo, `api.github.com` does not return releases to strangers)
 - **Who runs the public server:** if you open registration to others, you are the holder of their data and need full Privacy and Delete account pages; if only for personal use, you can state that "the server is only for invited people"
-- **Domain** (shared with the question in docs/project/PLAN.md)
+- **Domain:** https://vankey.onigix.com (decided)

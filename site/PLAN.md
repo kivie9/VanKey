@@ -139,7 +139,7 @@ Not deployed yet. The remaining steps are in [README.md](README.md). For 5.3, th
   - Root directory: `site`
   - Build command: `npm run build`, output: `dist`
   - Build watch paths: `site/**`
-- [ ] 5.2 (Optional) attach a custom domain
+- [ ] 5.2 Custom domain: https://vankey.onigix.com
 - [ ] 5.3 Download button points to the latest GitHub Releases
 - [x] 5.4 Security headers via `public/_headers` (CSP, `X-Content-Type-Options`, `Referrer-Policy`)
 
@@ -170,5 +170,5 @@ Alternative if you do not want to connect the repo: `npx wrangler pages deploy s
 
 ## Open questions
 
-- Domain: until one exists, use `*.pages.dev`
+- Domain: https://vankey.onigix.com
 - Whether to publish links to the APK/installer before the official signed release

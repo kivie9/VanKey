@@ -94,15 +94,14 @@ export const vi = {
     ],
   },
   honesty: {
-    title: 'Nói thẳng về bảo mật',
+    title: 'Giới hạn bảo mật',
     items: [
-      { title: 'Mất cả hai thì mất kho', body: 'Quên mật khẩu chính và làm mất mã khôi phục thì không ai mở lại được, kể cả người viết app.' },
-      { title: 'Chưa có rà soát độc lập', body: 'Định dạng file và mã mật mã chưa được người ngoài kiểm tra. Mật mã chạy bằng Dart thuần. Đặc tả hiện khuyên không dùng cho dữ liệu thật trước khi có rà soát.' },
-      { title: 'Không chống được máy đã nhiễm độc', body: 'Mã độc, keylogger hay người đang cầm máy đã mở khóa nằm ngoài khả năng bảo vệ.' },
-      { title: 'Đã viết nhưng chưa thử thật', body: 'Quét QR, mở bằng vân tay, chặn chụp màn hình, thông báo hẹn giờ, kiểm tra rò rỉ qua mạng, nhập file xuất thật từ app khác, quét mã xuất bằng Google Authenticator, chạy máy chủ đồng bộ trên Cloudflare thật.' },
+      { title: 'Mất mật khẩu và mã khôi phục', body: 'Nếu mất cả mật khẩu kho và mã khôi phục, không ai mở lại được kho, kể cả người phát triển.' },
+      { title: 'Máy đã bị nhiễm mã độc', body: 'VanKey không bảo vệ được dữ liệu khi có mã độc, keylogger, hoặc người đang cầm máy đã mở khóa.' },
+      { title: 'Bảo vệ khi máy đang mở khóa', body: 'Vân tay hoặc Windows Hello chỉ là lối mở nhanh. Ai có vân tay hoặc PIN đã đăng ký trên máy vẫn mở được kho, nên bật tự khóa. Kho mới tự khóa sau 5 phút không dùng.' },
     ],
-    threat: 'Đọc mô hình đe dọa',
-    format: 'Đọc đặc tả định dạng kho',
+    threat: 'Đọc mô hình đe dọa (tiếng Anh)',
+    format: 'Đọc đặc tả định dạng kho (tiếng Anh)',
   },
   download: {
     title: 'Tải về',

@@ -96,15 +96,14 @@ export const en: Dict = {
     ],
   },
   honesty: {
-    title: 'Straight talk about security',
+    title: 'Security limits',
     items: [
-      { title: 'Lose both and the vault is gone', body: 'If you forget the master password and lose the recovery key, nobody can open the vault, including the app’s author.' },
-      { title: 'No independent review yet', body: 'The file format and the cryptographic code have not been checked by outsiders. The cryptography is pure Dart. The specification currently advises against real data until a review is done.' },
-      { title: 'No defence against a compromised device', body: 'Malware, keyloggers and someone holding your unlocked device are outside what it can protect against.' },
-      { title: 'Written but not yet tried for real', body: 'QR scanning, fingerprint unlock, screenshot blocking, scheduled notifications, the online breach check, importing real export files from other apps, scanning exported codes with Google Authenticator, and running the sync server on real Cloudflare.' },
+      { title: 'Losing both the password and the recovery key', body: 'If both the vault password and the recovery key are lost, nobody can open the vault, including its developer.' },
+      { title: 'Compromised devices', body: 'VanKey cannot protect the vault when malware, a keylogger, or someone holding your unlocked device is present.' },
+      { title: 'Protection while the device is unlocked', body: 'Fingerprint or Windows Hello is only a quick way in. Anyone whose fingerprint or PIN is enrolled on the device can still open the vault, so auto-lock should be turned on. New vaults auto-lock after 5 minutes of inactivity by default.' },
     ],
-    threat: 'Read the threat model (in Vietnamese)',
-    format: 'Read the vault format spec (in Vietnamese)',
+    threat: 'Read the threat model',
+    format: 'Read the vault format specification',
   },
   download: {
     title: 'Download',

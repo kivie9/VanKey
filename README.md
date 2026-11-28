@@ -6,7 +6,7 @@ A replacement for Google Authenticator that can import directly from it.
 - Plan: [PLAN.md](docs/project/PLAN.md) · Tasks: [docs/project/TASKS.md](docs/project/TASKS.md) · Status: [docs/project/STATUS.md](docs/project/STATUS.md)
 - Vault file format: [docs/technical/vault-format.md](docs/technical/vault-format.md) · Threat model: [docs/technical/threat-model.md](docs/technical/threat-model.md)
 - Core library for UI developers: [docs/technical/core-api.md](docs/technical/core-api.md)
-- Quick user guide: [docs/guide/huong-dan-nguoi-dung.md](docs/guide/huong-dan-nguoi-dung.md) · Operations notes: [docs/operations/van-hanh.md](docs/operations/van-hanh.md)
+- Quick user guide: [docs/guide/user-guide.md](docs/guide/user-guide.md) · Operations notes: [docs/operations/operations-notes.md](docs/operations/operations-notes.md)
 - Changelog: [CHANGELOG.md](docs/project/CHANGELOG.md) · Printable recovery sheet: [docs/guide/recovery-sheet.md](docs/guide/recovery-sheet.md) · Website: [site/PLAN.md](site/PLAN.md)
 
 ## Structure

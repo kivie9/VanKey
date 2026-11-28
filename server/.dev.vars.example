@@ -1,8 +1,8 @@
-# Bí mật của server. Nút "Deploy to Cloudflare" sẽ hỏi các giá trị này khi deploy.
-# Không điền giá trị thật vào file này. Giá trị thật chỉ đặt trên Cloudflare hoặc trong file .dev.vars trên máy.
+# Server secrets. The "Deploy to Cloudflare" button asks for these values during deployment.
+# Do not put real values in this file. Real values are set on Cloudflare, or in a local .dev.vars file.
 
-# TOKEN_SECRET: chuỗi ngẫu nhiên tối thiểu 32 ký tự. Đổi nó sau này sẽ buộc mọi thiết bị đăng nhập lại.
+# TOKEN_SECRET: a random string of at least 32 characters. Changing it later signs every device out.
 TOKEN_SECRET=
 
-# REGISTER_CODE: mã mời tùy chọn, tối thiểu 12 ký tự. Để trống thì ai cũng đăng ký được (có giới hạn).
+# REGISTER_CODE: optional invite code, at least 12 characters. Leave empty to allow anyone to register (rate-limited).
 REGISTER_CODE=

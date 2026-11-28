@@ -13,7 +13,7 @@ No release has been made yet (no tag). The sections below summarise what exists 
 - When creating a server account, agreeing to the Terms and the Privacy Policy is required. The server records the terms version and the time of agreement (migration 0007).
 - Legal pages: Privacy, Terms of Use, Delete account and data, Security and vulnerability reporting (vi and en, in `site/`). The homepage footer links to these pages.
 - The About screen has a section "When data leaves the device" and links to the legal pages when `SITE_URL` is set at build time.
-- `docs/SECURITY.md` on how to report vulnerabilities, `docs/guide/huong-dan-nguoi-dung.md` (user guide), and `docs/operations/van-hanh.md` (includes a procedure for opening registration).
+- `docs/SECURITY.md` on how to report vulnerabilities, `docs/guide/user-guide.md` (user guide), and `docs/operations/operations-notes.md` (includes a procedure for opening registration).
 - `.vkv` vault file: Argon2id (parameters self-measured when creating a vault), XChaCha20-Poly1305, recovery code, 3-way merge during sync.
 - Login, note, card, custom field, password history (last 10), trash, groups, search ignoring diacritics item types.
 - 2FA: TOTP with countdown, HOTP, Steam Guard; QR scanning by camera and from images; QR display for each item; export to Google Authenticator.

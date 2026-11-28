@@ -1,7 +1,12 @@
 import pubspec from '../../app/pubspec.yaml?raw';
 
 export const REPO = 'https://github.com/kivie9/VanKey';
-export const doc = (name: string) => `${REPO}/blob/main/docs/${name}`;
+// Docs moved into docs/technical/ (and other subfolders); map each name to its current path.
+const DOC_PATHS: Record<string, string> = {
+  'threat-model.md': 'technical/threat-model.md',
+  'vault-format.md': 'technical/vault-format.md',
+};
+export const doc = (name: string) => `${REPO}/blob/main/docs/${DOC_PATHS[name] ?? name}`;
 
 /** Đổi thành true khi đã có GitHub Release: nút tải về sẽ trỏ tới bản mới nhất. */
 export const RELEASED: boolean = false;

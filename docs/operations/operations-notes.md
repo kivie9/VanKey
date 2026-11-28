@@ -46,8 +46,8 @@ See [STATUS.md](../project/STATUS.md). Public release tasks (privacy policy, ter
 When public registration is opened, the operator holds other people's data. Complete the steps below before opening.
 
 ### 6.1 Before opening
-- [ ] Set `SITE_URL` when building the app (`--dart-define=SITE_URL=https://...`) so that the legal links appear in the app.
-- [ ] Deploy the `site/` pages (Cloudflare Pages, build `npm run build`, variable `SITE_URL`). Fill in the `[điền: …]` placeholders in the Privacy, Terms, Delete account and Security pages. (Placeholders are in Vietnamese in the source; they mean "fill in".)
+- [ ] Set `SITE_URL` when building the app (`--dart-define=SITE_URL=https://vankey.onigix.com`) so that the legal links appear in the app.
+- [ ] Deploy the `site/` pages (Cloudflare Pages, build `npm run build`, variable `SITE_URL`). Check that the Privacy, Terms, Delete account and Security pages are current.
 - [ ] Set the `REGISTER_CODE` secret if you only want to invite people you know; leave it empty to open to everyone (limited by IP and `MAX_USERS`).
 - [ ] Run `npm run db:migrate` (migration 0007 records consent to the terms).
 - [ ] Have a legal professional review the Terms and Policy (especially Decree 13/2023/ND-CP if there are users in Vietnam).
