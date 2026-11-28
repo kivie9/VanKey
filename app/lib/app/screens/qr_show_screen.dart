@@ -49,7 +49,7 @@ class _QrShowScreenState extends State<QrShowScreen> {
                   child: Row(children: [
                     const Icon(Icons.warning_amber_rounded),
                     const SizedBox(width: 10),
-                    Expanded(child: Text(tr('Mã QR này chứa khóa bí mật. Đừng chụp màn hình hay gửi cho ai; đóng màn này ngay khi quét xong.'))),
+                    Expanded(child: Text(tr('Mã QR này chứa khóa bí mật. Không chụp màn hình hay gửi cho ai; đóng màn này ngay khi quét xong.'))),
                   ]),
                 ),
               ),

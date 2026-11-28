@@ -86,4 +86,4 @@ node check.js
 ```
 The cross-check script is in `app/tool/interop/` (it uses `libsodium-wrappers-sumo`; the regular build does **not** include Argon2) and reads `app/build/spike_out.json`, which the test creates.
 
-Timings vary between runs (for example 856 ms, then 995 ms, for the same parameters), so do not treat a single number as exact.
+Timings vary between runs (for example 856 ms, then 995 ms, for the same parameters), so a single number is only approximate.

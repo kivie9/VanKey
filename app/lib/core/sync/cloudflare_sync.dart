@@ -283,7 +283,7 @@ final class CloudflareSync implements SyncProvider {
       await _refresh(); // token bị từ chối dù chưa hết hạn theo đồng hồ máy: thử làm mới một lần
       r = await call(_session.accessToken);
     }
-    if (r.$1 == 401 || r.$1 == 403) throw const SyncAuthException('Phiên đăng nhập không còn hiệu lực. Hãy đăng nhập lại.');
+    if (r.$1 == 401 || r.$1 == 403) throw const SyncAuthException('Phiên đăng nhập không còn hiệu lực. Đăng nhập lại.');
     return r;
   }
 
@@ -296,7 +296,7 @@ final class CloudflareSync implements SyncProvider {
       r = await api.send(method, _session.baseUrl, path, token: _session.accessToken, json: json);
     }
     if (r.$1 == 204) return;
-    if (r.$1 == 401) throw const SyncAuthException('Phiên đăng nhập không còn hiệu lực. Hãy đăng nhập lại.');
+    if (r.$1 == 401) throw const SyncAuthException('Phiên đăng nhập không còn hiệu lực. Đăng nhập lại.');
     throw api._apiError(r.$1, r.$2);
   }
 

@@ -94,7 +94,7 @@ class _UnlockScreenState extends State<UnlockScreen> {
         if (c.bioNeedsReenable && !c.biometricEnabled)
           Padding(
             padding: const EdgeInsets.only(top: Gap.md),
-            child: Notice(tr('Mở khóa bằng {p0} đã được nâng cấp để an toàn hơn. Sau khi mở bằng mật khẩu, hãy bật lại trong Cài đặt > Tài khoản.', {'p0': VaultController.bioName}), tone: NoticeTone.info, icon: Icons.fingerprint),
+            child: Notice(tr('Mở khóa bằng {p0} đã được nâng cấp để an toàn hơn. Sau khi mở bằng mật khẩu, bật lại trong Cài đặt > Tài khoản.', {'p0': VaultController.bioName}), tone: NoticeTone.info, icon: Icons.fingerprint),
           ),
         if (c.biometricEnabled) ...[
           const SizedBox(height: Gap.md),

@@ -773,7 +773,7 @@ class VaultController extends ChangeNotifier {
       if (e.code == 'invalidated' || e.code == 'corrupt') {
         await disableBiometric();
         error = tr(
-          'Khóa {p0} trên máy đã thay đổi. Hãy nhập mật khẩu rồi bật lại mở khóa bằng {p0}.',
+          'Khóa {p0} trên máy đã thay đổi. Nhập mật khẩu rồi bật lại mở khóa bằng {p0}.',
           {'p0': VaultController.bioName},
         );
         notifyListeners();
@@ -1180,7 +1180,7 @@ class VaultController extends ChangeNotifier {
       if (blob == null) {
         await _cfApi.logout(s);
         return tr(
-          'Tài khoản này chưa có kho trên máy chủ. Hãy tạo kho ở máy đầu tiên rồi bật đồng bộ.',
+          'Tài khoản này chưa có kho trên máy chủ. Tạo kho ở máy đầu tiên rồi bật đồng bộ.',
         );
       }
       final bytes = blob.bytes;
@@ -1260,7 +1260,7 @@ class VaultController extends ChangeNotifier {
   /// Drive chưa có kho: tạo kho mới bằng [password], bật đồng bộ Drive. Sau đó người dùng lưu mã khôi phục rồi vào app.
   Future<String?> driveCreateVault(String password) async {
     final auth = _pendingDriveAuth;
-    if (auth == null) return tr('Hãy đăng nhập Google trước.');
+    if (auth == null) return tr('Đăng nhập Google trước.');
     final weak = newPasswordError(password);
     if (weak != null) return weak;
     busy = true;
@@ -1271,7 +1271,7 @@ class VaultController extends ChangeNotifier {
       if (await DriveSync(auth, base: driveBase).fetch() != null) {
         _pendingDriveAuth = null;
         return tr(
-          'Google Drive này vừa có kho (tạo ở máy khác). Hãy quay lại và đăng nhập Google lại để mở kho đó.',
+          'Google Drive này vừa có kho (tạo ở máy khác). Quay lại và đăng nhập Google lại để mở kho đó.',
         );
       }
       final (session, recovery) = await isoCreateCalibrated(password);
@@ -1294,7 +1294,7 @@ class VaultController extends ChangeNotifier {
   /// Drive đã có kho (tạo ở máy khác): mở bằng mật khẩu của kho rồi vào app.
   Future<String?> driveOpenVault(String password) async {
     final auth = _pendingDriveAuth;
-    if (auth == null) return tr('Hãy đăng nhập Google trước.');
+    if (auth == null) return tr('Đăng nhập Google trước.');
     busy = true;
     error = null;
     notifyListeners();
@@ -1334,7 +1334,7 @@ class VaultController extends ChangeNotifier {
   /// Cài đặt: bật đồng bộ Google Drive cho kho đang có trên máy. Từ chối nếu Drive đã có một kho KHÁC (khóa khác).
   Future<String?> enableDriveSync() async {
     final s = _session;
-    if (s == null) return tr('Hãy mở khóa kho trước.');
+    if (s == null) return tr('Mở khóa kho trước.');
     busy = true;
     notifyListeners();
     try {
@@ -1348,7 +1348,7 @@ class VaultController extends ChangeNotifier {
         } on AuthenticationFailedException {
           await auth.signOut();
           return tr(
-            'Google Drive này đã có một kho khác (khóa khác). Để dùng kho đó, hãy cài lại app và chọn đăng nhập Google ở màn đầu.',
+            'Google Drive này đã có một kho khác (khóa khác). Để dùng kho đó, cài lại app và chọn đăng nhập Google ở màn đầu.',
           );
         }
       }
@@ -1488,7 +1488,7 @@ class VaultController extends ChangeNotifier {
     } on AuthenticationFailedException {
       syncStatus = SyncStatus.error;
       syncError = tr(
-        'Bản trên nơi đồng bộ dùng khóa khác (đã đổi mật khẩu hoặc xoay khóa ở máy khác). Hãy khóa rồi mở lại bằng mật khẩu mới.',
+        'Bản trên nơi đồng bộ dùng khóa khác (đã đổi mật khẩu hoặc xoay khóa ở máy khác). Khóa rồi mở lại bằng mật khẩu mới.',
       );
     } on VaultException catch (e) {
       syncStatus = SyncStatus.error;

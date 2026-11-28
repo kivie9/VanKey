@@ -34,7 +34,7 @@ Future<void> loadDemoData(
     context,
     title: tr('Nạp dữ liệu mẫu?'),
     message: tr(
-      'Thêm khoảng 30 mục giả (đủ loại, logo, 2FA, nhắc nhở, thẻ) vào kho này để xem giao diện. Đừng nạp vào kho thật bạn đang dùng.',
+      'Thêm khoảng 30 mục giả (đủ loại, logo, 2FA, nhắc nhở, thẻ) vào kho này để xem giao diện. Không nạp vào kho thật bạn đang dùng.',
     ),
     confirmLabel: tr('Nạp'),
   );
@@ -586,7 +586,7 @@ class SettingsTab extends StatelessWidget {
                 subtitle: Text(
                   controller.noPassword
                       ? tr(
-                          'Chỉ mở lại được bằng mã khôi phục: hãy tạo mã trước.',
+                          'Chỉ mở lại được bằng mã khôi phục: tạo mã trước.',
                         )
                       : tr(
                           'An toàn. Chỉ VanKey mở được, cần mật khẩu hoặc mã khôi phục.',
@@ -671,7 +671,7 @@ class SettingsTab extends StatelessWidget {
         title: Text(tr('Xuất không mã hóa?')),
         content: Text(
           tr(
-            'File sẽ chứa bí mật của bạn ở dạng đọc được. Hãy xóa file ngay sau khi dùng xong và không gửi qua kênh không an toàn.',
+            'File sẽ chứa bí mật của bạn ở dạng đọc được. Xóa file ngay sau khi dùng xong và không gửi qua kênh không an toàn.',
           ),
         ),
         actions: [
@@ -1002,7 +1002,7 @@ class _NewPasswordDialogState extends State<_NewPasswordDialog> {
     return _PasswordPage(
       title: tr('Đặt mật khẩu'),
       note: tr(
-        'Từ giờ app sẽ hỏi mật khẩu này mỗi khi mở. Hãy nhớ kỹ: quên mật khẩu thì chỉ mở lại được bằng mã khôi phục.',
+        'Từ giờ app sẽ hỏi mật khẩu này mỗi khi mở. Quên mật khẩu thì chỉ mở lại được bằng mã khôi phục.',
       ),
       confirmLabel: tr('Đặt'),
       onConfirm: ok ? () => Navigator.pop(context, _a.text) : null,

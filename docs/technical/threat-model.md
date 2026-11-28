@@ -59,7 +59,7 @@
 ## 5. Assumptions and limitations to state plainly to users
 
 - Forgetting both the passphrase and the recovery key = **permanent data loss**.
-- Removing a device does **not** revoke copies of data already on that device. If you suspect a device was exposed, you must **change the vault passphrase and rotate the vault key**, then change the passwords of important services.
+- Removing a device does **not** revoke copies of data already on that device. If you suspect a device was exposed, changing the vault passphrase and rotating the vault key is required, then change the passwords of important services.
 - Metadata that is visible: file size (padded to multiples of 4 KiB), update time, number of devices, IP addresses used to connect to the server.
 - Google Drive or Cloudflare may **delete or fail to return** your files. Each device keeps a full copy, and encrypted export is available to reduce the risk.
 
@@ -85,7 +85,7 @@
 - [ ] Vault format specification and test vectors (`vault-format.md`, M1)
 - [ ] Measure passphrase strength when set; reject passphrases that are too weak (M2/M3)
 - [ ] Slow down after many wrong attempts (M3)
-- [ ] Do not log sensitive data; review logs before release (M3)
+- [ ] Sensitive data is not logged; logs are reviewed before release (M3)
 - [ ] Notifications contain no secrets (M6)
 - [ ] Rehearse recovery and lost-device scenarios (M7)
 - [ ] Have a qualified expert review the specification and cryptographic parts before real use (M7)

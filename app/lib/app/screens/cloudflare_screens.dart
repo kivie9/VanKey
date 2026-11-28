@@ -262,7 +262,7 @@ class _CloudflareDevicesScreenState extends State<CloudflareDevicesScreen> {
         title: Text(tr('Gỡ thiết bị "{p0}"?', {'p0': d.name})),
         content: Text(
           tr(
-            'Thiết bị này sẽ mất quyền truy cập ngay. Nếu nghi bị lộ, hãy đổi mật khẩu kho sau đó.',
+            'Thiết bị này sẽ mất quyền truy cập ngay. Nếu nghi bị lộ, đổi mật khẩu kho sau đó.',
           ),
         ),
         actions: [

@@ -54,7 +54,7 @@ You need a Cloudflare account (free) and Node.
    ```powershell
    npx wrangler secret put TOKEN_SECRET
    ```
-5. (Optional) set an invite code if you do not want everyone to register:
+5. (Optional) set an invite code to restrict registration:
    ```powershell
    npx wrangler secret put REGISTER_CODE
    ```
@@ -101,10 +101,10 @@ The old version signed in with email and an `ALLOWED_EMAILS` list. Migration `00
 
 ### Password change, account deletion, hash iterations (migration `0004`)
 
-- `POST /auth/password` `{authKey, newAuthKey}` (token required): changes the account password. You must send the correct current password; wrong attempts are counted and locked like sign-in. All other devices of the account are removed. The app calls this API when you change the password in Settings, before changing it on the device.
+- `POST /auth/password` `{authKey, newAuthKey}` (token required): changes the account password. The correct current password is required; wrong attempts are counted and locked like sign-in. All other devices of the account are removed. The app calls this API when you change the password in Settings, before changing it on the device.
 - `DELETE /account` `{authKey}` (token required): permanently deletes the account, the vault and all devices. Cannot be undone. In the app: Sync → Delete account.
 - New accounts hash the authKey with PBKDF2 at `5000` iterations instead of `100000` (100000 iterations exceeds the free plan's 10 ms CPU limit). The authKey has already been through Argon2id on the device, so it is not weakened. Old accounts are re-hashed automatically the next time they sign in.
-- Remember to run `npx wrangler d1 migrations apply vankey --remote` before deploying (adds the `kdf_iter` column).
+- Run `npx wrangler d1 migrations apply vankey --remote` before deploying (adds the `kdf_iter` column).
 
 ## Known limitations
 

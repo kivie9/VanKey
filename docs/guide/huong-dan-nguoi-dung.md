@@ -32,7 +32,7 @@
 ## 5. Mở khóa và bảo vệ
 
 - Mở bằng vân tay hoặc Windows Hello chỉ là lối vào nhanh. Vẫn cần mật khẩu kho khi đổi vân tay trên máy.
-- Bật **tự khóa** (mặc định 5 phút). Đừng để kho mở khi đưa máy cho người khác.
+- Bật **tự khóa** (mặc định 5 phút). Không để kho mở khi đưa máy cho người khác.
 - Quên mật khẩu kho: ở màn mở khóa bấm **Quên mật khẩu? Dùng mã khôi phục**, nhập mã, rồi đặt mật khẩu mới và **tạo mã khôi phục mới**. Mã cũ không dùng lại được.
 
 ## 6. Mục khi quên hoặc mất thiết bị

@@ -122,7 +122,7 @@ class _ImportScreenState extends State<ImportScreen> {
     } on EncryptedImportException {
       setState(
         () => _error = tr(
-          'File này được mã hóa bởi app nguồn. Hãy xuất lại bản không mã hóa từ app đó.',
+          'File này được mã hóa bởi app nguồn. Xuất lại bản không mã hóa từ app đó.',
         ),
       );
     } on VaultException catch (e) {

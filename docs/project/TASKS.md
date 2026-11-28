@@ -10,9 +10,9 @@ Legend: **(P)** = has a UI sample in the prototype · **(T)** = needs tests · *
 ## General rules
 
 - [ ] Each milestone ends with a tagged commit (`m0`, `m1`, ...).
-- [ ] Never commit: keys, tokens, `google-services`, keystores, `.env` files, real data. Add them to `.gitignore` from the start.
+- [ ] Keys, tokens, `google-services`, keystores, `.env` files and real data are kept out of commits. They are added to `.gitignore` from the start.
 - [ ] `flutter analyze` is clean and `flutter test` passes before every commit.
-- [ ] Never log passwords, keys, 2FA codes or passphrases at any log level.
+- [ ] Passwords, keys, 2FA codes and passphrases are not logged at any log level.
 - [ ] UI strings go through ARB files (vi, en), **never hard-coded** in the code.
 - [ ] Settled technical decisions are recorded in `docs/technical/decisions.md` (one line per decision: what, why, date).
 

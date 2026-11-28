@@ -48,7 +48,7 @@ final code = Otp.code(item.totp!, DateTime.now());      // '123456'
 Otp.grouped(code);                                      // '123 456'
 Otp.secondsRemaining(DateTime.now());                   // 1..30 (for the countdown)
 ```
-Use **one** timer for the whole app (every second) and recalculate all codes; do not create a timer per row.
+Use **one** timer for the whole app (every second) and recalculate all codes; no timer is created per row.
 
 ## Sync (M4)
 
@@ -59,7 +59,7 @@ final r = mergeVaults(local: localData, remote: remoteData, base: lastSyncedData
 // r.changesRemote    -> must be uploaded
 // r.conflicts        -> the UI asks the user; resolveConflict(...) creates a new version
 ```
-After every successful sync you must **save `base`** (the common version just synced).
+After every successful sync, **`base` is saved** (the common version just synced).
 
 ## Rules of use
 

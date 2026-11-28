@@ -92,7 +92,7 @@ void main() {
     await tester.enterText(field, 'password123');
     await tester.pump();
     expect(enabled(), isFalse, reason: 'đủ dài nhưng quá dễ đoán');
-    expect(find.text('Mật khẩu quá dễ đoán. Hãy dài hơn, hoặc ghép vài từ không liên quan.'), findsOneWidget);
+    expect(find.text('Mật khẩu quá dễ đoán. Dài hơn, hoặc ghép vài từ không liên quan.'), findsOneWidget);
     await tester.enterText(field, 'mat-khau-du-dai-1');
     await tester.pump();
     expect(enabled(), isFalse, reason: 'chưa đồng ý Điều khoản và Chính sách quyền riêng tư');

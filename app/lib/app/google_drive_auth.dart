@@ -59,7 +59,7 @@ final class GoogleDriveAuth implements DriveAccountAuth {
       return switch (e.code) {
         GoogleSignInExceptionCode.canceled => tr('Đã hủy đăng nhập Google, hoặc cấu hình đăng nhập chưa đúng (kiểm tra SHA-1 và tên gói trong Google Cloud).'),
         GoogleSignInExceptionCode.clientConfigurationError => tr('Cấu hình đăng nhập Google chưa đúng. Xem docs/operations/google-drive-setup.md.'),
-        GoogleSignInExceptionCode.uiUnavailable => tr('Không mở được màn đăng nhập Google. Hãy thử lại khi app đang ở phía trước.'),
+        GoogleSignInExceptionCode.uiUnavailable => tr('Không mở được màn đăng nhập Google. Thử lại khi app đang ở phía trước.'),
         _ => tr('Không đăng nhập được Google: {p0}', {'p0': e.description ?? e.code.name}),
       };
     } on Object catch (e) {
@@ -98,7 +98,7 @@ final class GoogleDriveAuth implements DriveAccountAuth {
     try {
       // Ở nền không được hiện giao diện: chỉ lấy token khi quyền đã cấp từ trước.
       final authz = await client.authorizationForScopes([DriveSync.scope]);
-      if (authz == null) throw SyncAuthException(tr('Cần cấp lại quyền Google Drive. Hãy bật lại đồng bộ trong Cài đặt.'));
+      if (authz == null) throw SyncAuthException(tr('Cần cấp lại quyền Google Drive. Bật lại đồng bộ trong Cài đặt.'));
       _lastToken = authz.accessToken;
       return authz.accessToken;
     } on GoogleSignInException catch (e) {

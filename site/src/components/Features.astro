@@ -57,30 +57,30 @@ const sources = ['Google Authenticator', 'Aegis', '2FAS', 'Bitwarden', 'KeePass 
 </section>
 
 <style>
-  /* Chia khối bằng đường kẻ, bề rộng không đều: khối quan trọng chiếm nhiều chỗ hơn. */
-  .grid { display: grid; grid-template-columns: minmax(0, 1fr); margin-top: var(--space-12); border-top: 1px solid var(--line); }
-  article { padding-block: var(--space-8); border-bottom: 1px solid var(--line); }
+  /* Không kẻ đường: khoảng trắng và bề rộng không đều tự chia khối. Khối quan trọng chiếm nhiều chỗ hơn. */
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr); margin-top: var(--space-12); row-gap: var(--space-12); }
   article p { margin-top: var(--space-3); color: var(--muted); max-width: 56ch; }
   article h3 + div p:first-child { margin-top: 0; }
-  .note { font-size: var(--text-sm); border-left: 2px solid var(--warn); padding-left: var(--space-3); margin-top: var(--space-4); }
+  .note { font-size: var(--text-sm); margin-top: var(--space-4); }
 
   .types { display: flex; flex-wrap: wrap; gap: var(--space-6); font: 500 clamp(1.75rem, 6vw, 3rem) / 1.2 var(--font-mono); }
   .types span { color: var(--fg); }
   .types span + span { color: var(--muted); }
 
   .sources { margin: var(--space-4) 0 0; padding: 0; list-style: none; font: 400 var(--text-sm) / 1.4 var(--font-mono); }
-  .sources li { padding-block: var(--space-2); border-bottom: 1px dashed var(--line); }
+  .sources li { padding-block: var(--space-1); }
 
   .hash { font: 400 var(--text-xs) / 1.8 var(--font-mono); overflow-wrap: anywhere; }
   .hash mark { background: var(--accent); color: var(--on-accent); padding: 2px 4px; margin-right: 2px; }
 
   @media (min-width: 900px) {
     .grid { grid-template-columns: repeat(12, minmax(0, 1fr)); }
-    .twofa { grid-column: 1 / 8; padding-right: var(--space-12); }
-    .import { grid-column: 8 / 13; padding-left: var(--space-8); border-left: 1px solid var(--line); }
+    .grid { row-gap: var(--space-16); column-gap: var(--space-12); }
+    .twofa { grid-column: 1 / 8; }
+    .import { grid-column: 8 / 13; }
     .offline, .guard { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-8); }
     .offline p { margin-top: 0; font-size: var(--text-lg); }
-    .sync { grid-column: 1 / 6; padding-right: var(--space-8); }
-    .audit { grid-column: 6 / 13; padding-left: var(--space-12); border-left: 1px solid var(--line); }
+    .sync { grid-column: 1 / 6; }
+    .audit { grid-column: 6 / 13; }
   }
 </style>

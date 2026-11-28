@@ -381,7 +381,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       Text(tr('Lưu mã khôi phục'), textAlign: TextAlign.center, style: text.headlineMedium),
       const SizedBox(height: Gap.sm),
       Text(
-        tr('Nếu quên mật khẩu, đây là cách DUY NHẤT mở lại kho. Mã chỉ hiện một lần. Hãy chép và cất ở nơi an toàn, ngoài chiếc điện thoại này.'),
+        tr('Nếu quên mật khẩu, đây là cách DUY NHẤT mở lại kho. Mã chỉ hiện một lần. Chép và cất ở nơi an toàn, ngoài chiếc điện thoại này.'),
         textAlign: TextAlign.center,
         style: text.bodyLarge?.copyWith(color: colors.muted),
       ),

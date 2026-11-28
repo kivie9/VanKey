@@ -64,7 +64,7 @@ class _HealthScreenState extends State<HealthScreen> {
         _checked = true;
       });
     } on Object {
-      setState(() => _error = tr('Không kết nối được dịch vụ kiểm tra. Hãy thử lại khi có mạng.'));
+      setState(() => _error = tr('Không kết nối được dịch vụ kiểm tra. Thử lại khi có mạng.'));
     } finally {
       if (mounted) setState(() => _checking = false);
     }
@@ -120,7 +120,7 @@ class _HealthScreenState extends State<HealthScreen> {
                   ]),
                 ),
               ),
-              section(tr('Mật khẩu đã bị lộ, hãy đổi ngay'), r.leaked),
+              section(tr('Mật khẩu đã bị lộ, đổi ngay'), r.leaked),
               section(tr('Mật khẩu yếu'), r.weak),
               for (final g in r.reused) section(tr('Dùng chung một mật khẩu'), g.items),
               section(tr('Chưa bật 2FA'), r.noTotp),

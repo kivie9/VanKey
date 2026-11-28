@@ -38,7 +38,7 @@ class RemindersScreen extends StatelessWidget {
     final ok = await NotificationService.instance.requestPermission();
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ok ? tr('Đã bật thông báo nhắc nhở') : tr('Chưa được cấp quyền thông báo. Hãy bật trong cài đặt điện thoại.'))),
+        SnackBar(content: Text(ok ? tr('Đã bật thông báo nhắc nhở') : tr('Chưa được cấp quyền thông báo. Bật trong cài đặt điện thoại.'))),
       );
     }
   }

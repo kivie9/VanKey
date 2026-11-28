@@ -25,7 +25,7 @@ class HelpScreen extends StatelessWidget {
       (
         tr('Chuyển từ Google Authenticator thế nào?'),
         tr(
-          'Trong Google Authenticator chọn Xuất tài khoản, rồi trong VanKey bấm + → Quét QR. Có thể chụp màn hình mã QR và chọn ảnh. Sau khi xong hãy so vài mã với app cũ trước khi xóa app cũ.',
+          'Trong Google Authenticator chọn Xuất tài khoản, rồi trong VanKey bấm + → Quét QR. Có thể chụp màn hình mã QR và chọn ảnh. Sau khi xong so vài mã với app cũ trước khi xóa app cũ.',
         ),
       ),
       (
@@ -37,7 +37,7 @@ class HelpScreen extends StatelessWidget {
       (
         tr('Mở bằng vân tay hoặc Windows Hello có an toàn không?'),
         tr(
-          'App không cất mật khẩu. Khóa kho được bọc bằng một khóa phần cứng (Android Keystore hoặc Windows Hello trong TPM), chỉ dùng được sau khi bạn xác thực. Ai có vân tay hoặc PIN đã đăng ký trên máy này vẫn mở được, nên hãy bật tự khóa. Đổi vân tay trên máy thì phải nhập lại mật khẩu kho, nên hãy nhớ nó.',
+          'App không cất mật khẩu. Khóa kho được bọc bằng một khóa phần cứng (Android Keystore hoặc Windows Hello trong TPM), chỉ dùng được sau khi bạn xác thực. Ai có vân tay hoặc PIN đã đăng ký trên máy này vẫn mở được, nên bật tự khóa. Đổi vân tay trên máy thì phải nhập lại mật khẩu kho, nên nhớ nó.',
         ),
       ),
       (
@@ -67,13 +67,13 @@ class HelpScreen extends StatelessWidget {
       (
         tr('Mất điện thoại thì làm sao?'),
         tr(
-          'Trên máy còn lại, vào Cài đặt → Dữ liệu → Đồng bộ → Thiết bị đã đăng nhập rồi gỡ máy bị mất. Máy đó mất quyền truy cập ngay. Nếu nghi bị lộ, hãy đổi mật khẩu kho.',
+          'Trên máy còn lại, vào Cài đặt → Dữ liệu → Đồng bộ → Thiết bị đã đăng nhập rồi gỡ máy bị mất. Máy đó mất quyền truy cập ngay. Nếu nghi bị lộ, đổi mật khẩu kho.',
         ),
       ),
       (
         tr('Xóa tài khoản máy chủ thế nào?'),
         tr(
-          'Cài đặt → Dữ liệu → Đồng bộ → Xóa tài khoản. Thao tác này xóa kho trên máy chủ và trên máy này, không hoàn tác được. Hãy xuất bản sao lưu mã hóa trước nếu còn cần dữ liệu.',
+          'Cài đặt → Dữ liệu → Đồng bộ → Xóa tài khoản. Thao tác này xóa kho trên máy chủ và trên máy này, không hoàn tác được. Xuất bản sao lưu mã hóa trước nếu còn cần dữ liệu.',
         ),
       ),
       (
@@ -146,7 +146,7 @@ class AboutScreen extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           tr(
-            'Mã hóa XChaCha20-Poly1305, khóa dẫn xuất bằng Argon2id từ mật khẩu của bạn. Chưa có người ngoài rà soát độc lập, nên hãy giữ thêm bản sao lưu mã hóa và mã khôi phục.',
+            'Mã hóa XChaCha20-Poly1305, khóa dẫn xuất bằng Argon2id từ mật khẩu của bạn. Chưa có người ngoài rà soát độc lập, nên giữ thêm bản sao lưu mã hóa và mã khôi phục.',
           ),
         ),
         const SizedBox(height: 16),

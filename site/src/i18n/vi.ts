@@ -29,7 +29,7 @@ export const vi = {
     title: 'Mã 2FA đang chạy ngay trong trang này',
     lead: 'Đây không phải ảnh động. Trình duyệt của bạn tự tính mã theo chuẩn TOTP (RFC 6238) từ một khóa mẫu công khai, cùng phép tính mà các ứng dụng xác thực theo chuẩn này dùng.',
     account: 'Tài khoản mẫu',
-    secretLabel: 'Khóa mẫu lấy từ RFC 6238, đừng dùng thật',
+    secretLabel: 'Khóa mẫu lấy từ RFC 6238, không dùng thật',
     codeLabel: 'Mã hiện tại',
     remaining: 'Còn {s} giây',
     noJs: 'Cần bật JavaScript để tính mã.',
@@ -46,7 +46,7 @@ export const vi = {
     import: {
       title: 'Mang dữ liệu cũ sang',
       body: 'Có bộ nhập cho các nguồn sau:',
-      note: 'Các bộ nhập mới được kiểm bằng dữ liệu mẫu, chưa thử với file xuất thật. Hãy giữ nguồn cũ cho đến khi bạn đã so lại.',
+      note: 'Các bộ nhập mới được kiểm bằng dữ liệu mẫu, chưa thử với file xuất thật. Giữ nguồn cũ cho đến khi bạn đã so lại.',
     },
     offline: {
       title: 'Không có mạng vẫn dùng được',

@@ -58,7 +58,7 @@ On this development machine, the SHA-1 of the debug key is `0D:BE:13:7B:63:96:CF
 ```
 
 - **Back up the `.jks` file and its password** (for example in a password manager). If you lose this key, you cannot publish updates for people who already installed the app.
-- Do not commit this file (it is already in `.gitignore`: `*.jks`, `key.properties`).
+- This file is not committed (it is already in `.gitignore`: `*.jks`, `key.properties`).
 - Get its SHA-1 with `keytool -list -v -keystore vankey-release.jks -alias vankey`, then create one more Android OAuth client with that SHA-1.
 - **Changing the signing key means already-installed versions cannot be updated over** (Android reports a signature conflict; the old app must be uninstalled, which deletes the data on the device). Change the key before there are real users.
 - If you later publish on Google Play with Play App Signing, Google re-signs the app with its own key: add that key's SHA-1 (shown in Play Console → App integrity) to one more Android OAuth client.

@@ -6,7 +6,6 @@ interface Props {
 }
 const { t } = Astro.props;
 const SECRET = 'GEZD GNBV GY3T QOJQ GEZD GNBV GY3T QOJQ';
-const ticks = Array.from({ length: 30 }, (_, i) => i * 12);
 ---
 
 <section class="section" aria-labelledby="totp-title">
@@ -18,20 +17,20 @@ const ticks = Array.from({ length: 30 }, (_, i) => i * 12);
     </div>
 
     <div class="device" data-totp data-secret={SECRET} data-remaining={t.totp.remaining} data-unsupported={t.totp.unsupported}>
-      <div class="head">
-        <div>
+      <div class="row">
+        <div class="meta">
           <p class="account">{t.totp.account}</p>
           <p class="label">TOTP · SHA1 · 6 · 30s</p>
         </div>
-        <svg class="ring" viewBox="-24 -24 48 48" width="56" height="56" aria-hidden="true" focusable="false">
-          {ticks.map((angle) => <line data-tick x1="0" y1="-22" x2="0" y2="-16" transform={`rotate(${angle})`} />)}
+        <!-- Hình tròn đếm ngược giống vòng trong app: một hình quạt, không có vạch. -->
+        <svg class="ring" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle class="track" cx="12" cy="12" r="6" />
+          <circle class="fill" data-fill cx="12" cy="12" r="6" />
         </svg>
       </div>
-      <p class="visually-hidden">{t.totp.codeLabel}</p>
       <p class="code" data-code>––– –––</p>
-      <p class="label" data-status>
-        <noscript>{t.totp.noJs}</noscript>
-      </p>
+      <p class="visually-hidden" data-status>{t.totp.codeLabel}</p>
+      <p class="note" data-note><noscript>{t.totp.noJs}</noscript></p>
       <div class="secret">
         <p class="label">{t.totp.secretLabel}</p>
         <code>{SECRET}</code>
@@ -46,19 +45,37 @@ const ticks = Array.from({ length: 30 }, (_, i) => i * 12);
     .layout { grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); }
   }
   .check { margin-top: var(--space-6); font-size: var(--text-sm); color: var(--muted); max-width: 52ch; }
-  .device { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: clamp(20px, 4vw, 32px); }
-  .head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); }
+
+  .device {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    padding: clamp(20px, 4vw, 32px);
+    --ring: var(--accent);
+    color: var(--fg);
+  }
+  .row { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-4); }
   .account { font-weight: 600; }
-  .ring line { stroke: var(--accent); stroke-width: 2.4; stroke-linecap: round; }
-  .ring line:global(.spent) { opacity: 0.18; }
+  .meta { min-width: 0; }
+  .meta .label { white-space: nowrap; }
+
+  .ring { flex: none; width: 28px; height: 28px; transform: scaleX(-1); }
+  .ring circle { fill: none; stroke-width: 12; }
+  .ring .track { stroke: var(--line); }
+  .ring .fill { stroke: var(--ring); transform: rotate(-90deg); transform-origin: 12px 12px; }
+
   .code {
-    margin-block: var(--space-4) var(--space-2);
-    font: 600 clamp(2.5rem, 11vw, 4rem) / 1.1 var(--font-mono);
+    margin-top: var(--space-6);
+    font: 600 clamp(2rem, 8vw, 2.75rem) / 1.1 var(--font-mono);
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.02em;
     white-space: nowrap;
+    color: var(--ring);
   }
-  [data-status] { min-height: 1.4em; }
-  .secret { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--line); }
-  .secret code { display: block; margin-top: var(--space-2); font-size: var(--text-sm); overflow-wrap: anywhere; }
+  .device:global(.is-urgent) { --ring: var(--warn); }
+
+  .note:empty { display: none; }
+  .note { margin-top: var(--space-4); font-size: var(--text-sm); color: var(--muted); }
+
+  .secret { margin-top: var(--space-8); }
+  .secret code { display: block; margin-top: var(--space-2); font-size: var(--text-sm); overflow-wrap: anywhere; color: var(--muted); }
 </style>

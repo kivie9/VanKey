@@ -172,7 +172,7 @@ abstract final class VaultFileCodec {
     final headerLen = view.getUint32(8);
     if (version < 1) throw const CorruptVaultException('version không hợp lệ');
     if (version > formatVersion) {
-      throw const UnsupportedVersionException('kho được tạo bởi phiên bản VanKey mới hơn, hãy cập nhật ứng dụng');
+      throw const UnsupportedVersionException('kho được tạo bởi phiên bản VanKey mới hơn, cập nhật ứng dụng');
     }
     if (flags != 0) throw const UnsupportedVersionException('kho dùng tính năng chưa được hỗ trợ');
     if (headerLen == 0 || headerLen > maxHeaderBytes) throw const CorruptVaultException('độ dài header không hợp lệ');

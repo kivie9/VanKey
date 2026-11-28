@@ -79,7 +79,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
       if (mounted)
         setState(
           () => _camError = tr(
-            'Không mở được camera ({p0}). Hãy kiểm tra camera không bị app khác dùng, hoặc chọn ảnh QR bên dưới.',
+            'Không mở được camera ({p0}). Kiểm tra camera không bị app khác dùng, hoặc chọn ảnh QR bên dưới.',
             {'p0': e.toString()},
           ),
         );
@@ -187,7 +187,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
               padding: const EdgeInsets.all(24),
               child: Text(
                 tr(
-                  'Không mở được camera. Hãy cấp quyền camera cho VanKey trong cài đặt điện thoại, hoặc chọn ảnh QR bên dưới.\n({p0})',
+                  'Không mở được camera. Cấp quyền camera cho VanKey trong cài đặt điện thoại, hoặc chọn ảnh QR bên dưới.\n({p0})',
                   {'p0': error.errorCode.name},
                 ),
                 textAlign: TextAlign.center,

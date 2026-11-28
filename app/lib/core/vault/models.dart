@@ -557,7 +557,7 @@ final class VaultData {
   factory VaultData.fromJson(Map<String, dynamic> j) {
     final schema = (j['schema'] as int?) ?? 1;
     if (schema > currentSchema) {
-      throw const UnsupportedVersionException('dữ liệu kho dùng lược đồ mới hơn, hãy cập nhật ứng dụng');
+      throw const UnsupportedVersionException('dữ liệu kho dùng lược đồ mới hơn, cập nhật ứng dụng');
     }
     const known = {'schema', 'groups', 'items', 'tombstones'};
     return VaultData(

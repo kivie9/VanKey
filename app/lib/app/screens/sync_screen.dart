@@ -45,7 +45,7 @@ class SyncScreen extends StatelessWidget {
     final ok = await confirmDialog(
       context,
       title: tr('Xóa tài khoản?'),
-      message: tr('Tài khoản {p0}, kho trên máy chủ và kho trên máy này sẽ bị xóa vĩnh viễn. Các thiết bị khác bị đăng xuất. Không thể hoàn tác. Hãy xuất bản sao lưu trước nếu còn cần dữ liệu.', {'p0': controller.cfSession?.username ?? ''}),
+      message: tr('Tài khoản {p0}, kho trên máy chủ và kho trên máy này sẽ bị xóa vĩnh viễn. Các thiết bị khác bị đăng xuất. Không thể hoàn tác. Xuất bản sao lưu trước nếu còn cần dữ liệu.', {'p0': controller.cfSession?.username ?? ''}),
       confirmLabel: tr('Tiếp tục'),
       danger: true,
     );

@@ -20,7 +20,7 @@ The first phase runs locally only. The site will only be connected to Cloudflare
 
 ## Design principle: no "AI slop"
 
-**Do not use:**
+**Excluded:**
 - Purple/pink gradients, frosted-glass cards, emoji as icons
 - Empty slogans such as "Unlock the power…", "Absolute security", "Military-grade encryption"
 - Invented numbers, invented testimonials or partner logos; fake mockup images

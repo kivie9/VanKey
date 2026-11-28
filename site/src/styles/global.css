@@ -26,7 +26,7 @@ a { color: var(--accent); text-underline-offset: 0.2em; }
 code, .mono { font-family: var(--font-mono); }
 
 .wrap { width: min(100% - 2 * var(--gutter), var(--wrap)); margin-inline: auto; }
-.section { padding-block: var(--space-section); border-top: 1px solid var(--line); }
+.section { padding-block: var(--space-section); }
 .lead { color: var(--muted); font-size: var(--text-lg); max-width: 58ch; margin-top: var(--space-4); }
 .label { font: 500 var(--text-xs) / 1.4 var(--font-mono); color: var(--muted); }
 
@@ -42,11 +42,11 @@ code, .mono { font-family: var(--font-mono); }
 .button {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
   min-height: 48px; padding: 0 var(--space-6);
-  border-radius: var(--radius-md); border: 1px solid var(--line);
+  border-radius: var(--radius-md);
   background: var(--card); color: var(--fg);
   font-weight: 600; font-size: var(--text-sm); text-decoration: none;
 }
-.button:hover { border-color: var(--muted); }
-.button-primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
-.button-primary:hover { border-color: var(--fg); }
+.button:hover { background: var(--line); }
+.button-primary { background: var(--accent); color: var(--on-accent); }
+.button-primary:hover { background: var(--fg); }
 .button:active { transform: translateY(1px); }

@@ -100,7 +100,7 @@ abstract final class AccountPolicy {
   /// Lời báo (đã dịch) nếu [password] chưa đạt để làm mật khẩu mới, hoặc `null` nếu đạt.
   static String? newPasswordError(String password) => switch (checkNewPassword(password)) {
         PasswordIssue.tooShort => tr('Mật khẩu cần ít nhất {p0} ký tự', {'p0': minPasswordLength}),
-        PasswordIssue.tooWeak => tr('Mật khẩu quá dễ đoán. Hãy dài hơn, hoặc ghép vài từ không liên quan.'),
+        PasswordIssue.tooWeak => tr('Mật khẩu quá dễ đoán. Dài hơn, hoặc ghép vài từ không liên quan.'),
         null => null,
       };
   static final _username = RegExp(r'^[a-z0-9][a-z0-9._-]{2,31}$');

@@ -21,7 +21,7 @@ A password, API key, secure note and **2FA (TOTP) code** manager that runs on **
 Autofill of passwords (Android Autofill), browser extension, server push notifications, file attachments, sharing between people, passkeys, emergency access.
 
 ### Design principles
-- **Do not invent cryptography.** Only use algorithms and libraries that are widely reviewed.
+- **No custom cryptography.** Only algorithms and libraries that are widely reviewed are used.
 - **One codebase** (Flutter) for both platforms; platform-specific parts are hidden behind an interface.
 - **The data format is fixed early and versioned**, because the extension and server must read the same format later.
 - Minimal UI, little explanatory text, safe defaults.

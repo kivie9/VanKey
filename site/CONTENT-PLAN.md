@@ -89,7 +89,7 @@ Describe exactly what the code does, and promise nothing more. Sections:
 | Android permissions | Camera (QR scanning), notifications and alarms (reminders), biometrics |
 | Retention and deletion | Deleting the account immediately deletes the server copy of the vault (already exists: `DELETE /account`). State any Cloudflare backups if they exist |
 | Children | Not aimed at people under 13 |
-| Contact | A dedicated email for VanKey (**needs to be created**, do not use a personal email) |
+| Contact | A dedicated email for VanKey (**needs to be created**; not a personal email) |
 | Effective date, change history | Included |
 
 **Before writing:** check whether the server logs requests (Workers Logs, Logpush), because those logs also contain IP addresses.

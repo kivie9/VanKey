@@ -1,13 +1,13 @@
 # Security Policy
 
-VanKey stores passwords, keys and 2FA codes. If you find a security vulnerability, please report it privately and do not make it public before a fix is available.
+VanKey stores passwords, keys and 2FA codes. If you find a security vulnerability, report it privately. It should not be made public before a fix is available.
 
 ## How to report
 
 1. **Recommended:** use GitHub's private vulnerability reporting: go to the repo page and choose **Security → Report a vulnerability**.
 2. Or email: vankey@onigix.com.
 
-Please include: steps to reproduce, the app or server version, and the impact you observed. When testing, do not access data or accounts that are not yours.
+Include: steps to reproduce, the app or server version, and the impact you observed. Testing must not access data or accounts that do not belong to the tester.
 
 ## Scope
 

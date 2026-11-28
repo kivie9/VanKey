@@ -59,7 +59,7 @@ class DuplicatesScreen extends StatelessWidget {
                                 child: FilledButton.tonal(onPressed: () => _merge(context, g), child: Text(tr('Gộp, giữ bản mới nhất'))),
                               )
                             else
-                              Text(tr('Chỉ cảnh báo: hãy đổi mật khẩu để mỗi tài khoản một mật khẩu riêng.')),
+                              Text(tr('Chỉ cảnh báo: đổi mật khẩu để mỗi tài khoản một mật khẩu riêng.')),
                           ]),
                         ),
                       ),

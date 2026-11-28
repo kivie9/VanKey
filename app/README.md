@@ -53,5 +53,5 @@ The version shown in the app comes from `--dart-define=APP_VERSION=...` (CI sets
 ## Rules when editing
 
 - UI strings are written in Vietnamese inside `tr('...')`; add the English translation to `i18n_en.dart` (the `i18n_test.dart` test catches missing strings).
-- Do not call Argon2id directly from `VaultController`; go through `isolate_ops.dart`.
+- Argon2id is not called directly from `VaultController`; calls go through `isolate_ops.dart`.
 - If you change the vault file format, update `docs/technical/vault-format.md` and the vectors in `test/vectors/`.

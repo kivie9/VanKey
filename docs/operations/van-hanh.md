@@ -7,12 +7,12 @@ For the people who hold the signing keys and the Cloudflare and Google Cloud acc
 | Item | Where | If lost | Where to keep it |
 |---|---|---|---|
 | Android signing key `.jks` and its password | `%USERPROFILE%\vankey-signing` (created by `app/scripts/create-android-signing-key.cmd`) | Updates can no longer be installed over the released app | Two places off the computer: a USB drive in a safe, and an encrypted copy in a private cloud |
-| `app/android/key.properties` | On the computer, not committed to git | You must recreate it from the key | Same place as the key |
+| `app/android/key.properties` | On the computer, not committed to git | It has to be recreated from the key | Same place as the key |
 | Worker secret `TOKEN_SECRET` | `wrangler secret put` (cannot be read back) | Every device must sign in again | Password manager |
 | Worker secret `REGISTER_CODE` (if set) | `wrangler secret put` | Existing accounts are not affected | Password manager |
 | Cloudflare and Google Cloud sign-in | The publisher's accounts | Cannot deploy or change OAuth | Two-factor authentication enabled |
 
-Never commit `.jks`, `key.properties`, backup files `.vkv`/`.vkbackup`, or CSV exports containing passwords.
+The files `.jks`, `key.properties`, backup files `.vkv`/`.vkbackup`, or CSV exports containing passwords.
 
 ## 2. Cloudflare server
 

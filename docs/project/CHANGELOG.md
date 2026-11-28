@@ -10,7 +10,7 @@ Groups: **Added**, **Changed**, **Fixed**, **Security**, **Removed**.
 No release has been made yet (no tag). The sections below summarise what exists as of 2026-11-27.
 
 ### Added
-- When creating a server account, you must agree to the Terms and the Privacy Policy. The server records the terms version and the time of agreement (migration 0007).
+- When creating a server account, agreeing to the Terms and the Privacy Policy is required. The server records the terms version and the time of agreement (migration 0007).
 - Legal pages: Privacy, Terms of Use, Delete account and data, Security and vulnerability reporting (vi and en, in `site/`). The homepage footer links to these pages.
 - The About screen has a section "When data leaves the device" and links to the legal pages when `SITE_URL` is set at build time.
 - `docs/SECURITY.md` on how to report vulnerabilities, `docs/guide/huong-dan-nguoi-dung.md` (user guide), and `docs/operations/van-hanh.md` (includes a procedure for opening registration).

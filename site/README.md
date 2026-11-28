@@ -54,4 +54,4 @@ Before going public: fill in every `[điền: ...]` / `[fill: ...]` placeholder 
 
 If you do not want to connect the repo: build locally and run `npx wrangler pages deploy dist` inside `site/`.
 
-Security headers (CSP, etc.) are in `public/_headers`. The CSP does not allow scripts or styles written inline in HTML, so do not add `style="..."` attributes or `<script is:inline>`.
+Security headers (CSP, etc.) are in `public/_headers`. The CSP does not allow scripts or styles written inline in HTML, so inline `style="..."` attributes and `<script is:inline>` tags are not used.

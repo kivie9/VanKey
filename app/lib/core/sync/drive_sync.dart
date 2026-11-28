@@ -9,7 +9,7 @@ import 'sync_provider.dart';
 
 /// Nguồn access token OAuth cho Google Drive (đăng nhập Google nằm ở tầng ứng dụng, xem `app/google_drive_auth.dart`).
 abstract interface class AccessTokenSource {
-  /// Trả về access token còn dùng được. [forceRefresh] = token vừa bị Google từ chối (401), hãy lấy token mới.
+  /// Trả về access token còn dùng được. [forceRefresh] = token vừa bị Google từ chối (401), lấy token mới.
   /// Ném [SyncAuthException] nếu cần đăng nhập lại.
   Future<String> token({bool forceRefresh = false});
 }
@@ -94,13 +94,13 @@ final class DriveSync implements SyncProvider {
     } on Object {
       // thân phản hồi không phải JSON
     }
-    if (status == 401) throw const SyncAuthException('Google từ chối phiên đăng nhập. Hãy đăng nhập lại.');
+    if (status == 401) throw const SyncAuthException('Google từ chối phiên đăng nhập. Đăng nhập lại.');
     if (status == 403) {
       if (reason == 'rateLimitExceeded' || reason == 'userRateLimitExceeded' || reason == 'sharingRateLimitExceeded') {
         throw const SyncNetworkException('Google Drive đang giới hạn tốc độ, sẽ thử lại sau');
       }
       if (reason == 'storageQuotaExceeded') throw const SyncNetworkException('Tài khoản Google đã hết dung lượng lưu trữ');
-      throw SyncAuthException('Chưa được cấp quyền dùng Google Drive${message.isEmpty ? '' : ' ($message)'}. Hãy đăng nhập lại và cho phép.');
+      throw SyncAuthException('Chưa được cấp quyền dùng Google Drive${message.isEmpty ? '' : ' ($message)'}. Đăng nhập lại và cho phép.');
     }
     if (status == 429 || status >= 500) throw SyncNetworkException('Google Drive trả lỗi $status');
     throw SyncNetworkException('Google Drive trả lỗi $status${message.isEmpty ? '' : ': $message'}');
