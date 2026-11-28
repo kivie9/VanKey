@@ -1,20 +1,21 @@
 name: Build & Release
 
-# - Push lên nhánh main: build Android và Windows (rẻ), tải về phần Artifacts.
-# - Push tag dạng v1.2.3: build cả 3 nền tảng rồi tạo GitHub Release. Số phiên bản của app lấy từ tag,
-#   push lên main thì lấy từ pubspec.yaml. Số build là số lần chạy workflow (tăng dần, Android cần để cài đè).
-# - Chạy tay (Actions -> Run workflow): chọn nền tảng cần build. iOS tốn phút nhiều nhất nên chỉ chạy khi chọn.
+# - Push to main: build Android and Windows (cheap); download them from the run's Artifacts.
+# - Push a tag like v1.2.3: build all 3 platforms, then create a GitHub Release. The app version comes from the tag;
+#   on main it comes from pubspec.yaml. The build number is the workflow run number (always increasing, which
+#   Android needs to install over an older build).
+# - Manual run (Actions -> Run workflow): pick the platforms to build. iOS costs the most minutes, so it only runs when picked.
 
 on:
   push:
     branches: [main]
     tags: ["v*"]
-    # Chỉ sửa web giới thiệu thì không build app. GitHub không xét bộ lọc đường dẫn khi push tag, nên tag vẫn phát hành.
+    # Changes to the intro site alone don't build the app. GitHub ignores path filters on tag pushes, so tags still release.
     paths-ignore: ["site/**"]
   workflow_dispatch:
     inputs:
       platforms:
-        description: "Nền tảng cần build"
+        description: "Platforms to build"
         type: choice
         options: [android, windows, ios, all]
         default: android
@@ -49,7 +50,7 @@ jobs:
 
       - run: flutter pub get
 
-      - name: Số phiên bản
+      - name: Version number
         id: ver
         shell: bash
         run: |
@@ -59,21 +60,22 @@ jobs:
             v=$(sed -nE 's/^version: *([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' pubspec.yaml)
           fi
           if ! [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Phiên bản phải có dạng 1.2.3 (tag v1.2.3), đang là '$v'."
+            echo "::error::Version must look like 1.2.3 (tag v1.2.3), got '$v'."
             exit 1
           fi
           echo "name=$v" >> "$GITHUB_OUTPUT"
 
-      # Khóa ký bản phát hành (tạo bằng app/scripts/create-android-signing-key.cmd). Thiếu secret thì dừng hẳn: bản ký bằng khóa debug
-      # của CI đổi mỗi lần chạy, không cài đè được bản cũ (người dùng phải gỡ app và mất kho trên máy).
-      - name: Khóa ký Android
+      # Release signing key (created with app/scripts/create-android-signing-key.cmd). Missing secrets stop the build:
+      # a build signed with CI's debug key changes on every run and can't install over the previous one
+      # (users would have to uninstall the app and lose the vault on the device).
+      - name: Android signing key
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
           if [ -z "$KEYSTORE_B64" ] || [ -z "$KEYSTORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ]; then
-            echo "::error::Chưa đặt secret ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS (xem app/scripts/create-android-signing-key.ps1)."
+            echo "::error::Secrets ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD and ANDROID_KEY_ALIAS are not set (see app/scripts/create-android-signing-key.ps1)."
             exit 1
           fi
           echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
@@ -105,7 +107,7 @@ jobs:
 
       - run: flutter pub get
 
-      - name: Số phiên bản
+      - name: Version number
         id: ver
         shell: bash
         run: |
@@ -115,29 +117,29 @@ jobs:
             v=$(sed -nE 's/^version: *([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' pubspec.yaml)
           fi
           if ! [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Phiên bản phải có dạng 1.2.3 (tag v1.2.3), đang là '$v'."
+            echo "::error::Version must look like 1.2.3 (tag v1.2.3), got '$v'."
             exit 1
           fi
           echo "name=$v" >> "$GITHUB_OUTPUT"
 
       - run: flutter build windows --release --build-name=${{ steps.ver.outputs.name }} --build-number=${{ github.run_number }} --dart-define=APP_VERSION=${{ steps.ver.outputs.name }}
 
-      # Máy chưa cài Visual C++ Redistributable cần 3 DLL này cạnh vankey.exe (windows/CMakeLists.txt tự chép vào).
-      - name: Kiểm tra đã kèm VC++ runtime
+      # PCs without the Visual C++ Redistributable need these 3 DLLs next to vankey.exe (windows/CMakeLists.txt copies them).
+      - name: Check VC++ runtime is bundled
         shell: pwsh
         run: |
           foreach ($f in 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll') {
-            if (-not (Test-Path "build\windows\x64\runner\Release\$f")) { Write-Error "Thiếu $f trong bản build"; exit 1 }
+            if (-not (Test-Path "build\windows\x64\runner\Release\$f")) { Write-Error "$f is missing from the build"; exit 1 }
           }
 
-      - name: Tạo bộ cài (Inno Setup)
+      - name: Build installer (Inno Setup)
         shell: pwsh
         run: |
           choco install innosetup -y --no-progress
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /Qp "/DAppVersion=${{ steps.ver.outputs.name }}" installer\vankey.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Đóng gói bản portable (zip)
+      - name: Package portable build (zip)
         shell: pwsh
         run: Compress-Archive -Path "build\windows\x64\runner\Release\*" -DestinationPath "build\installer\vankey-windows-portable.zip"
 
@@ -162,7 +164,7 @@ jobs:
 
       - run: flutter build ios --release --no-codesign
 
-      - name: Đóng gói .app (chưa ký)
+      - name: Package .app (unsigned)
         run: |
           cd build/ios/iphoneos
           mkdir Payload
@@ -191,7 +193,7 @@ jobs:
         with:
           path: release-files
 
-      - name: Gom file và tạo GitHub Release
+      - name: Collect files and create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
