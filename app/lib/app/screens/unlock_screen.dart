@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../theme.dart';
 import '../vault_controller.dart';
+import '../widgets/auth_shell.dart';
 import '../widgets/ui.dart';
 import '../i18n.dart';
 
@@ -61,11 +62,9 @@ class _UnlockScreenState extends State<UnlockScreen> {
     final colors = AppColors.of(context);
     return ListenableBuilder(
       listenable: c,
-      builder: (context, _) => CenteredPage(maxWidth: 420, children: [
-        const Center(child: AppLogo()),
+      builder: (context, _) => AuthShell(children: [
+        Text(tr('Kho đang khóa'), style: text.headlineMedium),
         const SizedBox(height: Gap.xl),
-        Text(tr('VanKey'), textAlign: TextAlign.center, style: text.headlineLarge),
-        const SizedBox(height: Gap.xxl),
         TextField(
           controller: _text,
           autofocus: true,

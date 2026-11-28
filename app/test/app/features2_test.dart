@@ -26,8 +26,10 @@ void main() {
     });
 
     testWidgets('nhiều mục: chia nhiều mã, chuyển trang qua lại', (tester) async {
-      await tester.binding.setSurfaceSize(const Size(420, 1000));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      tester.view
+      ..physicalSize = const Size(420, 1000)
+      ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       final c = _ctrl();
       final items = [
         for (var i = 0; i < 8; i++) Item.create(type: ItemType.totp, title: 'D$i', clock: c.clock, totp: const TotpParams(secret: 'JBSWY3DPEHPK3PXP')),
@@ -74,8 +76,10 @@ void main() {
   });
 
   testWidgets('thanh độ mạnh hiện khi gõ mật khẩu và đổi theo độ mạnh', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(420, 1400));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+    tester.view
+      ..physicalSize = const Size(420, 1400)
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     await tester.pumpWidget(MaterialApp(home: ItemEditorScreen(controller: _ctrl())));
     expect(find.text('Yếu'), findsNothing);
     await tester.enterText(find.widgetWithText(TextField, 'Mật khẩu'), '123456');
@@ -88,8 +92,10 @@ void main() {
 
   group('sắp xếp', () {
     testWidgets('theo tên, mới sửa trước, mới tạo trước', (tester) async {
-      await tester.binding.setSurfaceSize(const Size(420, 900));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      tester.view
+      ..physicalSize = const Size(420, 900)
+      ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       final c = _ctrl();
       final a = Item.create(type: ItemType.login, title: 'Alpha', clock: c.clock, now: DateTime.utc(2026, 1, 1));
       final b = Item.create(type: ItemType.login, title: 'Bravo', clock: c.clock, now: DateTime.utc(2026, 1, 2));
@@ -150,8 +156,10 @@ void main() {
   });
 
   testWidgets('màn Tài khoản hiện trạng thái lưu trên máy', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(420, 1000));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+    tester.view
+      ..physicalSize = const Size(420, 1000)
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: SettingsTab(controller: _ctrl()))));
     await tester.tap(find.text('Tài khoản'));
     await tester.pumpAndSettle();

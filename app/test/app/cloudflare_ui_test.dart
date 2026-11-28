@@ -24,8 +24,10 @@ void main() {
   });
 
   testWidgets('màn đăng nhập: nút chỉ bật khi địa chỉ, tên đăng nhập và mật khẩu hợp lệ', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(420, 1000));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+    tester.view
+      ..physicalSize = const Size(420, 1000)
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     final c = VaultController()..debugUnlock();
     await tester.pumpWidget(MaterialApp(home: CloudflareLoginScreen(controller: c)));
 
@@ -53,8 +55,10 @@ void main() {
   });
 
   testWidgets('chế độ máy mới đòi thêm mật khẩu hoặc mã khôi phục của kho', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(420, 1000));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+    tester.view
+      ..physicalSize = const Size(420, 1000)
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     final c = VaultController()..debugUnlock();
     await tester.pumpWidget(MaterialApp(home: CloudflareLoginScreen(controller: c, join: true)));
 
@@ -74,8 +78,11 @@ void main() {
   });
 
   testWidgets('tạo tài khoản mới đòi mật khẩu đủ dài và đủ khó; đăng nhập thường chỉ cần có mật khẩu', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(420, 1000));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+    // Form đăng ký dài hơn: đủ cao để ListView dựng cả nút ở cuối.
+    tester.view
+      ..physicalSize = const Size(420, 1400)
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     final c = VaultController()..debugUnlock();
     await tester.pumpWidget(MaterialApp(home: CloudflareLoginScreen(controller: c)));
     await tester.enterText(find.widgetWithText(TextField, 'Tên đăng nhập'), 'a.b');

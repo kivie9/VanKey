@@ -4,6 +4,7 @@ import '../vault_controller.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 import '../widgets/ui.dart';
+import '../widgets/form_layout.dart';
 import '../i18n.dart';
 
 class TrashScreen extends StatelessWidget {
@@ -41,7 +42,7 @@ class TrashScreen extends StatelessWidget {
             ),
             body: items.isEmpty
                 ? EmptyState(icon: Icons.delete_outline_rounded, title: tr('Thùng rác trống'), message: tr('Mục đã xóa nằm ở đây 30 ngày rồi tự xóa hẳn.'))
-                : ListView(padding: const EdgeInsets.fromLTRB(Gap.lg, Gap.sm, Gap.lg, Gap.xxl), children: [
+                : ListView(padding: formPadding(MediaQuery.sizeOf(context).width, const EdgeInsets.fromLTRB(Gap.lg, Gap.sm, Gap.lg, Gap.xxl)), children: [
                     CardList(children: [
                     for (final i in items)
                       ListTile(

@@ -113,8 +113,8 @@ abstract final class AccountPolicy {
 }
 
 /// Máy chủ đồng bộ: chỉ cho http với các host phát triển (máy này, máy ảo Android).
-/// Bản MVP: màn đầu chỉ có đăng nhập / đăng ký trên máy chủ VanKey ([ServerPolicy.defaultUrl]).
-/// Tự dựng máy chủ, Google Drive và mã mời bị ẩn. Đặt `false` để hiện lại màn chọn đầy đủ.
+/// Bản MVP: màn đầu là đăng nhập / đăng ký; máy chủ (VanKey hoặc self-host) đổi ở màn cấu hình máy chủ.
+/// Google Drive và màn chọn nơi lưu bị ẩn. Đặt `false` để hiện lại màn chọn đầy đủ.
 abstract final class Mvp {
   static const serverOnly = true;
 }
@@ -124,8 +124,14 @@ abstract final class ServerPolicy {
   static const devScheme = 'http';
   static const devHosts = {'localhost', '127.0.0.1', '10.0.2.2'};
 
-  /// Máy chủ mặc định điền sẵn ở màn đăng nhập (người dùng vẫn sửa được).
-  static const defaultUrl = 'https://vankey.devcloudly.workers.dev';
+  /// Địa chỉ chính của máy chủ VanKey (dùng khi người dùng không chọn self-host).
+  static const defaultUrl = 'https://vankeyapp.onigix.com';
+
+  /// Địa chỉ phụ của cùng máy chủ đó: dùng khi không kết nối được [defaultUrl].
+  static const backupUrl = 'https://vankey.devcloudly.workers.dev';
+
+  /// Tên hiện cho người dùng ở lựa chọn máy chủ VanKey.
+  static const officialName = 'vankeyapp.onigix.com';
 }
 
 /// Tên file và khóa JSON lưu cục bộ.
@@ -150,6 +156,7 @@ abstract final class SettingsKey {
   static const lastType = 'lastType';
   static const snooze = 'snooze';
   static const sync = 'sync';
+  static const serverUrl = 'serverUrl';
 }
 
 /// Giá trị ngôn ngữ.

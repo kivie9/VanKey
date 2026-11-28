@@ -12,6 +12,7 @@ import 'import_screen.dart';
 import 'item_editor_screen.dart';
 import '../i18n.dart';
 import '../qr_image.dart';
+import '../widgets/form_layout.dart';
 
 /// Quét QR bằng camera (hoặc chọn ảnh QR có sẵn). Hỗ trợ otpauth:// và otpauth-migration:// của Google Authenticator.
 class QrScanScreen extends StatefulWidget {
@@ -233,7 +234,15 @@ class _QrScanScreenState extends State<QrScanScreen> {
     }
     return Stack(
       children: [
-        Positioned.fill(child: view),
+        // Khung camera và thông báo lỗi không kéo rộng theo cửa sổ.
+        Positioned.fill(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: formMaxWidth),
+              child: view,
+            ),
+          ),
+        ),
         if (_message != null)
           Positioned(
             top: 16,
@@ -254,16 +263,14 @@ class _QrScanScreenState extends State<QrScanScreen> {
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(tr('Quét mã QR'))),
     body: _mlKit ? _mobileBody() : _desktopBody(),
-    bottomNavigationBar: SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: OutlinedButton.icon(
-          onPressed: _fromImage,
-          icon: const Icon(Icons.image_outlined),
-          label: Padding(
-            padding: EdgeInsets.all(12),
-            child: Text(tr('Chọn ảnh QR có sẵn')),
-          ),
+    bottomNavigationBar: FormBar(
+      padding: const EdgeInsets.all(12),
+      child: OutlinedButton.icon(
+        onPressed: _fromImage,
+        icon: const Icon(Icons.image_outlined),
+        label: Padding(
+          padding: EdgeInsets.all(12),
+          child: Text(tr('Chọn ảnh QR có sẵn')),
         ),
       ),
     ),

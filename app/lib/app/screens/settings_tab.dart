@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -22,6 +23,7 @@ import 'import_screen.dart';
 import 'info_screens.dart';
 import 'qr_show_screen.dart';
 import 'reminders_screen.dart';
+import 'server_screen.dart';
 import 'sync_screen.dart';
 import 'theme_screen.dart';
 import 'trash_screen.dart';
@@ -122,9 +124,10 @@ class _Section {
   final List<Widget> Function(BuildContext) children;
 }
 
-/// Một dòng menu. Mục có [section] mở danh sách cài đặt; mục có [page] mở một màn riêng.
+/// Một dòng menu. Mục có [section] mở danh sách cài đặt; mục có [page] mở một màn riêng; mục có [action] chạy ngay.
 class _Entry {
-  const _Entry(this.icon, this.title, this.subtitle, {this.section, this.page});
+  const _Entry(this.icon, this.title, this.subtitle, {this.section, this.page, this.action});
+  final Future<void> Function(BuildContext)? action;
   final IconData icon;
   final String title;
   final String subtitle;
@@ -181,6 +184,10 @@ class _SettingsBodyState extends State<_SettingsBody> {
 
   Future<void> _tap(BuildContext context, int i, bool wide) async {
     final e = widget.entries[i];
+    if (e.action != null) {
+      await e.action!(context);
+      return;
+    }
     if (e.page != null) {
       unawaited(pushPage(context, e.page!()));
       return;
@@ -205,17 +212,25 @@ class _SettingsBodyState extends State<_SettingsBody> {
         if (s == null) return const Center(child: CircularProgressIndicator());
         return ListenableBuilder(
           listenable: widget.controller,
-          builder: (ctx, _) => ListView(
-            padding: const EdgeInsets.fromLTRB(Gap.xl, Gap.xl, Gap.xl, Gap.xxl),
-            children: [
-              Text(
-                s.title,
-                style: Theme.of(ctx).textTheme.headlineSmall
-                    ?.copyWith(color: c.fg, fontWeight: FontWeight.w700),
+          builder: (ctx, _) => LayoutBuilder(
+            builder: (ctx, box) => ListView(
+              // Nội dung nằm sát menu và không rộng quá một form.
+              padding: EdgeInsets.fromLTRB(
+                Gap.xl,
+                Gap.xl,
+                math.max(Gap.xl, box.maxWidth - Gap.xl - formMaxWidth),
+                Gap.xxl,
               ),
-              const SizedBox(height: Gap.lg),
-              CardList(children: s.children(ctx)),
-            ],
+              children: [
+                Text(
+                  s.title,
+                  style: Theme.of(ctx).textTheme.headlineSmall
+                      ?.copyWith(color: c.fg, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: Gap.lg),
+                CardList(children: s.children(ctx)),
+              ],
+            ),
           ),
         );
       },
@@ -294,6 +309,7 @@ class _SettingsBodyState extends State<_SettingsBody> {
 }
 
 /// Cài đặt gom thành 7 menu: Tài khoản, Dữ liệu, Bảo mật, Chủ đề, Chung, Hỗ trợ, Giới thiệu.
+/// Đang đăng nhập máy chủ thì thêm nút Đăng xuất ở cuối.
 class SettingsTab extends StatelessWidget {
   const SettingsTab({super.key, required this.controller});
   final VaultController controller;
@@ -708,6 +724,32 @@ class SettingsTab extends StatelessWidget {
     }
   }
 
+  /// Đăng xuất: xóa kho trên máy này rồi về màn đăng nhập. Chưa đồng bộ được thì hỏi lại trước khi bỏ.
+  Future<void> _signOut(BuildContext context) async {
+    if (controller.busy) return;
+    final ok = await confirmDialog(
+      context,
+      title: tr('Đăng xuất?'),
+      message: tr(
+        'App sẽ đồng bộ lần cuối, xóa kho trên máy này rồi quay về màn đăng nhập. Đăng nhập lại để tải kho về.',
+      ),
+      confirmLabel: tr('Đăng xuất'),
+      danger: true,
+    );
+    if (!ok || !context.mounted) return;
+    if (await controller.signOutCloudflare() || !context.mounted) return;
+    final force = await confirmDialog(
+      context,
+      title: tr('Chưa đồng bộ được'),
+      message: tr(
+        'Nếu đăng xuất bây giờ, những thay đổi chưa lên máy chủ sẽ mất vĩnh viễn. Nên hủy, kiểm tra mạng rồi thử lại.',
+      ),
+      confirmLabel: tr('Vẫn đăng xuất'),
+      danger: true,
+    );
+    if (force) await controller.signOutCloudflare(force: true);
+  }
+
   // ---------- Các trang con ----------
 
   Future<_Section?> _account(BuildContext context) async {
@@ -736,6 +778,17 @@ class SettingsTab extends StatelessWidget {
           subtitle: Text(controller.syncLabel),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => pushPage(ctx, SyncScreen(controller: controller)),
+        ),
+        ListTile(
+          leading: const Icon(Icons.dns_outlined),
+          title: Text(tr('Máy chủ')),
+          subtitle: Text(
+            controller.isSelfHost
+                ? tr('Self-host: {p0}', {'p0': controller.serverUrl})
+                : ServerPolicy.officialName,
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => pushPage(ctx, ServerScreen(controller: controller)),
         ),
         if (controller.noPassword)
           ListTile(
@@ -928,7 +981,12 @@ class SettingsTab extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: controller,
+    builder: (context, _) => _menu(context),
+  );
+
+  Widget _menu(BuildContext context) {
     final entries = <_Entry>[
       _Entry(
         Icons.person_outline,
@@ -972,6 +1030,13 @@ class SettingsTab extends StatelessWidget {
         tr('Phiên bản {p0}', {'p0': appVersion}),
         page: () => const AboutScreen(),
       ),
+      if (controller.cfSession != null)
+        _Entry(
+          Icons.logout,
+          tr('Đăng xuất'),
+          controller.busy ? tr('Đang đồng bộ…') : controller.cfSession!.username,
+          action: _signOut,
+        ),
     ];
     return _SettingsBody(controller: controller, entries: entries);
   }
@@ -1122,27 +1187,25 @@ class _PasswordPage extends StatelessWidget {
           ...children,
         ],
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(Gap.lg),
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(tr('Hủy')),
-                ),
+      bottomNavigationBar: FormBar(
+        padding: const EdgeInsets.all(Gap.lg),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(tr('Hủy')),
               ),
-              const SizedBox(width: Gap.md),
-              Expanded(
-                flex: 2,
-                child: FilledButton(
-                  onPressed: onConfirm,
-                  child: Text(confirmLabel),
-                ),
+            ),
+            const SizedBox(width: Gap.md),
+            Expanded(
+              flex: 2,
+              child: FilledButton(
+                onPressed: onConfirm,
+                child: Text(confirmLabel),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

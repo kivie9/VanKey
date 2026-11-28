@@ -4,6 +4,7 @@ import '../../core/security/reminders.dart';
 import '../notification_service.dart';
 import '../vault_controller.dart';
 import '../widgets/common.dart';
+import '../widgets/form_layout.dart';
 import 'item_detail_screen.dart';
 import 'item_editor_screen.dart';
 import '../i18n.dart';
@@ -50,7 +51,7 @@ class RemindersScreen extends StatelessWidget {
           final alerts = pendingAlerts(controller.data.items, DateTime.now(), snoozedUntil: controller.snoozed);
           return Scaffold(
             appBar: AppBar(title: Text(tr('Nhắc nhở'))),
-            body: ListView(children: [
+            body: ListView(padding: formPadding(MediaQuery.sizeOf(context).width, EdgeInsets.zero), children: [
               if (NotificationService.instance.supported)
                 FutureBuilder<bool>(
                   future: NotificationService.instance.enabled(),

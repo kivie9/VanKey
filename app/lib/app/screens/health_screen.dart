@@ -9,6 +9,7 @@ import '../theme.dart';
 import '../vault_controller.dart';
 import '../widgets/common.dart';
 import '../widgets/ui.dart';
+import '../widgets/form_layout.dart';
 import 'item_detail_screen.dart';
 import '../i18n.dart';
 
@@ -91,7 +92,7 @@ class _HealthScreenState extends State<HealthScreen> {
                 ]);
           return Scaffold(
             appBar: AppBar(title: Text(tr('Kiểm tra bảo mật'))),
-            body: ListView(padding: const EdgeInsets.fromLTRB(Gap.lg, Gap.sm, Gap.lg, Gap.xxl), children: [
+            body: ListView(padding: formPadding(MediaQuery.sizeOf(context).width, const EdgeInsets.fromLTRB(Gap.lg, Gap.sm, Gap.lg, Gap.xxl)), children: [
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(Gap.xl),

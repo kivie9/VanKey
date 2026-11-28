@@ -10,8 +10,10 @@ void main() {
   setUp(() => c = VaultController()..debugUnlock());
 
   Future<void> open(WidgetTester t) async {
-    await t.binding.setSurfaceSize(const Size(412, 915));
-    addTearDown(() => t.binding.setSurfaceSize(null));
+    t.view
+      ..physicalSize = const Size(412, 915)
+      ..devicePixelRatio = 1;
+    addTearDown(t.view.reset);
     await t.pumpWidget(MaterialApp(home: HomeScreen(controller: c)));
     await t.pump();
   }

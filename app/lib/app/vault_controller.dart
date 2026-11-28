@@ -111,10 +111,73 @@ class VaultController extends ChangeNotifier {
   DateTime? lastSync;
   List<ItemConflict> conflicts = [];
   SyncState _syncState = const SyncState();
-  final CloudflareApi _cfApi = CloudflareApi();
+  final CloudflareApi _cfApi = CloudflareApi(
+    fallbacks: const {ServerPolicy.defaultUrl: ServerPolicy.backupUrl},
+  );
   CloudflareSession? cfSession;
   static const _cfKey = 'cloudflare.session';
   Timer? _syncTimer;
+
+  // ---- Máy chủ đã chọn ----
+  /// Địa chỉ máy chủ tự dựng đã cấu hình; null = dùng máy chủ VanKey. Giữ nguyên khi đăng xuất hay xóa kho.
+  String? customServerUrl;
+
+  /// Mã mời của máy chủ tự dựng (chỉ gửi khi tạo tài khoản). Cất trong kho khóa của hệ điều hành.
+  String serverInviteCode = '';
+  static const _inviteKey = 'server.invite';
+
+  bool get isSelfHost => customServerUrl != null;
+  String get serverUrl => customServerUrl ?? ServerPolicy.defaultUrl;
+
+  /// Tên ngắn để hiện trên giao diện.
+  String get serverName {
+    final u = customServerUrl;
+    if (u == null) return ServerPolicy.officialName;
+    final parsed = Uri.parse(u);
+    return parsed.hasPort ? '${parsed.host}:${parsed.port}' : parsed.host;
+  }
+
+  /// Đang gắn với một tài khoản máy chủ (kể cả khi phiên cần đăng nhập lại).
+  bool get signedInToServer => cfSession != null || _syncConfig?['type'] == 'cloudflare';
+
+  static String? _customUrlFrom(String url) {
+    final u = url.trim().replaceAll(RegExp(r'/+$'), '');
+    if (!isAllowedServerUrl(u) ||
+        u == ServerPolicy.defaultUrl ||
+        u == ServerPolicy.backupUrl) {
+      return null;
+    }
+    return u;
+  }
+
+  /// Lưu lựa chọn máy chủ. [selfHostUrl] null = máy chủ VanKey. Địa chỉ không hợp lệ thì không đổi gì.
+  Future<void> setServer({String? selfHostUrl, String inviteCode = ''}) async {
+    if (selfHostUrl != null && !isAllowedServerUrl(selfHostUrl)) return;
+    final url = selfHostUrl == null ? null : _customUrlFrom(selfHostUrl);
+    await _setInviteCode(url == null ? '' : inviteCode.trim());
+    await _updateSettings(() => customServerUrl = url);
+  }
+
+  /// Đăng nhập được máy chủ nào thì lần sau dùng máy chủ đó (gọi trước khi lưu cài đặt).
+  Future<void> _rememberServer(String base) async {
+    final url = _customUrlFrom(base);
+    if (url == customServerUrl) return;
+    await _setInviteCode(''); // mã mời thuộc về máy chủ cũ
+    customServerUrl = url;
+  }
+
+  Future<void> _setInviteCode(String code) async {
+    serverInviteCode = code;
+    try {
+      if (code.isEmpty) {
+        await _secure.delete(key: _inviteKey);
+      } else {
+        await _secure.write(key: _inviteKey, value: code);
+      }
+    } on Object {
+      // Không lưu được thì vẫn dùng được trong phiên này.
+    }
+  }
 
   /// Chỉ để test: thay đăng nhập Google thật và địa chỉ Drive bằng bản giả.
   @visibleForTesting
@@ -168,6 +231,14 @@ class VaultController extends ChangeNotifier {
         if (a is int && a >= 0 && a < accentColors.length) accent = a;
         final sc = j[SettingsKey.sync];
         if (sc is Map<String, dynamic>) _syncConfig = sc;
+        final su = j[SettingsKey.serverUrl];
+        if (su is String) {
+          customServerUrl = _customUrlFrom(su);
+        } else if (_syncConfig?['type'] == 'cloudflare') {
+          // Bản trước chưa lưu lựa chọn máy chủ: lấy theo tài khoản đang đăng nhập.
+          final old = _syncConfig?['url'];
+          if (old is String) customServerUrl = _customUrlFrom(old);
+        }
         final sn = j[SettingsKey.snooze];
         if (sn is Map<String, dynamic>) {
           snoozed = {
@@ -209,6 +280,7 @@ class VaultController extends ChangeNotifier {
     } on Object {
       // Cài đặt hỏng thì dùng mặc định.
     }
+    if (isSelfHost) serverInviteCode = await _readStored(_inviteKey) ?? '';
     _syncStateFile = File(
       '${dir.path}${Platform.pathSeparator}sync_state.json',
     );
@@ -490,6 +562,7 @@ class VaultController extends ChangeNotifier {
     noPassword = false;
     error = null;
     phase = Phase.onboarding;
+    _scheduleNotifications(); // kho trống: bỏ các lịch nhắc của kho vừa xóa
     notifyListeners();
   }
 
@@ -842,6 +915,10 @@ class VaultController extends ChangeNotifier {
       cfSession = CloudflareSession.fromJson(
         jsonDecode(raw) as Map<String, dynamic>,
       );
+      // Phiên tạo bằng địa chỉ phụ (mặc định của bản trước): chuyển sang địa chỉ chính.
+      if (cfSession!.baseUrl == ServerPolicy.backupUrl) {
+        await _saveCfSession(cfSession!.withBaseUrl(ServerPolicy.defaultUrl));
+      }
       provider = CloudflareSync(_cfApi, cfSession!, onSession: _saveCfSession);
     } on Object {
       syncStatus = SyncStatus.error;
@@ -888,6 +965,7 @@ class VaultController extends ChangeNotifier {
             )
           : await _cfLogin(base, name, password);
       await _saveCfSession(s);
+      await _rememberServer(base);
       await _updateSettings(
         () => _syncConfig = {
           'type': 'cloudflare',
@@ -1018,6 +1096,7 @@ class VaultController extends ChangeNotifier {
       _session = session;
       await _writeNow();
       await _saveCfSession(s);
+      await _rememberServer(base);
       await _updateSettings(
         () => _syncConfig = {
           'type': 'cloudflare',
@@ -1113,6 +1192,7 @@ class VaultController extends ChangeNotifier {
     _session = session;
     await VaultStorage.writeAtomic(_file, blob.bytes);
     await _saveCfSession(s);
+    await _rememberServer(base);
     await _updateSettings(
       () => _syncConfig = {
         'type': 'cloudflare',
@@ -1142,21 +1222,39 @@ class VaultController extends ChangeNotifier {
 
   Future<void> revokeCloudflareDevice(String id) => _cfSync.revokeDevice(id);
 
-  Future<void> signOutCloudflare() async {
-    if (cfSession != null) {
-      try {
-        await _cfSync.logout();
-      } on Object {
-        // Không có mạng thì vẫn đăng xuất cục bộ.
-      }
-    }
+  /// Đăng xuất tài khoản máy chủ: gỡ thiết bị, xóa kho trên máy này và về màn đăng nhập.
+  /// Đồng bộ trước; nếu không đồng bộ được thì trả về `false` và giữ nguyên kho, vì xóa lúc này có thể
+  /// làm mất thay đổi chưa lên máy chủ. [force]: người dùng đã chấp nhận mất phần đó.
+  Future<bool> signOutCloudflare({bool force = false}) async {
+    busy = true;
+    notifyListeners();
     try {
-      await _secure.delete(key: _cfKey);
-    } on Object {
-      // bỏ qua
+      if (!force) {
+        await syncNow();
+        if (provider is! CloudflareSync || syncStatus != SyncStatus.idle)
+          return false;
+      }
+      if (cfSession != null) {
+        try {
+          await _cfSync.logout();
+        } on Object {
+          // Không có mạng thì vẫn đăng xuất cục bộ.
+        }
+      }
+      try {
+        await _secure.delete(key: _cfKey);
+      } on Object {
+        // bỏ qua
+      }
+      cfSession = null;
+      await disableSync();
+      await _saving;
+      await resetVault();
+      return true;
+    } finally {
+      busy = false;
+      notifyListeners();
     }
-    cfSession = null;
-    await disableSync();
   }
 
   /// Máy mới: đăng nhập tài khoản rồi tải kho có sẵn về, mở bằng passphrase hoặc mã khôi phục của KHO (không phải mật khẩu tài khoản).
@@ -1581,6 +1679,8 @@ class VaultController extends ChangeNotifier {
               e.key: e.value.toUtc().toIso8601String(),
           },
           if (_syncConfig != null) SettingsKey.sync: _syncConfig,
+          // Rỗng = máy chủ VanKey. Luôn ghi để phân biệt với file cài đặt cũ chưa có khóa này.
+          SettingsKey.serverUrl: customServerUrl ?? '',
         }),
         flush: true,
       );

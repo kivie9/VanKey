@@ -5,8 +5,10 @@ import '../constants.dart';
 import '../google_drive_auth.dart';
 import '../theme.dart';
 import '../vault_controller.dart';
+import '../widgets/auth_shell.dart';
 import '../widgets/ui.dart';
 import 'cloudflare_screens.dart';
+import 'server_screen.dart';
 import '../widgets/common.dart';
 import '../i18n.dart';
 
@@ -74,7 +76,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final c = widget.controller;
     return ListenableBuilder(
       listenable: c,
-      builder: (context, _) => CenteredPage(
+      builder: (context, _) => AuthShell(
+        maxWidth: 460,
+        // Hình lớn chỉ hiện ở bước chọn; các bước sau cần chỗ cho form.
+        compactHeader: c.pendingRecovery != null || _step != _Step.choose,
         children: c.pendingRecovery != null
             ? _recoveryStep(c)
             : switch (_step) {
@@ -103,9 +108,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
         );
     return [
-      const Center(child: AppLogo()),
-      const SizedBox(height: Gap.xl),
-      Text(tr('VanKey'), textAlign: TextAlign.center, style: text.headlineLarge),
+      Text(tr('Chọn nơi lưu kho'), textAlign: TextAlign.center, style: text.headlineMedium),
       const SizedBox(height: Gap.sm),
       Text(
         tr('Mật khẩu, khóa và mã 2FA của bạn, mã hóa trên máy. Máy chủ chỉ giữ bản đã mã hóa, không đọc được.'),
@@ -154,9 +157,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       _error = null;
       _vaultMismatch = false;
     });
-    final url = _selfHost ? _url.text : ServerPolicy.defaultUrl;
+    final url = _targetUrl(c);
     if (_register) {
-      final err = await c.signUpWithServer(url: url, username: _user.text, password: _pass.text, registerCode: _code.text);
+      final code = widget.serverOnly ? c.serverInviteCode : _code.text;
+      final err = await c.signUpWithServer(url: url, username: _user.text, password: _pass.text, registerCode: code);
       if (mounted) setState(() => _error = err);
     } else {
       final r = await c.signInWithServer(url: url, username: _user.text, password: _pass.text);
@@ -167,6 +171,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         });
       }
     }
+  }
+
+  /// Máy chủ sẽ đăng nhập: bản MVP theo cấu hình đã lưu; màn chọn đầy đủ theo lựa chọn ở bước 1.
+  String _targetUrl(VaultController c) =>
+      widget.serverOnly ? c.serverUrl : (_selfHost ? _url.text : ServerPolicy.defaultUrl);
+
+  Future<void> _openServerConfig(VaultController c) async {
+    await pushPage(context, ServerScreen(controller: c));
+    if (!mounted) return;
+    c.error = null; // lỗi cũ thuộc về máy chủ trước
+    setState(() {
+      _error = null;
+      _vaultMismatch = false;
+    });
   }
 
   Widget _backButton() => Align(
@@ -210,14 +228,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final text = Theme.of(context).textTheme;
     final colors = AppColors.of(context);
     return [
-      if (widget.serverOnly) ...[
-        const Center(child: AppLogo()),
-        const SizedBox(height: Gap.lg),
-      ] else ...[
+      if (!widget.serverOnly) ...[
         _backButton(),
         const SizedBox(height: Gap.md),
       ],
-      Text(_selfHost ? tr('Máy chủ của bạn') : (widget.serverOnly ? tr('VanKey') : tr('Máy chủ VanKey')), textAlign: TextAlign.center, style: text.headlineMedium),
+      Text(_selfHost ? tr('Máy chủ của bạn') : (widget.serverOnly ? tr('Chào mừng bạn') : tr('Máy chủ VanKey')), textAlign: TextAlign.center, style: text.headlineMedium),
       const SizedBox(height: Gap.sm),
       Text(
         _register
@@ -293,7 +308,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ? null
                 : () => pushPage(
                       context,
-                      CloudflareLoginScreen(controller: c, join: true, initialUrl: _selfHost ? _url.text : ServerPolicy.defaultUrl, initialUsername: _user.text),
+                      CloudflareLoginScreen(controller: c, join: true, initialUrl: _targetUrl(c), initialUsername: _user.text),
                     ),
             child: Text(tr('Mở kho bằng mật khẩu kho hoặc mã khôi phục'), textAlign: TextAlign.center),
           ),
@@ -305,6 +320,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5))
             : Text(_register ? tr('Tạo tài khoản') : tr('Đăng nhập')),
       ),
+      if (widget.serverOnly) ...[
+        const SizedBox(height: Gap.md),
+        TextButton.icon(
+          onPressed: c.busy ? null : () => _openServerConfig(c),
+          icon: const Icon(Icons.dns_outlined, size: 18),
+          label: Text(tr('Máy chủ: {p0}', {'p0': c.serverName}), overflow: TextOverflow.ellipsis),
+        ),
+      ],
     ];
   }
 

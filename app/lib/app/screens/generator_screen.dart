@@ -5,6 +5,7 @@ import '../../core/security/password_strength.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 import '../widgets/ui.dart';
+import '../widgets/form_layout.dart';
 import '../i18n.dart';
 
 class GeneratorScreen extends StatefulWidget {
@@ -80,7 +81,7 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(tr('Tạo mật khẩu'))),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(Gap.lg, Gap.sm, Gap.lg, Gap.xxl),
+        padding: formPadding(MediaQuery.sizeOf(context).width, const EdgeInsets.fromLTRB(Gap.lg, Gap.sm, Gap.lg, Gap.xxl)),
         children: [
           Card(
             child: Padding(

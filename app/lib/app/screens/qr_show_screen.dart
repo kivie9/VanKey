@@ -5,6 +5,7 @@ import '../../core/import_export/exporters.dart';
 import '../../core/vault/models.dart';
 import '../i18n.dart';
 import '../widgets/qr_view.dart';
+import '../widgets/form_layout.dart';
 
 /// Hiện một hoặc nhiều mã QR (mỗi mã một trang). Dùng để chuyển 2FA sang app khác.
 class QrShowScreen extends StatefulWidget {
@@ -41,7 +42,7 @@ class _QrShowScreenState extends State<QrShowScreen> {
       appBar: AppBar(title: Text(widget.title, overflow: TextOverflow.ellipsis)),
       body: codes.isEmpty
           ? Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(tr('Chưa có mục 2FA nào để xuất.'), textAlign: TextAlign.center)))
-          : ListView(padding: const EdgeInsets.all(16), children: [
+          : ListView(padding: formPadding(MediaQuery.sizeOf(context).width, const EdgeInsets.all(16)), children: [
               Card(
                 color: Theme.of(context).colorScheme.errorContainer,
                 child: Padding(

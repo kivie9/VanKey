@@ -93,6 +93,22 @@ void main() {
     expect(find.text('Bỏ yêu thích'), findsOneWidget);
   });
 
+  testWidgets('gắn thẻ từ menu nhấn giữ: chọn thẻ có sẵn; mục đã có thẻ thì hiện "Đổi thẻ"', (t) async {
+    await openHome(t);
+    await t.longPress(tileOf('Ghi chú nhà'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Gắn thẻ'));
+    await t.pumpAndSettle();
+    await t.tap(find.widgetWithText(ListTile, 'Dev').last);
+    await t.pumpAndSettle();
+    expect(c.data.byId(plain.id)!.group, 'Dev');
+
+    await t.longPress(tileOf('Ghi chú nhà'));
+    await t.pumpAndSettle();
+    expect(find.text('Đổi thẻ'), findsOneWidget);
+    expect(find.text('Gắn thẻ'), findsNothing);
+  });
+
   testWidgets('sửa từ menu mở màn sửa đúng mục', (t) async {
     await openHome(t);
     await t.longPress(tileOf('GitHub'));

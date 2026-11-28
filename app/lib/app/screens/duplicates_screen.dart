@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/security/duplicates.dart';
 import '../vault_controller.dart';
 import '../widgets/common.dart';
+import '../widgets/form_layout.dart';
 import '../i18n.dart';
 
 class DuplicatesScreen extends StatelessWidget {
@@ -38,7 +39,7 @@ class DuplicatesScreen extends StatelessWidget {
             appBar: AppBar(title: Text(tr('Mục trùng lặp'))),
             body: groups.isEmpty
                 ? Center(child: Text(tr('Không có mục trùng lặp')))
-                : ListView(padding: const EdgeInsets.all(12), children: [
+                : ListView(padding: formPadding(MediaQuery.sizeOf(context).width, const EdgeInsets.all(12)), children: [
                     for (final g in groups)
                       Card(
                         child: Padding(

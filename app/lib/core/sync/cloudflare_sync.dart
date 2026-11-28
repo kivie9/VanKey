@@ -49,6 +49,16 @@ final class CloudflareSession {
         username: (j['username'] ?? j['email']) as String, // bản cũ lưu khóa 'email'
       );
 
+  CloudflareSession withBaseUrl(String url) => CloudflareSession(
+        baseUrl: url,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        expiresAt: expiresAt,
+        deviceId: deviceId,
+        accountId: accountId,
+        username: username,
+      );
+
   CloudflareSession withTokens(String access, String refresh, DateTime expires) => CloudflareSession(
         baseUrl: baseUrl,
         accessToken: access,
@@ -96,10 +106,12 @@ final class CloudflareApi {
   /// Làm mới phiên khi còn ít hơn chừng này.
   static const refreshMargin = Duration(seconds: 30);
 
-  CloudflareApi({HttpClient? client}) : _client = client ?? HttpClient()
+  /// [fallbacks]: địa chỉ chính -> địa chỉ phụ của CÙNG một máy chủ (không kèm dấu / ở cuối).
+  CloudflareApi({HttpClient? client, this.fallbacks = const {}}) : _client = client ?? HttpClient()
     ..connectionTimeout = connectTimeout;
 
   final HttpClient _client;
+  final Map<String, String> fallbacks;
 
   /// Khóa đăng nhập dẫn xuất từ mật khẩu. Máy chủ chỉ thấy khóa này, không thấy mật khẩu; khóa mở kho dẫn xuất riêng
   /// (salt khác, ngẫu nhiên trong file kho) nên máy chủ không dùng khóa này mở được kho. Tham số cố định vì mọi thiết bị
@@ -131,7 +143,21 @@ final class CloudflareApi {
     return true;
   }
 
-  Uri _uri(String baseUrl, String path) => Uri.parse('${baseUrl.replaceAll(RegExp(r'/+$'), '')}$path');
+  static String _trimSlash(String url) => url.replaceAll(RegExp(r'/+$'), '');
+
+  Uri _uri(String baseUrl, String path) => Uri.parse('${_trimSlash(baseUrl)}$path');
+
+  /// Mở kết nối; không kết nối được địa chỉ chính thì thử địa chỉ phụ. Chỉ chuyển ở bước này, khi yêu cầu
+  /// CHƯA được gửi đi: gửi lại sau khi máy chủ đã nhận có thể đăng ký hay làm mới phiên hai lần.
+  Future<HttpClientRequest> _open(String method, String baseUrl, String path) async {
+    final backup = fallbacks[_trimSlash(baseUrl)];
+    if (backup == null) return _client.openUrl(method, _uri(baseUrl, path));
+    try {
+      return await _client.openUrl(method, _uri(baseUrl, path));
+    } on IOException {
+      return _client.openUrl(method, _uri(backup, path));
+    }
+  }
 
   Future<(int, Uint8List, HttpHeaders)> send(
     String method,
@@ -143,7 +169,7 @@ final class CloudflareApi {
     Map<String, String> headers = const {},
   }) async {
     try {
-      final req = await _client.openUrl(method, _uri(baseUrl, path));
+      final req = await _open(method, baseUrl, path);
       if (token != null) req.headers.set('authorization', 'Bearer $token');
       headers.forEach(req.headers.set);
       if (json != null) {

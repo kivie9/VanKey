@@ -191,6 +191,17 @@ Future<String?> pickGroup(
   );
 }
 
+/// Mở bảng chọn thẻ rồi gắn cho mục [id].
+Future<void> assignGroup(BuildContext context, VaultController c, String id) async {
+  final before = c.data.byId(id)?.group;
+  if (before == null) return;
+  final picked = await pickGroup(context, c, current: before);
+  final item = c.data.byId(id);
+  // Thẻ đang gắn bị đổi tên/xóa ngay trong bảng (mục "Quản lý") thì giữ kết quả đó, không ghi đè.
+  if (picked == null || item == null || item.group != before || picked == before) return;
+  c.upsert(item.edit(clock: c.clock, group: picked));
+}
+
 /// Quản lý nhóm: đổi tên và xóa. Xóa nhóm KHÔNG xóa mục, chỉ bỏ các mục ra khỏi nhóm.
 Future<void> manageGroups(BuildContext context, VaultController c) {
   final colors = AppColors.of(context);

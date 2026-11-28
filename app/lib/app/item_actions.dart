@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../core/totp/totp.dart';
 import '../core/vault/models.dart';
+import 'group_actions.dart';
 import 'i18n.dart';
 import 'screens/item_editor_screen.dart';
 import 'screens/qr_show_screen.dart';
@@ -75,7 +76,8 @@ Future<void> showItemActions(BuildContext context, VaultController c, Item item,
             if (password.isNotEmpty) act(Icons.key_rounded, tr('Chép mật khẩu'), () => copyText(context, password, what: tr('Đã chép mật khẩu'))),
             if (url.isNotEmpty) act(Icons.open_in_new_rounded, tr('Mở link'), () => openExternalUrl(context, c, url)),
             act(item.favorite ? Icons.star_border_rounded : Icons.star_rounded, item.favorite ? tr('Bỏ yêu thích') : tr('Yêu thích'), () => c.toggleFavorite(item)),
-            act(Icons.edit_outlined, tr('Sửa'), () => navigator.push(MaterialPageRoute<void>(fullscreenDialog: true, builder: (_) => ItemEditorScreen(controller: c, existing: item)))),
+            act(Icons.label_outline, item.group.isEmpty ? tr('Gắn thẻ') : tr('Đổi thẻ'), () => assignGroup(navigator.context, c, item.id)),
+            act(Icons.edit_outlined,tr('Sửa'), () => navigator.push(MaterialPageRoute<void>(fullscreenDialog: true, builder: (_) => ItemEditorScreen(controller: c, existing: item)))),
             if (code != null) act(Icons.qr_code_2, tr('Hiện mã QR'), () => navigator.push(MaterialPageRoute<void>(builder: (_) => QrShowScreen.forItem(item)))),
             act(Icons.delete_outline_rounded, tr('Xóa vào thùng rác'), () async {
               final ok = await confirmDialog(

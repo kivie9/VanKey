@@ -256,15 +256,13 @@ class _ImportScreenState extends State<ImportScreen> {
       ),
       bottomNavigationBar: rows == null || rows.isEmpty
           ? null
-          : SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: FilledButton(
-                  onPressed: _selected.isEmpty ? null : _import,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Text(tr('Nhập {p0} mục', {'p0': _selected.length})),
-                  ),
+          : FormBar(
+              padding: const EdgeInsets.all(12),
+              child: FilledButton(
+                onPressed: _selected.isEmpty ? null : _import,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Text(tr('Nhập {p0} mục', {'p0': _selected.length})),
                 ),
               ),
             ),

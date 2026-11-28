@@ -47,8 +47,8 @@ class _VanKeyAppState extends State<VanKeyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _controller.init();
     _controller.addListener(() {
-      // Khóa kho thì đóng mọi màn đang mở (chi tiết, sửa...) để không lộ dữ liệu.
-      if (_controller.phase == Phase.locked && _lastPhase == Phase.unlocked) {
+      // Khóa kho hoặc đăng xuất thì đóng mọi màn đang mở (chi tiết, sửa, cài đặt...).
+      if (_controller.phase != Phase.unlocked && _lastPhase == Phase.unlocked) {
         _nav.currentState?.popUntil((r) => r.isFirst);
       }
       _lastPhase = _controller.phase;

@@ -10,6 +10,7 @@ import '../theme.dart';
 import '../vault_controller.dart';
 import '../widgets/common.dart';
 import '../widgets/ui.dart';
+import '../widgets/form_layout.dart';
 import 'item_editor_screen.dart';
 import 'qr_show_screen.dart';
 import '../group_actions.dart';
@@ -110,7 +111,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
               final text = Theme.of(context).textTheme;
               final hasTotp = item.totp != null && item.totp!.secret.isNotEmpty;
               final shown = [for (var i = 0; i < item.fields.length; i++) if (item.fields[i].value.isNotEmpty) i];
-              return ListView(padding: const EdgeInsets.fromLTRB(Gap.lg, Gap.sm, Gap.lg, Gap.xxl), children: [
+              const edge = EdgeInsets.fromLTRB(Gap.lg, Gap.sm, Gap.lg, Gap.xxl);
+              return ListView(padding: widget.inDialog ? edge : formPadding(MediaQuery.sizeOf(context).width, edge), children: [
                 // Phần đầu: tên, loại, nhóm
                 Row(children: [
                   Avatar.forItem(item, size: 60),
@@ -160,11 +162,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     );
   }
 
-  Future<void> _changeGroup(Item item) async {
-    final c = widget.controller;
-    final picked = await pickGroup(context, c, current: item.group);
-    if (picked != null && picked != item.group) c.upsert(item.edit(clock: c.clock, group: picked));
-  }
+  Future<void> _changeGroup(Item item) => assignGroup(context, widget.controller, item.id);
 
   Widget _history(Item item) => Card(
         child: ExpansionTile(

@@ -11,6 +11,7 @@ import '../../core/vault/models.dart';
 import '../theme.dart';
 import '../vault_controller.dart';
 import '../widgets/ui.dart';
+import '../widgets/form_layout.dart';
 import '../i18n.dart';
 import '../widgets/common.dart';
 
@@ -86,7 +87,7 @@ class SyncScreen extends StatelessWidget {
           final syncing = controller.syncStatus == SyncStatus.syncing;
           return Scaffold(
             appBar: AppBar(title: Text(tr('Đồng bộ'))),
-            body: ListView(padding: const EdgeInsets.fromLTRB(Gap.lg, Gap.sm, Gap.lg, Gap.xxl), children: [
+            body: ListView(padding: formPadding(MediaQuery.sizeOf(context).width, const EdgeInsets.fromLTRB(Gap.lg, Gap.sm, Gap.lg, Gap.xxl)), children: [
               if (!on) ...[
                 Notice(tr('Đồng bộ giữa các thiết bị bằng bản đã mã hóa. Nơi lưu chỉ thấy dữ liệu không đọc được.'), icon: Icons.lock_outline_rounded),
                 const SizedBox(height: Gap.lg),
@@ -168,23 +169,24 @@ class SyncScreen extends StatelessWidget {
                   ]),
                 ],
                 const SizedBox(height: Gap.lg),
-                TextButton(
-                  onPressed: syncing
-                      ? null
-                      : () async {
-                          final signOut = controller.cfSession != null;
-                          final ok = await confirmDialog(
-                            context,
-                            title: signOut ? tr('Đăng xuất khỏi máy chủ?') : tr('Tắt đồng bộ?'),
-                            message: tr('Dữ liệu trên máy này vẫn giữ nguyên. Máy này sẽ không còn đồng bộ với các máy khác.'),
-                            confirmLabel: signOut ? tr('Đăng xuất') : tr('Tắt đồng bộ'),
-                            danger: true,
-                          );
-                          if (ok) await (signOut ? controller.signOutCloudflare() : controller.disableSync());
-                        },
-                  style: TextButton.styleFrom(foregroundColor: AppColors.of(context).danger),
-                  child: Text(controller.cfSession != null ? tr('Đăng xuất khỏi máy chủ (giữ nguyên dữ liệu trên máy)') : tr('Tắt đồng bộ (giữ nguyên dữ liệu trên máy)'), textAlign: TextAlign.center),
-                ),
+                // Tài khoản máy chủ đăng xuất ở menu Cài đặt.
+                if (controller.cfSession == null)
+                  TextButton(
+                    onPressed: syncing
+                        ? null
+                        : () async {
+                            final ok = await confirmDialog(
+                              context,
+                              title: tr('Tắt đồng bộ?'),
+                              message: tr('Dữ liệu trên máy này vẫn giữ nguyên. Máy này sẽ không còn đồng bộ với các máy khác.'),
+                              confirmLabel: tr('Tắt đồng bộ'),
+                              danger: true,
+                            );
+                            if (ok) await controller.disableSync();
+                          },
+                    style: TextButton.styleFrom(foregroundColor: AppColors.of(context).danger),
+                    child: Text(tr('Tắt đồng bộ (giữ nguyên dữ liệu trên máy)'), textAlign: TextAlign.center),
+                  ),
                 if (controller.cfSession != null)
                   TextButton(
                     onPressed: syncing ? null : () => _deleteAccount(context),
@@ -228,7 +230,7 @@ class ConflictsScreen extends StatelessWidget {
           appBar: AppBar(title: Text(tr('Mục xung đột'))),
           body: controller.conflicts.isEmpty
               ? EmptyState(icon: Icons.check_circle_outline_rounded, title: tr('Không còn xung đột'))
-              : ListView(padding: const EdgeInsets.all(12), children: [
+              : ListView(padding: formPadding(MediaQuery.sizeOf(context).width, const EdgeInsets.all(12)), children: [
                   for (final c in controller.conflicts)
                     Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       _side(context, tr('Máy này'), c.local, c.winner.id == c.local.id && c.winner.hlc == c.local.hlc, () => controller.resolveConflictChoice(c, ConflictChoice.keepLocal)),
