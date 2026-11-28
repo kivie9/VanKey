@@ -39,13 +39,17 @@ const main = await esbuild.build({
   entryPoints: [join(here, 'src/app/main.tsx')],
   outdir: assets,
   entryNames: 'main-[hash]',
+  // Bảng logo dịch vụ được tách thành file riêng, tải sau khi trang đã hiện.
+  splitting: true,
+  chunkNames: 'chunk-[hash]',
   format: 'esm',
   jsx: 'automatic',
   jsxImportSource: 'preact',
   define: { __KDF_WORKER__: JSON.stringify(workerUrl) },
 });
 const mainOut = outputsOf(main).map((p) => join(here, '..', p));
-const js = mainOut.find((p) => p.endsWith('.js'));
+const js = mainOut.find((p) => /main-[^\/]+.js$/.test(p));
+const chunks = mainOut.filter((p) => p.endsWith('.js') && p !== js);
 const css = mainOut.find((p) => p.endsWith('.css'));
 
 // 3) File tĩnh: icon, manifest.
@@ -79,7 +83,7 @@ const html = `<!doctype html>
 writeFileSync(join(app, 'index.html'), html);
 
 // 5) Service worker: danh sách file cần lưu sẵn + phiên bản = hash của toàn bộ nội dung.
-const precache = ['/app/', url(js), url(css), workerUrl, '/app/favicon.svg', '/app/apple-touch-icon.png', '/app/manifest.webmanifest'];
+const precache = ['/app/', url(js), url(css), ...chunks.map(url), workerUrl, '/app/favicon.svg', '/app/apple-touch-icon.png', '/app/manifest.webmanifest'];
 const version = createHash('sha256')
   .update(html)
   .update(precache.join('\n'))

@@ -27,7 +27,8 @@ The same Worker serves a small web app at **`/app/`** (opening the server addres
 - Crypto: Argon2id from `hash-wasm` in a Web Worker (about 0.3 s on a PC), XChaCha20-Poly1305 from `@noble/ciphers`, HKDF/HMAC from WebCrypto. Checked against vectors produced by the Dart core (`app/test/vectors/web-v1.json`, made by `app/tool/make_web_vectors.dart`).
 - Security headers (strict CSP, no third-party code, `frame-ancestors 'none'`) are written to `public/_headers` by `web/build.mjs`. Scripts carry Subresource Integrity hashes.
 - Updates: a new version waits until you press **Update** in the page, so the code running in your browser only changes when you agree.
-- Locks after 5 minutes without use or 1 minute in the background.
+- Reloading the page keeps the vault open in that tab. It locks when the tab is closed, after 15 minutes without use, or with the Lock button. The tab keeps the vault key encrypted in `sessionStorage` with a non-extractable AES key in IndexedDB (`web/src/app/tab-session.ts`).
+- Showing or copying a secret field asks for the password again if it was last entered more than 2 minutes ago. 2FA codes are shown without asking.
 - Type check: `npm run check:web`. Tests: `npm test`.
 
 ## Local testing (no Cloudflare needed)

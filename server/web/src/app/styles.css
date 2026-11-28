@@ -601,3 +601,24 @@ h2 {
     transition: none;
   }
 }
+
+/* Hộp hỏi lại mật khẩu */
+.verify {
+  width: min(400px, calc(100vw - 32px));
+  padding: 24px;
+  color: var(--fg);
+}
+.verify::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+}
+.verify form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.verify p {
+  margin: 0;
+}
+.row.end {
+  justify-content: flex-end;
+}

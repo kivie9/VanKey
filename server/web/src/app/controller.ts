@@ -1,6 +1,6 @@
 // Trạng thái của bản web: đăng nhập, mở khóa, đồng bộ (chỉ tải về) và tự khóa.
 // Bản web hiện CHỈ ĐỌC: không bao giờ ghi kho lên máy chủ, nên không thể làm hỏng dữ liệu của các thiết bị khác.
-import { fromUtf8, randomBytes, utf8, wipe } from '../core/bytes.ts';
+import { bytesEqual, fromUtf8, randomBytes, utf8, wipe } from '../core/bytes.ts';
 import { aeadOpen, aeadSeal, hkdfSha256 } from '../core/crypto.ts';
 import { deriveAuthKey, deriveLegacyAuthKey, hasLegacyAuthKey } from '../core/auth.ts';
 import { VaultError } from '../core/errors.ts';
@@ -11,6 +11,7 @@ import type { Session } from './api.ts';
 import * as db from './db.ts';
 import type { Profile, StoredSession, StoredVault } from './db.ts';
 import { workerArgon2 } from './kdf.ts';
+import * as tabSession from './tab-session.ts';
 
 export type Phase = 'loading' | 'login' | 'locked' | 'unlocked';
 
@@ -28,6 +29,10 @@ export interface State {
   signedOut: boolean;
   /** Lần đồng bộ gần nhất không gọi được máy chủ (mất mạng hoặc máy chủ không trả lời). */
   unreachable: boolean;
+  /** Đang hỏi lại mật khẩu trước khi xem hoặc sao chép mật khẩu. */
+  verifying: boolean;
+  verifyBusy: boolean;
+  verifyError: string;
 }
 
 interface Tokens {
@@ -38,8 +43,10 @@ interface Tokens {
 }
 
 const SESSION_INFO = utf8('vankey/web/session/v1');
-const IDLE_LOCK_MS = 5 * 60_000;
-const HIDDEN_LOCK_MS = 60_000;
+/** Không thao tác chừng này thì khóa (kể cả khi tải lại trang). Đóng tab thì khóa ngay. */
+export const IDLE_LOCK_MS = 15 * 60_000;
+/** Xem hoặc sao chép mật khẩu: đã nhập mật khẩu trong chừng này thì không hỏi lại. */
+const REVERIFY_MS = 2 * 60_000;
 
 let state: State = {
   phase: 'loading',
@@ -53,6 +60,9 @@ let state: State = {
   online: navigator.onLine,
   signedOut: false,
   unreachable: false,
+  verifying: false,
+  verifyBusy: false,
+  verifyError: '',
 };
 const listeners = new Set<() => void>();
 
@@ -71,6 +81,9 @@ let vaultKey: Uint8Array | null = null;
 let vaultId = '';
 /** Phiên vừa đăng nhập nhưng mật khẩu kho khác mật khẩu tài khoản: giữ tạm trong bộ nhớ tới khi mở được kho. */
 let pendingTokens: Tokens | null = null;
+/** Lần gần nhất người dùng nhập đúng mật khẩu (hoặc recovery key). */
+let verifiedAt = 0;
+let lastActivity = 0;
 
 function message(e: unknown): string {
   if (e instanceof VaultError) return e.message;
@@ -137,10 +150,34 @@ async function accessToken(): Promise<string | null> {
 
 export async function init(): Promise<void> {
   const [vault, profile] = await Promise.all([db.get<StoredVault>('vault'), db.get<Profile>('profile')]);
-  set({ phase: vault ? 'locked' : 'login', username: profile?.username ?? '', syncedAt: vault?.syncedAt ?? 0 });
+  set({ username: profile?.username ?? '', syncedAt: vault?.syncedAt ?? 0 });
   addEventListener('online', () => set({ online: true }));
   addEventListener('offline', () => set({ online: false }));
   setupAutoLock();
+  if (vault && (await restoreTab(vault))) void sync();
+  else set({ phase: vault ? 'locked' : 'login' });
+  void tabSession.cleanupOrphans().catch(() => {});
+}
+
+/** Tải lại trang trong lúc phiên còn hạn: mở lại bằng khóa đã giữ trong tab, không hỏi mật khẩu. */
+async function restoreTab(vault: StoredVault): Promise<boolean> {
+  const r = await tabSession.restore();
+  if (!r) return false;
+  try {
+    const parsed = parseVault(vault.bytes);
+    if (parsed.vaultId !== r.vaultId) throw new Error('khác kho');
+    const payload = decryptPayload(parsed, r.vaultKey);
+    vaultKey = r.vaultKey;
+    vaultId = parsed.vaultId;
+    verifiedAt = r.verifiedAt;
+    set({ phase: 'unlocked', payload });
+    touch();
+    return true;
+  } catch {
+    wipe(r.vaultKey);
+    await tabSession.clear();
+    return false;
+  }
 }
 
 /** Lần đầu trên trình duyệt này: đăng nhập, tải kho về, mở bằng cùng mật khẩu. */
@@ -186,6 +223,8 @@ async function openLocal(unwrap: (p: ParsedVault) => Promise<Uint8Array>): Promi
   const payload = decryptPayload(parsed, key);
   vaultKey = key;
   vaultId = parsed.vaultId;
+  verifiedAt = Date.now();
+  await tabSession.save(key, vaultId, Date.now() + IDLE_LOCK_MS, verifiedAt).catch(() => {});
   if (pendingTokens) {
     await sealTokens(pendingTokens);
     pendingTokens = null;
@@ -247,6 +286,7 @@ export async function sync(password?: string): Promise<void> {
         vaultKey = key;
         vaultId = parsed.vaultId;
         if (old) await sealTokens(old);
+        await tabSession.save(key, vaultId, Date.now() + IDLE_LOCK_MS, verifiedAt).catch(() => {});
       }
       await db.put('vault', { bytes: r.bytes, etag: r.etag, syncedAt: Date.now() } satisfies StoredVault);
       if (state.phase === 'unlocked') set({ payload });
@@ -271,7 +311,11 @@ export async function sync(password?: string): Promise<void> {
 export function lock(): void {
   wipe(vaultKey);
   vaultKey = null;
-  set({ phase: 'locked', payload: null, error: '', notice: '', busy: false });
+  verifiedAt = 0;
+  void tabSession.clear();
+  verifyResolve?.(false);
+  verifyResolve = null;
+  set({ phase: 'locked', payload: null, error: '', notice: '', busy: false, verifying: false, verifyBusy: false, verifyError: '' });
   void clearClipboardNow();
 }
 
@@ -286,6 +330,7 @@ export async function forgetDevice(): Promise<void> {
   wipe(vaultKey);
   vaultKey = null;
   pendingTokens = null;
+  await tabSession.clear();
   await db.clearAll();
   set({ phase: 'login', payload: null, error: '', notice: '', signedOut: false, syncedAt: 0 });
 }
@@ -297,22 +342,75 @@ export function backToLogin(): void {
 // ---------- Tự khóa ----------
 
 let idleTimer = 0;
-let hiddenTimer = 0;
+let savedExpiry = 0;
 
 function touch(): void {
+  if (state.phase !== 'unlocked') return;
+  lastActivity = Date.now();
   clearTimeout(idleTimer);
-  if (state.phase === 'unlocked') idleTimer = window.setTimeout(lock, IDLE_LOCK_MS);
+  idleTimer = window.setTimeout(lock, IDLE_LOCK_MS);
+  // Gia hạn phiên của tab, ghi tối đa 15 giây một lần.
+  if (lastActivity - savedExpiry > 15_000) {
+    savedExpiry = lastActivity;
+    tabSession.update({ expiresAt: lastActivity + IDLE_LOCK_MS });
+  }
 }
 
 function setupAutoLock(): void {
   for (const ev of ['pointerdown', 'keydown', 'wheel', 'touchstart']) addEventListener(ev, touch, { passive: true });
+  // Tab ở nền thì trình duyệt có thể làm chậm bộ hẹn giờ: quay lại thì kiểm tra theo đồng hồ.
   document.addEventListener('visibilitychange', () => {
-    clearTimeout(hiddenTimer);
-    if (document.hidden && state.phase === 'unlocked') hiddenTimer = window.setTimeout(lock, HIDDEN_LOCK_MS);
+    if (!document.hidden && state.phase === 'unlocked' && Date.now() - lastActivity >= IDLE_LOCK_MS) lock();
   });
-  addEventListener('pagehide', () => {
-    if (state.phase === 'unlocked') lock();
+}
+
+// ---------- Hỏi lại mật khẩu trước khi xem hoặc sao chép mật khẩu ----------
+
+let verifyResolve: ((ok: boolean) => void) | null = null;
+
+/** `true` nếu được phép xem: vừa nhập mật khẩu gần đây, hoặc người dùng nhập lại đúng. */
+export function requestVerify(): Promise<boolean> {
+  if (state.phase !== 'unlocked') return Promise.resolve(false);
+  if (Date.now() - verifiedAt < REVERIFY_MS) return Promise.resolve(true);
+  verifyResolve?.(false);
+  set({ verifying: true, verifyBusy: false, verifyError: '' });
+  return new Promise((resolve) => {
+    verifyResolve = resolve;
   });
+}
+
+export async function submitVerify(secret: string): Promise<void> {
+  if (!vaultKey) return;
+  set({ verifyBusy: true, verifyError: '' });
+  let key: Uint8Array | null = null;
+  try {
+    const v = await db.get<StoredVault>('vault');
+    if (!v) throw new VaultError('corrupt', 'Không thấy kho trên máy');
+    const parsed = parseVault(v.bytes);
+    try {
+      key = await unwrapWithPassphrase(parsed, secret, workerArgon2);
+    } catch (e) {
+      // Người mở bằng recovery key có thể xác nhận lại bằng chính recovery key.
+      if (!(e instanceof VaultError && e.code === 'auth') || secret.replace(/[\s-]/g, '').length !== 24) throw e;
+      key = await unwrapWithRecovery(parsed, secret);
+    }
+    if (!vaultKey || !bytesEqual(key, vaultKey)) throw new VaultError('auth', 'Sai mật khẩu');
+    verifiedAt = Date.now();
+    tabSession.update({ verifiedAt });
+    set({ verifying: false, verifyBusy: false });
+    verifyResolve?.(true);
+    verifyResolve = null;
+  } catch (e) {
+    set({ verifyBusy: false, verifyError: e instanceof VaultError && e.code === 'auth' ? 'Sai mật khẩu' : message(e) });
+  } finally {
+    wipe(key);
+  }
+}
+
+export function cancelVerify(): void {
+  set({ verifying: false, verifyBusy: false, verifyError: '' });
+  verifyResolve?.(false);
+  verifyResolve = null;
 }
 
 // ---------- Clipboard ----------

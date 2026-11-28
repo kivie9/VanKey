@@ -11,13 +11,15 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "db:migrate": "wrangler d1 migrations apply vankey --remote",
-    "db:migrate:local": "wrangler d1 migrations apply vankey --local"
+    "db:migrate:local": "wrangler d1 migrations apply vankey --local",
+    "gen:brands": "node web/gen-brands.mjs"
   },
   "devDependencies": {
     "@noble/ciphers": "2.4.0",
     "esbuild": "0.28.2",
     "hash-wasm": "4.12.0",
     "preact": "10.29.8",
+    "simple-icons": "16.37.0",
     "typescript": "5.9.3",
     "wrangler": "^4.0.0"
   }
