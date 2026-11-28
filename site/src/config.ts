@@ -12,6 +12,9 @@ export const doc = (name: string) => `${REPO}/blob/main/docs/${DOC_PATHS[name] ?
 export const RELEASED: boolean = true;
 export const LATEST_RELEASE = `${REPO}/releases/latest`;
 
+/** Bản web (chỉ xem), chạy cùng Worker với máy chủ đồng bộ mặc định của app. */
+export const WEB_APP = 'https://vankey.devcloudly.workers.dev/app/';
+
 /** Phiên bản lấy thẳng từ app/pubspec.yaml để không phải sửa hai nơi. */
 export const APP_VERSION = /^version:\s*([0-9.]+)/m.exec(pubspec)?.[1] ?? '';
 

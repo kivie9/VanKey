@@ -1,5 +1,5 @@
 ---
-import { APP_VERSION, LATEST_RELEASE, RELEASED, REPO } from '../config';
+import { APP_VERSION, LATEST_RELEASE, RELEASED, REPO, WEB_APP } from '../config';
 import type { Dict } from '../i18n/vi';
 
 interface Props {
@@ -31,6 +31,14 @@ const platforms = [
             : <p class="soon">{d.soon}</p>}
         </li>
       ))}
+      <li>
+        <div>
+          <h3>{d.web}</h3>
+          <p class="label" data-decode>{d.webKind}</p>
+          <p class="note">{d.webNote}</p>
+        </div>
+        <a class="button button-primary" href={WEB_APP}>{d.openWeb}</a>
+      </li>
     </ul>
     <p class="meta">
       <a href={`${REPO}#readme`}>{d.source}</a>
@@ -43,6 +51,8 @@ const platforms = [
   ul { margin: var(--space-12) 0 0; padding: 0; list-style: none; display: grid; gap: var(--space-4); }
   li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-6); background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-lg); }
   .soon { padding: var(--space-2) var(--space-4); background: var(--page); border: 1px dashed var(--line); text-transform: uppercase; letter-spacing: 0.06em; border-radius: var(--radius-md); color: var(--muted); font: 500 var(--text-sm) / 1.4 var(--font-mono); }
+  li > div { flex: 1 1 280px; }
+  .note { margin: var(--space-2) 0 0; max-width: 52ch; color: var(--muted); font-size: var(--text-sm); }
   .meta a { display: inline-block; padding-block: var(--space-2); }
   .meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-6); }
 </style>

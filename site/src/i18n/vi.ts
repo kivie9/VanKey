@@ -3,7 +3,7 @@ export const vi = {
   meta: {
     title: 'VanKey: mật khẩu và mã 2FA, mã hóa trên máy bạn',
     description:
-      'VanKey giữ mật khẩu, khóa và mã 2FA trong một kho mã hóa trên máy của bạn. Dùng được khi không có mạng, đồng bộ mã hóa đầu cuối, cho Android và Windows.',
+      'VanKey giữ mật khẩu, khóa và mã 2FA trong một kho mã hóa trên máy của bạn. Dùng được khi không có mạng, đồng bộ mã hóa đầu cuối, cho Android, Windows và trình duyệt.',
     ogAlt: 'Logo VanKey và dòng chữ: mật khẩu và mã 2FA, khóa ngay trên máy bạn',
   },
   skip: 'Tới nội dung chính',
@@ -25,7 +25,7 @@ export const vi = {
     how: 'Cách mã hóa',
     sheet: 'Sổ kỹ thuật',
     spec: [
-      { k: 'Nền tảng', v: 'Android, Windows' },
+      { k: 'Nền tảng', v: 'Android, Windows, Web' },
       { k: 'Giao diện', v: 'Tiếng Việt, English' },
       { k: 'Cần mạng để mở', v: 'Không' },
     ],
@@ -117,6 +117,10 @@ export const vi = {
     androidKind: 'File APK',
     windows: 'Windows',
     windowsKind: 'Bộ cài',
+    web: 'Web',
+    webKind: 'Trình duyệt, chỉ xem',
+    webNote: 'Xem và sao chép mật khẩu, mã 2FA trên máy không cài app. Đăng nhập bằng tài khoản đồng bộ tạo trong app. Thêm và sửa mục vẫn làm trên app.',
+    openWeb: 'Mở bản web',
     soon: 'Sắp có',
     get: 'Tải từ GitHub',
     source: 'Mã nguồn và cách tự build',

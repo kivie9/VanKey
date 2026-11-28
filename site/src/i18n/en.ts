@@ -5,7 +5,7 @@ export const en: Dict = {
   meta: {
     title: 'VanKey: passwords and 2FA codes, encrypted on device',
     description:
-      'VanKey keeps passwords, keys and 2FA codes in an encrypted vault on your device. Works offline, syncs end-to-end encrypted, for Android and Windows.',
+      'VanKey keeps passwords, keys and 2FA codes in an encrypted vault on your device. Works offline, syncs end-to-end encrypted, for Android, Windows and the browser.',
     ogAlt: 'VanKey logo with the line: passwords and 2FA codes, locked on your own device',
   },
   skip: 'Skip to main content',
@@ -27,7 +27,7 @@ export const en: Dict = {
     how: 'How it encrypts',
     sheet: 'Lab notebook',
     spec: [
-      { k: 'Platforms', v: 'Android, Windows' },
+      { k: 'Platforms', v: 'Android, Windows, Web' },
       { k: 'Interface', v: 'Tiếng Việt, English' },
       { k: 'Network to open', v: 'None' },
     ],
@@ -119,6 +119,10 @@ export const en: Dict = {
     androidKind: 'APK file',
     windows: 'Windows',
     windowsKind: 'Installer',
+    web: 'Web',
+    webKind: 'Browser, view only',
+    webNote: 'View and copy passwords and 2FA codes on a computer without the app. Sign in with the sync account you created in the app. Adding and editing items stays in the app.',
+    openWeb: 'Open the web app',
     soon: 'Coming soon',
     get: 'Get it on GitHub',
     source: 'Source code and build steps',
