@@ -32,6 +32,11 @@ set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RELEASE}")
 # Use Unicode for all projects.
 add_definitions(-DUNICODE -D_UNICODE)
 
+# MSVC 14.52+ (Visual Studio 2026, máy build windows-latest của GitHub) báo lỗi STL1011 khi plugin dùng
+# <experimental/coroutine> qua C++/WinRT (flutter_local_notifications_windows, local_auth_windows).
+# Định nghĩa này áp cho cả plugin, cho tới khi các plugin chuyển sang <coroutine> của C++20.
+add_definitions(-D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)
+
 # Compilation settings that should be applied to most targets.
 #
 # Be cautious about adding new options here, as plugins use this function by
