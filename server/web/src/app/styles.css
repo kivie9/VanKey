@@ -143,16 +143,91 @@ h2 {
 }
 
 /* Màn đăng nhập, mở khóa */
-.center {
+.split {
   min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(360px, 2fr) 3fr;
+}
+.center {
   display: grid;
   place-items: center;
   padding: 24px 16px;
 }
+.brand {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 40px clamp(28px, 4vw, 56px);
+  background: linear-gradient(160deg, #0b7a6b, #075f54);
+  color: #ffffff;
+}
+.brand-pattern {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.07;
+}
+.brand-text,
+.brand-art {
+  position: relative;
+}
+.brand .logo {
+  font-size: 22px;
+}
+.brand-title {
+  margin: 28px 0 0;
+  max-width: 14em;
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 700;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+.brand-lead {
+  margin: 16px 0 0;
+  font-size: 18px;
+  opacity: 0.85;
+}
+.brand-points {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-weight: 600;
+}
+.brand-points li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.brand-points li::before {
+  content: '✓';
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 13px;
+}
+.brand-art {
+  align-self: center;
+  width: 100%;
+  max-width: 380px;
+  max-height: 40vh;
+}
+.brand-code {
+  font: 700 19px var(--mono);
+}
 .auth {
   width: 100%;
   max-width: 400px;
-  padding: 28px 24px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -166,6 +241,22 @@ h2 {
   gap: 8px;
   font-weight: 700;
   font-size: 17px;
+}
+/* Màn rộng đã có logo ở bảng bên trái. */
+.auth .logo {
+  display: none;
+}
+/* Màn hẹp: bỏ bảng bên trái, chỉ còn form. */
+@media (max-width: 860px) {
+  .split {
+    grid-template-columns: 1fr;
+  }
+  .brand {
+    display: none;
+  }
+  .auth .logo {
+    display: flex;
+  }
 }
 .logo-mark {
   display: grid;

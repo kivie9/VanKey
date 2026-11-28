@@ -4,6 +4,7 @@ import type { JSX } from 'preact';
 import { otpCode } from '../core/otp.ts';
 import type { OtpState } from '../core/otp.ts';
 import type { Field, Item, TotpJson } from '../core/vault.ts';
+import { AuthLayout } from './brand.tsx';
 import * as c from './controller.ts';
 import type { State } from './controller.ts';
 import { warmUpKdf } from './kdf.ts';
@@ -115,8 +116,8 @@ function LoginScreen({ s }: { s: State }) {
     void c.signIn(username, password).then(() => setPassword(''));
   };
   return (
-    <main class="center">
-      <form class="card auth" onSubmit={submit}>
+    <AuthLayout logo={<Logo />}>
+      <form class="auth" onSubmit={submit}>
         <Logo />
         <h1>Đăng nhập</h1>
         <p class="muted">Dùng tài khoản đồng bộ Cloudflare của app. Kho được tải về và giải mã ngay trên trình duyệt này.</p>
@@ -130,7 +131,7 @@ function LoginScreen({ s }: { s: State }) {
           {s.busy ? 'Đang mở…' : s.online ? 'Đăng nhập' : 'Không có mạng'}
         </button>
       </form>
-    </main>
+    </AuthLayout>
   );
 }
 
@@ -147,8 +148,8 @@ function UnlockScreen({ s }: { s: State }) {
     void (mode === 'password' ? c.unlockWithPassword(v) : c.unlockWithRecovery(v));
   };
   return (
-    <main class="center">
-      <form class="card auth" onSubmit={submit}>
+    <AuthLayout logo={<Logo />}>
+      <form class="auth" onSubmit={submit}>
         <Logo />
         <h1>Kho đang khóa</h1>
         {s.username && <p class="muted">Tài khoản {s.username}</p>}
@@ -187,7 +188,7 @@ function UnlockScreen({ s }: { s: State }) {
           </button>
         )}
       </form>
-    </main>
+    </AuthLayout>
   );
 }
 
