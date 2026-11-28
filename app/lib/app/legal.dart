@@ -4,10 +4,11 @@ import 'i18n.dart';
 
 /// Các trang pháp lý công khai (Điều khoản, Quyền riêng tư, Xóa tài khoản, Bảo mật).
 ///
-/// Địa chỉ trang đặt lúc build: `--dart-define=SITE_URL=https://vankey.onigix.com`.
-/// Không đặt thì các link ẩn đi và app vẫn chạy bình thường.
+/// Mặc định là https://vankey.onigix.com (giống site/astro.config.mjs).
+/// Đổi sang địa chỉ khác lúc build: `--dart-define=SITE_URL=https://...`.
+/// Đặt SITE_URL rỗng thì các link ẩn đi.
 abstract final class Legal {
-  static const siteUrl = String.fromEnvironment('SITE_URL');
+  static const siteUrl = String.fromEnvironment('SITE_URL', defaultValue: 'https://vankey.onigix.com');
 
   /// Đường dẫn trang theo ngôn ngữ đang dùng. Khớp với site/src/pages.
   static const _paths = {

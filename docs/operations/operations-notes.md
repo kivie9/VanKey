@@ -46,7 +46,7 @@ See [STATUS.md](../project/STATUS.md). Public release tasks (privacy policy, ter
 When public registration is opened, the operator holds other people's data. Complete the steps below before opening.
 
 ### 6.1 Before opening
-- [ ] Set `SITE_URL` when building the app (`--dart-define=SITE_URL=https://vankey.onigix.com`) so that the legal links appear in the app.
+- [ ] Check the legal links in the app open the live pages. The app points to `https://vankey.onigix.com` by default; pass `--dart-define=SITE_URL=...` only for a different address.
 - [ ] Deploy the `site/` pages (Cloudflare Pages, build `npm run build`, variable `SITE_URL`). Check that the Privacy, Terms, Delete account and Security pages are current.
 - [ ] Set the `REGISTER_CODE` secret if you only want to invite people you know; leave it empty to open to everyone (limited by IP and `MAX_USERS`).
 - [ ] Run `npm run db:migrate` (migration 0007 records consent to the terms).
@@ -70,7 +70,7 @@ When public registration is opened, the operator holds other people's data. Comp
   2. `app/lib/core/sync/cloudflare_sync.dart`: `cloudflareTermsVersion`.
   3. The Terms page (both languages): the line "Terms version".
   Then run the server and app tests. Existing accounts keep the version they agreed to; the app does not yet ask users to agree again.
-- **Links in the app:** set through `SITE_URL` at build time, no code change needed. Page paths are in `app/lib/app/legal.dart`; if you change a page path, update it there and in `site/src/pages`.
+- **Links in the app:** default to `https://vankey.onigix.com`; override with `SITE_URL` at build time, no code change needed. Page paths are in `app/lib/app/legal.dart`; if you change a page path, update it there and in `site/src/pages`.
 - **UI strings:** Vietnamese in the code, English in `app/lib/app/i18n_en.dart`. When adding a new string, add both.
 - **License:** there is no LICENSE file yet. Choose a license before publishing the source code.
 
