@@ -1,0 +1,65 @@
+---
+import Legal from '../../layouts/Legal.astro';
+import { vi } from '../../i18n/vi';
+---
+
+<Legal t={vi} title="Chính sách quyền riêng tư" updated="27/11/2026">
+  <p>VanKey là kho mật khẩu, khóa và mã 2FA. Trang này nói rõ dữ liệu nào được lưu, lưu ở đâu, trong bao lâu và cách xóa.</p>
+  <p>Người vận hành máy chủ VanKey: VanKey. Liên hệ: <a href="mailto:vankey@onigix.com">vankey@onigix.com</a>.</p>
+
+  <h2>Tóm tắt</h2>
+  <ul>
+    <li>Mật khẩu, khóa và mã 2FA được mã hóa trên máy bạn trước khi rời máy. Máy chủ không đọc được nội dung kho.</li>
+    <li>Dữ liệu chỉ rời máy khi bạn bật đồng bộ, hoặc khi bạn bấm kiểm tra bản mới hay kiểm tra mật khẩu rò rỉ.</li>
+    <li>Không quảng cáo, không bán dữ liệu, không có phân tích hay báo lỗi tự động.</li>
+  </ul>
+
+  <h2>1. Dữ liệu nằm ở đâu</h2>
+  <ul>
+    <li><strong>Trên máy bạn:</strong> kho đã mã hóa, cài đặt giao diện và nhắc nhở. Khóa mở kho được bọc bằng Android Keystore hoặc Windows Hello nếu bạn bật mở bằng vân tay.</li>
+    <li><strong>Máy chủ VanKey</strong> (chỉ khi bạn tạo tài khoản và bật đồng bộ): xem mục 2.</li>
+    <li><strong>Google Drive</strong> (nếu bạn chọn): file kho đã mã hóa trong thư mục ẩn của app trên Drive của bạn.</li>
+    <li><strong>Thư mục bạn chọn</strong> (nếu bạn đồng bộ qua thư mục): file kho đã mã hóa.</li>
+  </ul>
+
+  <h2>2. Máy chủ VanKey lưu gì</h2>
+  <ul>
+    <li>Tên đăng nhập bạn chọn.</li>
+    <li>Băm của khóa đăng nhập. App không gửi mật khẩu gốc: khóa được dẫn xuất bằng Argon2id ngay trên máy, rồi máy chủ băm thêm bằng PBKDF2 trước khi lưu.</li>
+    <li>Thiết bị đã đăng nhập: tên thiết bị (tên mặc định nếu bạn không đặt), thời điểm đăng nhập, thời điểm hoạt động gần nhất, và băm của token làm mới. Token gốc không được lưu.</li>
+    <li>Phiên bản Điều khoản và thời điểm bạn đồng ý khi đăng ký.</li>
+    <li>Kho đã mã hóa và số phiên bản của nó.</li>
+    <li>Địa chỉ IP của bạn, dạng chữ, trong bộ đếm chống dò mật khẩu và giới hạn đăng ký. Địa chỉ IPv6 được gom theo khối /64.</li>
+  </ul>
+  <p>Máy chủ <strong>không</strong> lưu mật khẩu kho, mã khôi phục, mã 2FA, tên mục hay nội dung kho. Nó vẫn thấy tên đăng nhập, IP, thời điểm đăng nhập và đồng bộ, cùng kích thước kho.</p>
+
+  <h2>3. Bên thứ ba</h2>
+  <ul>
+    <li><strong>Cloudflare:</strong> vận hành máy chủ (Workers) và cơ sở dữ liệu (D1). Dữ liệu được xử lý theo chính sách của Cloudflare.</li>
+    <li><strong>Google:</strong> nếu bạn dùng Google Drive hoặc đăng nhập Google. Google chỉ nhận bản đã mã hóa.</li>
+    <li><strong>HaveIBeenPwned:</strong> khi bạn bấm kiểm tra mật khẩu rò rỉ, chỉ 5 ký tự đầu của mã băm SHA-1 được gửi đi. Mật khẩu không rời máy.</li>
+    <li><strong>GitHub:</strong> chỉ khi bạn bấm "Kiểm tra bản mới", app hỏi phiên bản mới nhất.</li>
+  </ul>
+
+  <h2>4. Thời gian lưu</h2>
+  <ul>
+    <li><strong>Kho và tài khoản trên máy chủ:</strong> đến khi bạn xóa tài khoản.</li>
+    <li><strong>Dòng thiết bị đã gỡ hoặc hết hạn:</strong> hiện chưa được dọn tự động. Chúng sẽ bị xóa cùng tài khoản, hoặc khi bạn yêu cầu.</li>
+    <li><strong>Bộ đếm IP và lần đăng nhập sai:</strong> tự dọn khi không được cập nhật trong khoảng 24 giờ.</li>
+    <li><strong>Trên máy bạn:</strong> đến khi bạn xóa kho hoặc gỡ app.</li>
+    <li><strong>Google Drive và thư mục:</strong> bạn quản lý ở đó. Xóa tài khoản máy chủ không xóa các file này.</li>
+  </ul>
+
+  <h2>5. Quyền của bạn</h2>
+  <ul>
+    <li>Xem, sửa, xóa dữ liệu trong app.</li>
+    <li>Xóa tài khoản và dữ liệu trên máy chủ theo <a href="/xoa-tai-khoan/">hướng dẫn xóa tài khoản</a>.</li>
+    <li>Yêu cầu khác: liên hệ người vận hành ở đầu trang.</li>
+  </ul>
+
+  <h2>6. Bảo mật</h2>
+  <p>Kho được mã hóa đầu cuối bằng Argon2id và XChaCha20-Poly1305. Chưa có kiểm toán độc lập. Chi tiết và những điều chưa làm được xem tại <a href="/bao-mat/">trang bảo mật</a>.</p>
+
+  <h2>7. Trẻ em và thay đổi</h2>
+  <p>Dịch vụ không nhắm tới trẻ em. Khi nội dung trang thay đổi, ngày cập nhật ở đầu trang sẽ đổi. Thay đổi quan trọng cũng được ghi trong nhật ký thay đổi.</p>
+</Legal>

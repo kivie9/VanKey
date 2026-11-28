@@ -1,0 +1,38 @@
+---
+// Bố cục cho các trang pháp lý: tiêu đề, ngày cập nhật, nội dung chữ thuần.
+import Base from './Base.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import type { Dict } from '../i18n/vi';
+
+interface Props {
+  t: Dict;
+  title: string;
+  updated: string;
+}
+const { t, title, updated } = Astro.props;
+const pageT = { ...t, meta: { ...t.meta, title: `${title} · VanKey` } };
+const updatedLabel = t.lang === 'vi' ? 'Cập nhật lần cuối' : 'Last updated';
+---
+
+<Base t={pageT}>
+  <Nav t={t} />
+  <main id="main" tabindex="-1" class="legal">
+    <article class="wrap">
+      <h1>{title}</h1>
+      <p class="label">{updatedLabel}: {updated}</p>
+      <slot />
+    </article>
+  </main>
+  <Footer t={t} />
+</Base>
+
+<style>
+  .legal { padding-block: var(--space-12); }
+  .legal article { max-width: 44rem; }
+  .legal h1 { font-size: var(--text-3xl); margin-bottom: var(--space-3); }
+  .legal :global(h2) { font-size: var(--text-xl); margin-top: var(--space-10); margin-bottom: var(--space-3); }
+  .legal :global(p), .legal :global(li) { color: var(--fg); line-height: 1.65; }
+  .legal :global(ul), .legal :global(ol) { padding-left: var(--space-6); display: grid; gap: var(--space-2); }
+  .legal :global(.todo) { color: var(--muted); font-family: var(--font-mono); font-size: var(--text-sm); }
+</style>

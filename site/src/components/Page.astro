@@ -1,0 +1,33 @@
+---
+// Một bố cục dùng chung cho cả hai ngôn ngữ.
+import Base from '../layouts/Base.astro';
+import Nav from './Nav.astro';
+import Hero from './Hero.astro';
+import TotpDemo from './TotpDemo.astro';
+import Features from './Features.astro';
+import Screens from './Screens.astro';
+import CryptoFlow from './CryptoFlow.astro';
+import Honesty from './Honesty.astro';
+import Download from './Download.astro';
+import Footer from './Footer.astro';
+import type { Dict } from '../i18n/vi';
+
+interface Props {
+  t: Dict;
+}
+const { t } = Astro.props;
+---
+
+<Base t={t}>
+  <Nav t={t} />
+  <main id="main" tabindex="-1">
+    <Hero t={t} />
+    <TotpDemo t={t} />
+    <Features t={t} />
+    <Screens t={t} />
+    <CryptoFlow t={t} />
+    <Honesty t={t} />
+    <Download t={t} />
+  </main>
+  <Footer t={t} />
+</Base>

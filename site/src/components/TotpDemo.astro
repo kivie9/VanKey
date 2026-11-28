@@ -1,0 +1,64 @@
+---
+import type { Dict } from '../i18n/vi';
+
+interface Props {
+  t: Dict;
+}
+const { t } = Astro.props;
+const SECRET = 'GEZD GNBV GY3T QOJQ GEZD GNBV GY3T QOJQ';
+const ticks = Array.from({ length: 30 }, (_, i) => i * 12);
+---
+
+<section class="section" aria-labelledby="totp-title">
+  <div class="wrap layout">
+    <div data-reveal>
+      <h2 id="totp-title">{t.totp.title}</h2>
+      <p class="lead">{t.totp.lead}</p>
+      <p class="check">{t.totp.check}</p>
+    </div>
+
+    <div class="device" data-totp data-secret={SECRET} data-remaining={t.totp.remaining} data-unsupported={t.totp.unsupported}>
+      <div class="head">
+        <div>
+          <p class="account">{t.totp.account}</p>
+          <p class="label">TOTP · SHA1 · 6 · 30s</p>
+        </div>
+        <svg class="ring" viewBox="-24 -24 48 48" width="56" height="56" aria-hidden="true" focusable="false">
+          {ticks.map((angle) => <line data-tick x1="0" y1="-22" x2="0" y2="-16" transform={`rotate(${angle})`} />)}
+        </svg>
+      </div>
+      <p class="visually-hidden">{t.totp.codeLabel}</p>
+      <p class="code" data-code>––– –––</p>
+      <p class="label" data-status>
+        <noscript>{t.totp.noJs}</noscript>
+      </p>
+      <div class="secret">
+        <p class="label">{t.totp.secretLabel}</p>
+        <code>{SECRET}</code>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .layout { display: grid; gap: var(--space-12); align-items: center; }
+  @media (min-width: 900px) {
+    .layout { grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); }
+  }
+  .check { margin-top: var(--space-6); font-size: var(--text-sm); color: var(--muted); max-width: 52ch; }
+  .device { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: clamp(20px, 4vw, 32px); }
+  .head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); }
+  .account { font-weight: 600; }
+  .ring line { stroke: var(--accent); stroke-width: 2.4; stroke-linecap: round; }
+  .ring line:global(.spent) { opacity: 0.18; }
+  .code {
+    margin-block: var(--space-4) var(--space-2);
+    font: 600 clamp(2.5rem, 11vw, 4rem) / 1.1 var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+  [data-status] { min-height: 1.4em; }
+  .secret { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--line); }
+  .secret code { display: block; margin-top: var(--space-2); font-size: var(--text-sm); overflow-wrap: anywhere; }
+</style>

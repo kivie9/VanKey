@@ -1,0 +1,81 @@
+---
+import { doc } from '../config';
+import type { Dict } from '../i18n/vi';
+
+interface Props {
+  t: Dict;
+}
+const { t } = Astro.props;
+const steps = t.flow.steps;
+const last = steps.length - 1;
+---
+
+<section class="section" id="flow" aria-labelledby="flow-title">
+  <div class="wrap">
+    <div data-reveal>
+      <h2 id="flow-title">{t.flow.title}</h2>
+      <p class="lead">{t.flow.lead}</p>
+    </div>
+
+    <p class="zone label">{t.flow.onDevice}</p>
+    <div class="track" data-flow>
+      <span class="rail" aria-hidden="true"><span data-flow-fill></span></span>
+      <ol>
+        {steps.map((step, i) => (
+          <li data-flow-step class:list={{ leaving: i === last }}>
+            {i === last && <p class="zone label boundary">{t.flow.leaves}</p>}
+            <div class="row">
+              <div>
+                <h3>{step.name}</h3>
+                <p>{step.body}</p>
+              </div>
+              <p class="token" aria-hidden="true">
+                <span class="from">{step.from}</span>
+                <span class="to" data-scramble data-from={step.from} data-to={step.to}>{step.to}</span>
+              </p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+    <p class="more"><a href={doc('vault-format.md')}>{t.honesty.format}</a></p>
+  </div>
+</section>
+
+<style>
+  .zone { margin-top: var(--space-12); }
+  .track { position: relative; margin-top: var(--space-4); }
+  .rail { position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px; background: var(--line); }
+  .rail span { position: absolute; inset: 0; background: var(--accent); transform-origin: top; }
+  ol { margin: 0; padding: 0; list-style: none; }
+  li { padding: 0 0 var(--space-12) var(--space-12); }
+  li:last-child { padding-bottom: 0; }
+  h3 { position: relative; }
+  h3::before {
+    content: ''; position: absolute; box-sizing: border-box;
+    left: calc(-1 * var(--space-12)); top: 0.2em;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--accent); border: 4px solid var(--page); outline: 1px solid var(--accent);
+  }
+  li:global(.is-waiting) h3::before { background: var(--page); outline-color: var(--muted); }
+  .row { display: grid; gap: var(--space-4); }
+  .row p { margin-top: var(--space-2); color: var(--muted); max-width: 56ch; }
+  .row .token {
+    margin: 0; align-self: start; min-width: 0;
+    padding: var(--space-3) var(--space-4);
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-md);
+    font: 400 var(--text-sm) / 1.5 var(--font-mono);
+  }
+  .token span { display: block; min-height: 1.5em; white-space: pre; overflow: hidden; text-overflow: ellipsis; }
+  .from { color: var(--muted); }
+  .to { color: var(--fg); }
+  .to::before { content: '→ '; color: var(--accent); }
+  /* Bước chưa tới: mới thấy đầu vào, kết quả chưa hiện. Không làm mờ chữ để giữ tương phản. */
+  li:global(.is-waiting) .to { opacity: 0; }
+  .boundary { margin: 0 0 var(--space-6); padding-top: var(--space-6); border-top: 2px dashed var(--warn); color: var(--warn); }
+  .more { margin-top: var(--space-12); }
+  .more a { display: inline-block; padding-block: var(--space-2); }
+  @media (min-width: 800px) {
+    .row { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--space-8); }
+  }
+</style>

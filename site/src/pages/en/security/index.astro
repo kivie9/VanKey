@@ -1,0 +1,30 @@
+---
+import Legal from '../../../layouts/Legal.astro';
+import { en } from '../../../i18n/en';
+---
+
+<Legal t={en} title="Security and vulnerability reports" updated="2026-11-27">
+  <h2>How VanKey protects your data</h2>
+  <ul>
+    <li>The vault is encrypted with XChaCha20-Poly1305, and its key is derived from your password with Argon2id. The recovery key is derived with HKDF-SHA256.</li>
+    <li>Your password never leaves the device. The server sees only the derived login key, and hashes it again before storing.</li>
+    <li>The server keeps only encrypted vaults and hashes of tokens. Refresh tokens rotate, and if an old token is reused after a short grace period, that device is removed.</li>
+    <li>Repeated failed sign-ins are temporarily locked, per IP address and per account.</li>
+    <li>The app slows down repeated wrong unlock attempts, hides 2FA codes and passwords after a while, and keeps secrets out of the Windows clipboard history.</li>
+  </ul>
+
+  <h2>What is not done yet</h2>
+  <ul>
+    <li>The encryption has not been reviewed by an independent auditor.</li>
+    <li>Fingerprint and Windows Hello unlock have not been tested on every kind of device. Anyone whose fingerprint is enrolled on the device can still open the app.</li>
+    <li>If you leave the vault open and lose the device, whoever holds it can read the data. Turn on auto-lock.</li>
+  </ul>
+
+  <h2>Reporting a vulnerability</h2>
+  <p>Please report privately rather than publicly before a fix is available:</p>
+  <ul>
+    <li>Use GitHub's private reporting: the repository page, <strong>Security → Report a vulnerability</strong>.</li>
+    <li>Or email <a href="mailto:vankey@onigix.com">vankey@onigix.com</a>.</li>
+  </ul>
+  <p>Include the steps to reproduce, the app version, and the impact you see. When testing, do not access data or accounts that are not yours. Expected response time: <span class="todo">[fill: response time]</span>.</p>
+</Legal>

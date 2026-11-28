@@ -1,0 +1,60 @@
+---
+import { pagePair, REPO } from '../config';
+import type { Dict } from '../i18n/vi';
+
+interface Props {
+  t: Dict;
+}
+const { t } = Astro.props;
+const home = t.nav.homeHref;
+const pair = pagePair(Astro.url.pathname);
+const otherLanguage = pair[t.nav.switchLang as 'vi' | 'en'];
+---
+
+<header class="bar">
+  <nav class="wrap" aria-label={t.nav.label}>
+    <a class="brand" href={t.nav.homeHref} aria-label={t.nav.home}>
+      <img src="/favicon.svg" alt="" width="28" height="28" />
+      <span>VanKey</span>
+    </a>
+    <ul>
+      <li class="wide"><a href={`${home}#features`}>{t.nav.features}</a></li>
+      <li class="wide"><a href={`${home}#security`}>{t.nav.security}</a></li>
+      <li><a href={`${home}#download`}>{t.nav.download}</a></li>
+      <li>
+        <a class="lang" href={otherLanguage} lang={t.nav.switchLang} hreflang={t.nav.switchLang} aria-label={t.nav.switchLabel}>
+          {t.nav.switchTo}
+        </a>
+      </li>
+      <li><a href={REPO} rel="noopener">GitHub</a></li>
+    </ul>
+  </nav>
+</header>
+
+<style>
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    height: 64px;
+    background: var(--page);
+    border-bottom: 1px solid var(--line);
+  }
+  nav { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+  .brand { display: flex; align-items: center; gap: var(--space-2); min-height: 44px; color: var(--fg); font-weight: 700; text-decoration: none; }
+  ul { display: flex; align-items: center; gap: var(--space-1); margin: 0; padding: 0; list-style: none; }
+  li a {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 44px; min-width: 44px; padding: 0 var(--space-2);
+    color: var(--muted); font-size: var(--text-sm); font-weight: 500; text-decoration: none; white-space: nowrap;
+  }
+  li a:hover { color: var(--fg); }
+  .lang { font-family: var(--font-mono); font-size: var(--text-xs); }
+  @media (max-width: 599px) {
+    .wide { display: none; }
+    li a { padding: 0 var(--space-1); }
+  }
+  @media (min-width: 600px) {
+    ul { gap: var(--space-3); }
+  }
+</style>

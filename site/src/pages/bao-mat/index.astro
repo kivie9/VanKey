@@ -1,0 +1,30 @@
+---
+import Legal from '../../layouts/Legal.astro';
+import { vi } from '../../i18n/vi';
+---
+
+<Legal t={vi} title="Bảo mật và báo lỗ hổng" updated="27/11/2026">
+  <h2>Cách VanKey bảo vệ dữ liệu</h2>
+  <ul>
+    <li>Kho được mã hóa bằng XChaCha20-Poly1305, khóa dẫn xuất từ mật khẩu bằng Argon2id. Mã khôi phục dẫn xuất bằng HKDF-SHA256.</li>
+    <li>Mật khẩu gốc không rời máy. Máy chủ chỉ thấy khóa đăng nhập đã dẫn xuất, và băm thêm trước khi lưu.</li>
+    <li>Máy chủ chỉ giữ bản đã mã hóa và băm token. Token làm mới được xoay vòng, và nếu một token cũ bị dùng lại sau ân hạn ngắn thì thiết bị đó bị gỡ.</li>
+    <li>Đăng nhập sai nhiều lần bị khóa tạm theo IP và theo tài khoản.</li>
+    <li>Ứng dụng làm chậm nhập sai, ẩn mã 2FA và mật khẩu sau một thời gian, không đưa bí mật vào lịch sử clipboard của Windows.</li>
+  </ul>
+
+  <h2>Những điều chưa làm được</h2>
+  <ul>
+    <li>Mã hóa chưa được người ngoài kiểm toán độc lập.</li>
+    <li>Mở bằng vân tay hoặc Windows Hello chưa được thử trên mọi loại máy. Ai có vân tay đã đăng ký trên máy đó vẫn mở được app.</li>
+    <li>Nếu bạn để kho mở và mất máy, người cầm máy có thể đọc được dữ liệu. Hãy bật tự khóa.</li>
+  </ul>
+
+  <h2>Báo lỗ hổng</h2>
+  <p>Vui lòng báo riêng, không công khai trước khi được sửa:</p>
+  <ul>
+    <li>Dùng tính năng báo cáo bảo mật riêng tư của GitHub: trang repo, mục <strong>Security → Report a vulnerability</strong>.</li>
+    <li>Hoặc gửi email: <a href="mailto:vankey@onigix.com">vankey@onigix.com</a>.</li>
+  </ul>
+  <p>Hãy ghi rõ các bước tái hiện, phiên bản app, và ảnh hưởng bạn thấy. Khi thử, đừng truy cập dữ liệu hay tài khoản không phải của bạn. Thời gian phản hồi: <span class="todo">[điền: thời gian]</span>.</p>
+</Legal>

@@ -1,0 +1,65 @@
+---
+import Legal from '../../../layouts/Legal.astro';
+import { en } from '../../../i18n/en';
+---
+
+<Legal t={en} title="Privacy policy" updated="2026-11-27">
+  <p>VanKey is a vault for passwords, keys and 2FA codes. This page explains what data is stored, where, for how long, and how to delete it.</p>
+  <p>Operator of the VanKey server: VanKey. Contact: <a href="mailto:vankey@onigix.com">vankey@onigix.com</a>.</p>
+
+  <h2>Summary</h2>
+  <ul>
+    <li>Passwords, keys and 2FA codes are encrypted on your device before they leave it. The server cannot read the vault contents.</li>
+    <li>Data leaves your device only when you turn on sync, or when you tap the update check or the leaked-password check.</li>
+    <li>No ads, no selling of data, no analytics or automatic crash reporting.</li>
+  </ul>
+
+  <h2>1. Where data lives</h2>
+  <ul>
+    <li><strong>On your device:</strong> the encrypted vault, interface settings and reminders. The key to open the vault is wrapped by Android Keystore or Windows Hello if you turn on fingerprint unlock.</li>
+    <li><strong>VanKey server</strong> (only if you create an account and turn on sync): see section 2.</li>
+    <li><strong>Google Drive</strong> (if you choose it): the encrypted vault file in a hidden app folder on your Drive.</li>
+    <li><strong>A folder you choose</strong> (if you sync through a folder): the encrypted vault file.</li>
+  </ul>
+
+  <h2>2. What the VanKey server stores</h2>
+  <ul>
+    <li>The username you choose.</li>
+    <li>A hash of your login key. The app never sends your password itself: the key is derived with Argon2id on your device, and the server adds a PBKDF2 hash before storing it.</li>
+    <li>Signed-in devices: the device name (a default name if you do not set one), sign-in time, last-seen time, and a hash of the refresh token. The token itself is not stored.</li>
+    <li>The version of the Terms and the time you agreed to them at sign-up.</li>
+    <li>The encrypted vault and its version number.</li>
+    <li>Your IP address, as text, in the counters that limit brute-force attempts and sign-ups. IPv6 addresses are grouped by /64.</li>
+  </ul>
+  <p>The server does <strong>not</strong> store your vault password, recovery key, 2FA codes, item names or vault contents. It still sees your username, IP address, sign-in and sync times, and the size of the vault.</p>
+
+  <h2>3. Third parties</h2>
+  <ul>
+    <li><strong>Cloudflare:</strong> runs the server (Workers) and its database (D1). Data is processed under Cloudflare's policies.</li>
+    <li><strong>Google:</strong> if you use Google Drive or sign in with Google. Google only receives the encrypted copy.</li>
+    <li><strong>Have I Been Pwned:</strong> when you run the leaked-password check, only the first 5 characters of a SHA-1 hash are sent. Your password does not leave the device.</li>
+    <li><strong>GitHub:</strong> only when you tap "Check for updates", the app asks GitHub for the latest version.</li>
+  </ul>
+
+  <h2>4. How long data is kept</h2>
+  <ul>
+    <li><strong>Vault and account on the server:</strong> until you delete the account.</li>
+    <li><strong>Removed or expired device records:</strong> not yet cleaned up automatically. They are deleted with the account, or on request.</li>
+    <li><strong>IP and failed-sign-in counters:</strong> cleared automatically when not updated for about 24 hours.</li>
+    <li><strong>On your device:</strong> until you delete the vault or uninstall the app.</li>
+    <li><strong>Google Drive and folders:</strong> you manage them there. Deleting the server account does not delete these files.</li>
+  </ul>
+
+  <h2>5. Your rights</h2>
+  <ul>
+    <li>View, edit and delete data inside the app.</li>
+    <li>Delete the account and server data by following the <a href="/en/delete-account/">account deletion guide</a>.</li>
+    <li>Other requests: contact the operator listed at the top of this page.</li>
+  </ul>
+
+  <h2>6. Security</h2>
+  <p>The vault is end-to-end encrypted with Argon2id and XChaCha20-Poly1305. It has not yet been independently audited. See the <a href="/en/security/">security page</a> for details and known limits.</p>
+
+  <h2>7. Children and changes</h2>
+  <p>The service is not aimed at children. When this page changes, the date at the top changes too. Significant changes are also recorded in the change log.</p>
+</Legal>

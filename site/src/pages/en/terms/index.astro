@@ -1,0 +1,38 @@
+---
+import Legal from '../../../layouts/Legal.astro';
+import { en } from '../../../i18n/en';
+---
+
+<Legal t={en} title="Terms of use" updated="2026-11-27">
+  <p>Terms version: <strong>2026-11-27</strong>. When you create a VanKey server account, you agree to these terms.</p>
+
+  <h2>1. Agreement</h2>
+  <p>Using VanKey without a server account does not require agreeing to these terms. Creating a server account does.</p>
+
+  <h2>2. The service</h2>
+  <p>VanKey is a password vault that runs on your device and can sync through the VanKey server, Google Drive or a folder. The VanKey server is free and runs on Cloudflare infrastructure. The service may limit the number of accounts and the vault size (about 1.5 MB), and may be interrupted for maintenance or for causes beyond our control.</p>
+
+  <h2>3. Your responsibilities</h2>
+  <ul>
+    <li>Keep your vault password and recovery key. If you lose both, nobody can reopen the vault, including the operator.</li>
+    <li>Back up regularly using an encrypted backup.</li>
+    <li>Do not share your account. Do not use the service to harm others or to break the law.</li>
+    <li>Do not attack, scan or overload the server.</li>
+    <li>Keep backup 2FA codes issued by each service. VanKey does not replace them.</li>
+  </ul>
+
+  <h2>4. No warranty</h2>
+  <p>The software is provided "as is". The encryption has not yet been independently audited. We do not guarantee that the server is always available, that data is never lost, or that every 2FA service is supported.</p>
+
+  <h2>5. Limitation of liability</h2>
+  <p>To the extent the law allows, the operator is not liable for indirect damage, or for data lost because a password was forgotten, a device was lost, or an event beyond our control.</p>
+
+  <h2>6. Suspension and termination</h2>
+  <p>The operator may suspend accounts that break these terms or harm the server. You may delete your account at any time by following the <a href="/en/delete-account/">guide</a>.</p>
+
+  <h2>7. Changes</h2>
+  <p>These terms may change. When the content changes, the terms version increases and new sign-ups must agree to the new version. Accounts created earlier keep the version they agreed to. Significant changes are recorded on this page and in the change log.</p>
+
+  <h2>8. Governing law and contact</h2>
+  <p>Governing law: the laws of Vietnam. Contact: <a href="mailto:vankey@onigix.com">vankey@onigix.com</a>.</p>
+</Legal>

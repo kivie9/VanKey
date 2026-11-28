@@ -1,0 +1,55 @@
+/* Màu lấy từ app/lib/app/theme.dart. Khoảng cách là bội số của 4 như Gap trong app. */
+:root {
+  color-scheme: light dark;
+
+  --page: #f4f5f7;
+  --card: #ffffff;
+  --line: #e3e6ea;
+  --fg: #15171a;
+  /* Đậm hơn #6B7280 của app một chút để đạt 4.5:1 trên nền trang. */
+  --muted: #5b6270;
+  --accent: #0b7a6b;
+  --on-accent: #ffffff;
+  --warn: #9a4a07;
+
+  --font-sans: 'Geist Variable', system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, Consolas, monospace;
+
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-md: 1.0625rem;
+  --text-lg: 1.1875rem;
+  --text-xl: clamp(1.35rem, 1.2rem + 0.7vw, 1.7rem);
+  --text-2xl: clamp(1.9rem, 1.4rem + 2vw, 3rem);
+  --text-3xl: clamp(2.35rem, 1.4rem + 3.4vw, 4.25rem);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-section: clamp(72px, 10vw, 136px);
+
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --wrap: 1160px;
+  --gutter: clamp(16px, 5vw, 40px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #0b0b0d;
+    --card: #141418;
+    --line: #26262c;
+    --fg: #c6c9cf;
+    --muted: #8f929b;
+    --accent: #3db5a0;
+    --on-accent: #05201b;
+    --warn: #dda050;
+  }
+}

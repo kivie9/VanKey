@@ -1,0 +1,48 @@
+---
+import { APP_VERSION, LATEST_RELEASE, RELEASED, REPO } from '../config';
+import type { Dict } from '../i18n/vi';
+
+interface Props {
+  t: Dict;
+}
+const { t } = Astro.props;
+const d = t.download;
+const platforms = [
+  { name: d.android, kind: d.androidKind },
+  { name: d.windows, kind: d.windowsKind },
+];
+---
+
+<section class="section" id="download" aria-labelledby="download-title">
+  <div class="wrap">
+    <div data-reveal>
+      <h2 id="download-title">{d.title}</h2>
+      <p class="lead">{RELEASED ? d.leadReleased : d.lead}</p>
+    </div>
+    <ul data-reveal>
+      {platforms.map((p) => (
+        <li>
+          <div>
+            <h3>{p.name}</h3>
+            <p class="label">{p.kind}</p>
+          </div>
+          {RELEASED
+            ? <a class="button button-primary" href={LATEST_RELEASE}>{d.get}<span class="visually-hidden"> ({p.name})</span></a>
+            : <p class="soon">{d.soon}</p>}
+        </li>
+      ))}
+    </ul>
+    <p class="meta">
+      <a href={`${REPO}#readme`}>{d.source}</a>
+      <span class="label">{d.version}: {APP_VERSION}</span>
+    </p>
+  </div>
+</section>
+
+<style>
+  ul { margin: var(--space-12) 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+  li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; padding-block: var(--space-6); border-bottom: 1px solid var(--line); }
+  .soon { padding: var(--space-2) var(--space-4); border: 1px dashed var(--muted); border-radius: var(--radius-md); color: var(--muted); font: 500 var(--text-sm) / 1.4 var(--font-mono); }
+  .meta a { display: inline-block; padding-block: var(--space-2); }
+  .meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-6); }
+</style>

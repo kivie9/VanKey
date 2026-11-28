@@ -1,0 +1,33 @@
+---
+import { REPO } from '../config';
+import type { Dict } from '../i18n/vi';
+
+interface Props {
+  t: Dict;
+}
+const { t } = Astro.props;
+const legal = t.lang === 'vi'
+  ? { terms: '/dieu-khoan/', privacy: '/quyen-rieng-tu/', deleteAccount: '/xoa-tai-khoan/', security: '/bao-mat/' }
+  : { terms: '/en/terms/', privacy: '/en/privacy/', deleteAccount: '/en/delete-account/', security: '/en/security/' };
+---
+
+<footer>
+  <div class="wrap">
+    <p><strong>VanKey</strong>. {t.footer.tagline}</p>
+    <p class="links">
+      <a href={REPO}>GitHub</a>
+      <a href={`${REPO}/tree/main/docs`}>{t.footer.docs}</a>
+      <a href={legal.terms}>{t.footer.terms}</a>
+      <a href={legal.privacy}>{t.footer.privacy}</a>
+      <a href={legal.deleteAccount}>{t.footer.deleteAccount}</a>
+      <a href={legal.security}>{t.footer.security}</a>
+    </p>
+    <p class="label">{t.footer.icons}</p>
+  </div>
+</footer>
+
+<style>
+  footer { border-top: 1px solid var(--line); padding-block: var(--space-12); font-size: var(--text-sm); }
+  .links { display: flex; flex-wrap: wrap; column-gap: var(--space-6); margin-block: var(--space-3); }
+  .links a { display: inline-block; padding-block: var(--space-2); }
+</style>

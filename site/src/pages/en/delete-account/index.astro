@@ -1,0 +1,35 @@
+---
+import Legal from '../../../layouts/Legal.astro';
+import { en } from '../../../i18n/en';
+---
+
+<Legal t={en} title="Delete account and data" updated="2026-11-27">
+  <h2>Delete in the app</h2>
+  <ol>
+    <li>Open VanKey and go to <strong>Settings → Data → Sync</strong>.</li>
+    <li>Tap <strong>Delete account</strong> and confirm.</li>
+  </ol>
+
+  <h2>What is deleted</h2>
+  <ul>
+    <li>The account and its login key on the server.</li>
+    <li>The encrypted vault on the server.</li>
+    <li>The list of signed-in devices. All other devices are signed out.</li>
+    <li>The vault on the device you are using to delete: data synced to this device is permanently removed.</li>
+  </ul>
+
+  <h2>What is not deleted automatically</h2>
+  <ul>
+    <li>The vault file on Google Drive or in a folder you chose. Delete it in Drive or in that folder.</li>
+    <li>Encrypted backup files you exported. Delete those files yourself.</li>
+    <li>Data on other devices stays there until you delete it or uninstall the app, but those devices no longer sync.</li>
+  </ul>
+
+  <p>This cannot be undone. If you still need the data, export an encrypted backup first.</p>
+
+  <h2>If you can no longer sign in on any device</h2>
+  <p>Contact <a href="mailto:vankey@onigix.com">vankey@onigix.com</a> and include your username. The operator will explain how ownership is verified: <span class="todo">[fill: verification method]</span>. A request is only handled once ownership of the account is verified.</p>
+
+  <h2>Server backups</h2>
+  <p>The operator may keep scheduled database backups. How long they are kept: <span class="todo">[fill: retention period]</span>.</p>
+</Legal>
